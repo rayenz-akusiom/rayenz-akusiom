@@ -300,7 +300,7 @@
 }
 
 .dr-decision-recap-meta {
-   margin: 0 0 10px;
+   margin: 0 0 8px;
    font-size: 0.82rem;
    color: #718096;
 }
@@ -308,18 +308,46 @@
 .dr-decision-recap-list {
    display: flex;
    flex-direction: column;
-   gap: 8px;
+   gap: 4px;
 }
 
 .dr-decision-recap-row {
-   display: grid;
-   grid-template-columns: 100px 1fr;
+   display: flex;
+   align-items: center;
    gap: 10px;
-   align-items: start;
-   padding: 8px 10px;
+   padding: 4px 8px;
    border-radius: 6px;
    border: 1px solid #edf2f7;
    background: #fafafa;
+   min-height: 28px;
+}
+
+.dr-decision-recap-status {
+   flex: 0 0 auto;
+   display: inline-flex;
+   align-items: center;
+   flex-wrap: nowrap;
+   gap: 4px;
+   white-space: nowrap;
+}
+
+.dr-decision-recap-status .dr-decision-label,
+.dr-decision-recap-status .dr-badge {
+   margin: 0;
+   font-size: 0.62rem;
+   padding: 2px 5px;
+   line-height: 1.2;
+   flex-shrink: 0;
+}
+
+.dr-decision-recap-swap {
+   flex: 1 1 auto;
+   min-width: 0;
+   font-size: 0.84rem;
+   line-height: 1.25;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
 }
 
 .dr-decision-recap-accepted {
@@ -724,8 +752,7 @@
    justify-content: center;
 }
 
-.dr-accepted-item,
-.dr-decision-recap-swap {
+.dr-accepted-item {
    font-size: 0.9rem;
 }
 
@@ -781,10 +808,16 @@
    }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
    .dr-decision-recap-row {
-      grid-template-columns: 1fr;
-      gap: 4px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      row-gap: 4px;
+   }
+
+   .dr-decision-recap-swap {
+      white-space: normal;
+      flex-basis: 100%;
    }
 }
 

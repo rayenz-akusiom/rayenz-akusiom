@@ -267,6 +267,19 @@
       return typeof global.RayenzArchidektBridge !== 'undefined' && global.RayenzArchidektBridge.isAvailable;
    }
 
+   function bridgeApplyAvailable() {
+      var bridge = global.RayenzArchidektBridge;
+      return !!(bridge && bridge.isAvailable && typeof bridge.stageApply === 'function');
+   }
+
+   function archidektApplyOpenUrl(archidektUrl) {
+      if (!archidektUrl) {
+         return archidektUrl;
+      }
+      var sep = archidektUrl.indexOf('?') >= 0 ? '&' : '?';
+      return archidektUrl + sep + 'rayenz_apply=1';
+   }
+
    function deriveSwapQueue(deck) {
       if (!deck.deck_snapshot || !Array.isArray(deck.deck_snapshot.cards)) {
          return null;
@@ -1537,7 +1550,7 @@
          var status = decision && decision.status ? decision.status : 'pending';
          var recap = decisionRecapInOut(s, decision);
          var stale = getSuggestionStaleness(deck, s);
-         var staleHtml = stale.stale ? ' <span class="dr-badge dr-badge-stale">Stale</span>' : '';
+         var staleHtml = stale.stale ? '<span class="dr-badge dr-badge-stale">Stale</span>' : '';
          var outHtml = recap.outName
             ? ' → ' + escapeHtml(recap.outName)
             : (needsSuggestedCut(s) ? ' → <em>(pick cut)</em>' : '');
@@ -1571,10 +1584,10 @@
          gateMsg = '<p class="dr-update-ready">All ' + progress.total + ' suggestions reviewed. Ready to update Archidekt.</p>';
       }
 
-      var bridgeBtn = bridgeAvailable()
+      var bridgeBtn = bridgeApplyAvailable()
          ? '<button type="button" class="dr-btn dr-btn-primary" id="dr-apply-bridge"' +
             (canApply ? '' : ' disabled') + '>Apply via bridge</button>'
-         : '<p class="dr-bridge-hint">Install the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript to apply from desktop.</p>';
+         : '<p class="dr-bridge-hint">Install or update the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript (2026-06-21.4+) to apply from desktop.</p>';
 
       return gateMsg +
          '<div class="dr-toolbar dr-update-actions">' +
@@ -1583,7 +1596,7 @@
          bridgeBtn +
          archidektDeckLinkHtml(deck, 'Open on Archidekt') +
          '</div>' +
-         '<p class="dr-import-hint">Tablet: Archidekt → Import → <strong>Replace deck</strong> → paste → Save Changes. Swap categories reflect accepted decisions only.</p>' +
+         '<p class="dr-import-hint">Desktop: Apply via bridge stages the import in Tampermonkey, then shows a banner on Archidekt. Tablet: Import → <strong>Replace deck</strong> → paste → Save.</p>' +
          '<textarea id="dr-full-import-text" class="dr-import-preview" readonly' +
          (canApply ? '' : ' disabled') + '>' + escapeHtml(importText) + '</textarea>';
    }
@@ -1621,6 +1634,10 @@
       var applyBtn = document.getElementById('dr-apply-bridge');
       if (applyBtn) {
          applyBtn.addEventListener('click', function () {
+            if (!bridgeApplyAvailable()) {
+               showError('Install/update Archidekt Deck Review Bridge userscript (2026-06-21.4+) to apply from Hub.');
+               return;
+            }
             var accepted = acceptedForDeck(deck.deck_id);
             var text = ArchidektExport.buildFullDeckImport(deck, ArchidektExport.buildTargetAcceptedSwaps(accepted));
             var deckId = ArchidektExport.parseDeckId(deck.archidekt_url);
@@ -1629,12 +1646,9 @@
                return;
             }
             try {
-               ArchidektExport.stageDeckApply(deckId, text);
-               if (global.RayenzArchidektBridge && RayenzArchidektBridge.stageApply) {
-                  RayenzArchidektBridge.stageApply(deckId, text);
-               }
-               window.open(deck.archidekt_url, '_blank', 'noopener');
-               setProfileStatus('Staged update for ' + deck.deck_name + '. Use Apply on the Archidekt tab.');
+               RayenzArchidektBridge.stageApply(deckId, text);
+               window.open(archidektApplyOpenUrl(deck.archidekt_url), '_blank', 'noopener');
+               setProfileStatus('Staged — switch to the Archidekt tab and click Apply import on the banner.');
             } catch (err) {
                showError(err.message || String(err));
             }

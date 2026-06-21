@@ -45,6 +45,16 @@ Clone the monorepo with submodules: `git clone --recurse-submodules https://gith
 
 **Update is blocked** until every visible suggestion for the deck has a decision. The exported import is a **full deck replace**: main-deck cards keep their categories; `New Set In` / `New Set Out` are rebuilt from **accepted** swaps only (rejected/skipped queue slots are cleared).
 
+### Apply via bridge troubleshooting
+
+Apply via bridge uses **Tampermonkey shared storage** (`GM_setValue`), not browser `localStorage`, so the Hub (GitHub Pages) and Archidekt can exchange the staged import.
+
+- Requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js) **version 2026-06-21.4 or newer** in the same browser profile as the Hub tab.
+- Tampermonkey must be enabled on both `rayenz-akusiom.github.io` and `archidekt.com`.
+- After **Apply via bridge**, the Archidekt deck tab should show a **Pending update from Rayenz Hub** banner — click **Apply import** there.
+- If only a blank deck page opens: reload the Archidekt tab, or re-click Apply via bridge (adds a cache-buster to force a fresh load).
+- On tablet without Tampermonkey, use **Copy full deck import** instead.
+
 ### Never suggest again (fallback CLI)
 
 If File System Access API is unavailable (non-Chromium browser), append preferences manually:

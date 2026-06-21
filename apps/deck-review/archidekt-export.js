@@ -151,35 +151,26 @@
       if (!archidektDeckId || !importText) {
          throw new Error('Missing deck id or import text');
       }
-      var payload = {
-         import_text: importText,
-         import_mode: 'full_deck_replace',
-         created_at: new Date().toISOString()
-      };
-      try {
-         localStorage.setItem(APPLY_STORAGE_PREFIX + archidektDeckId, JSON.stringify(payload));
-      } catch (e) {
-         throw new Error('Could not stage apply (storage blocked)');
+      var bridge = global.RayenzArchidektBridge;
+      if (bridge && typeof bridge.stageApply === 'function') {
+         bridge.stageApply(archidektDeckId, importText);
+         return;
       }
+      throw new Error('Install/update Archidekt Deck Review Bridge userscript to apply from Hub.');
    }
 
    function getStagedDeckApply(archidektDeckId) {
-      try {
-         var raw = localStorage.getItem(APPLY_STORAGE_PREFIX + archidektDeckId);
-         if (!raw) {
-            return null;
-         }
-         return JSON.parse(raw);
-      } catch (e) {
-         return null;
+      var bridge = global.RayenzArchidektBridge;
+      if (bridge && typeof bridge.getStagedApply === 'function') {
+         return bridge.getStagedApply(archidektDeckId);
       }
+      return null;
    }
 
    function clearStagedDeckApply(archidektDeckId) {
-      try {
-         localStorage.removeItem(APPLY_STORAGE_PREFIX + archidektDeckId);
-      } catch (e) {
-         /* ignore */
+      var bridge = global.RayenzArchidektBridge;
+      if (bridge && typeof bridge.clearStagedApply === 'function') {
+         bridge.clearStagedApply(archidektDeckId);
       }
    }
 
