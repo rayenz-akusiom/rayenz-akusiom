@@ -1,0 +1,158 @@
+*,
+*::before,
+*::after {
+   box-sizing: border-box;
+}
+
+html,
+body {
+   margin: 0;
+   padding: 0;
+   min-height: 100vh;
+   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+   background: #111;
+   color: #1a1a1a;
+}
+
+.hub-layout {
+   display: flex;
+   min-height: 100vh;
+}
+
+.hub-nav {
+   width: 200px;
+   flex-shrink: 0;
+   background: #1e1e1e;
+   color: #e8e8e8;
+   display: flex;
+   flex-direction: column;
+   padding: 0;
+   position: relative;
+   z-index: 100;
+}
+
+.hub-nav-header {
+   padding: 20px 16px 12px;
+   border-bottom: 1px solid #333;
+}
+
+.hub-nav-header h1 {
+   margin: 0;
+   font-size: 1.15rem;
+   font-weight: 700;
+   letter-spacing: 0.02em;
+}
+
+.hub-nav-header p {
+   margin: 4px 0 0;
+   font-size: 0.75rem;
+   color: #888;
+}
+
+.hub-nav-list {
+   list-style: none;
+   margin: 12px 0;
+   padding: 0;
+}
+
+.hub-nav-link {
+   display: block;
+   padding: 12px 16px;
+   color: #ccc;
+   text-decoration: none;
+   font-size: 0.95rem;
+   font-weight: 600;
+   border-left: 3px solid transparent;
+   transition: background 0.15s, color 0.15s;
+}
+
+.hub-nav-link:hover {
+   background: #2a2a2a;
+   color: #fff;
+}
+
+.hub-nav-link.active {
+   background: #2d3748;
+   color: #fff;
+   border-left-color: #63b3ed;
+}
+
+.hub-nav-toggle {
+   display: none;
+   position: fixed;
+   top: 12px;
+   left: 12px;
+   z-index: 200;
+   width: 44px;
+   height: 44px;
+   border: none;
+   border-radius: 8px;
+   background: #2d3748;
+   color: #fff;
+   font-size: 1.4rem;
+   cursor: pointer;
+   line-height: 1;
+}
+
+.hub-main {
+   flex: 1;
+   min-width: 0;
+   overflow-x: auto;
+   background: #000;
+}
+
+#app-root {
+   min-height: 100vh;
+}
+
+.hub-loading {
+   padding: 40px;
+   text-align: center;
+   color: #888;
+}
+
+.hub-error {
+   padding: 24px;
+   margin: 20px;
+   background: #3b1f1f;
+   color: #feb2b2;
+   border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+   .hub-nav-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+   }
+
+   .hub-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+   }
+
+   .hub-nav.open {
+      transform: translateX(0);
+   }
+
+   .hub-nav-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 90;
+   }
+
+   .hub-nav-backdrop.open {
+      display: block;
+   }
+
+   .hub-main {
+      padding-top: 0;
+   }
+}
