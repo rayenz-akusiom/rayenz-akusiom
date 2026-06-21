@@ -1,6 +1,6 @@
 # Requires PowerShell 5.1+
 param(
-    [Parameter(Mandatory = $true)][string]$Input,
+    [Parameter(Mandatory = $true)][string]$InputPath,
     [string]$Output,
     [string]$ProfilesDir = (Join-Path $env:USERPROFILE 'mtg\decks\profiles')
 )
@@ -77,7 +77,7 @@ function Build-Snapshot($deck) {
     }
 }
 
-$data = Get-Content $Input -Raw | ConvertFrom-Json
+$data = Get-Content $InputPath -Raw | ConvertFrom-Json
 foreach ($deckEntry in $data.decks) {
     $deckId = Get-DeckIdFromUrl $deckEntry.archidekt_url
     Write-Host "Fetching $($deckEntry.deck_name) ($deckId)..."
@@ -89,7 +89,7 @@ foreach ($deckEntry in $data.decks) {
     }
 }
 
-$outPath = if ($Output) { $Output } else { [System.IO.Path]::ChangeExtension($Input, '.enriched.json') }
+$outPath = if ($Output) { $Output } else { [System.IO.Path]::ChangeExtension($InputPath, '.enriched.json') }
 $json = $data | ConvertTo-Json -Depth 20
 [System.IO.File]::WriteAllText($outPath, $json + "`n", [System.Text.UTF8Encoding]::new($false))
 Write-Host "Wrote $outPath ($((Get-Item $outPath).Length) bytes)"

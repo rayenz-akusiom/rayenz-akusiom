@@ -4,6 +4,9 @@
    var SUPPORTED_SCHEMAS = { '1.0': true, '1.1': true };
    var CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 };
    var LATEST_URL = 'data/suggestions/latest.json';
+   var BRIDGE_SCRIPT_URL = 'https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js';
+   var SWAP_IN = 'New Set In';
+   var SWAP_OUT = 'New Set Out';
    var cssLoaded = false;
 
    var state = {
@@ -189,12 +192,10 @@
       });
    }
 
-   function selectedInCardName(printSelect, suggestion) {
-      if (!printSelect) {
-         return suggestion.card.name;
-      }
-      var printId = printSelect.value;
-      var prints = state.printCache[(suggestion.card.name || '').toLowerCase()] || [];
+   function selectedInCardName(cardEl, suggestion) {
+      var printId = getPrintValue(cardEl);
+      var prints = (cardEl && cardEl._drPrints) ||
+         state.printCache[(suggestion.card.name || '').toLowerCase()] || [];
       var print = prints.find(function (p) { return p.id === printId; });
       return (print && print.name) || suggestion.card.name;
    }
@@ -205,20 +206,17 @@
          return;
       }
 
-      var root = cardEl || document;
-      var printSelect = root.querySelector('[data-dr-print-select]');
-      var cutSelect = root.querySelector('[data-dr-cut-select]');
       var field = side === 'in' ? 'blocked_cards' : 'protected_cards';
       var cardName = side === 'in'
-         ? selectedInCardName(printSelect, suggestion)
-         : readCutOption(cutSelect).name;
+         ? selectedInCardName(cardEl, suggestion)
+         : readCutSelection(cardEl).name;
 
       if (!cardName) {
          setProfileStatus('Select a card first.');
          return;
       }
 
-      var btn = root.querySelector(side === 'in' ? '[data-dr-never-in]' : '[data-dr-never-out]');
+      var btn = (cardEl || document).querySelector(side === 'in' ? '[data-dr-never-in]' : '[data-dr-never-out]');
       if (btn) {
          btn.disabled = true;
       }
@@ -264,6 +262,162 @@
       return [opt.name, opt.set_code || '', opt.collector_number || ''].join('|');
    }
 
+   function bridgeAvailable() {
+      return typeof global.RayenzArchidektBridge !== 'undefined' && global.RayenzArchidektBridge.isAvailable;
+   }
+
+   function deriveSwapQueue(deck) {
+      if (!deck.deck_snapshot || !Array.isArray(deck.deck_snapshot.cards)) {
+         return null;
+      }
+      var newSetIn = [];
+      var newSetOut = [];
+      var metadataFlags = [];
+      deck.deck_snapshot.cards.forEach(function (card) {
+         var primary = card.primary_category || (card.categories && card.categories[0]);
+         var cats = card.categories || [];
+         if (primary === SWAP_IN) {
+            newSetIn.push(card);
+         }
+         if (primary === SWAP_OUT) {
+            newSetOut.push(card);
+         }
+         if (cats.indexOf(SWAP_IN) >= 0 && primary !== SWAP_IN) {
+            metadataFlags.push(card.name + ' (primary: ' + primary + ')');
+         }
+         if (cats.indexOf(SWAP_OUT) >= 0 && primary !== SWAP_OUT) {
+            metadataFlags.push(card.name + ' (primary: ' + primary + ')');
+         }
+      });
+      return {
+         new_set_in: newSetIn,
+         new_set_out: newSetOut,
+         metadata_flags: metadataFlags,
+         fetched_at: deck.deck_snapshot.fetched_at || null
+      };
+   }
+
+   function swapQueueHasName(cards, name) {
+      return (cards || []).some(function (c) { return c.name === name; });
+   }
+
+   function formatSwapQueueItem(card) {
+      if (card.set_code && card.collector_number) {
+         return card.name + ' (' + String(card.set_code).toUpperCase() + ' #' + card.collector_number + ')';
+      }
+      return card.name;
+   }
+
+   function getSuggestionStaleness(deck, suggestion) {
+      var queue = deriveSwapQueue(deck);
+      if (!queue) {
+         return { stale: false, level: '', reasons: [] };
+      }
+      var reasons = [];
+      var incoming = suggestion.card && suggestion.card.name;
+      var slot = suggestion.fills_swap_slot;
+      var queuedIn = (incoming && swapQueueHasName(queue.new_set_in, incoming)) ||
+         (slot && swapQueueHasName(queue.new_set_in, slot));
+      var queuedOut = (suggestion.replaces || []).some(function (r) {
+         return r.name && swapQueueHasName(queue.new_set_out, r.name);
+      });
+      if (queuedIn) {
+         reasons.push((slot || incoming) + ' is already in your Archidekt New Set In queue.');
+      }
+      if (queuedOut) {
+         (suggestion.replaces || []).forEach(function (r) {
+            if (r.name && swapQueueHasName(queue.new_set_out, r.name)) {
+               reasons.push(r.name + ' is already in your Archidekt New Set Out queue.');
+            }
+         });
+      }
+      var level = '';
+      if (queuedIn && queuedOut) {
+         level = 'fully_queued';
+      } else if (queuedIn) {
+         level = 'queued_in';
+      } else if (queuedOut) {
+         level = 'queued_out';
+      }
+      return { stale: reasons.length > 0, level: level, reasons: reasons };
+   }
+
+   function refreshDeckSnapshot(deck) {
+      if (!bridgeAvailable()) {
+         return Promise.reject(new Error('Archidekt bridge userscript not installed'));
+      }
+      var deckId = ArchidektExport.parseDeckId(deck.archidekt_url);
+      if (!deckId) {
+         return Promise.reject(new Error('Invalid Archidekt URL for ' + (deck.deck_name || deck.deck_id)));
+      }
+      return global.RayenzArchidektBridge.fetchDeckSnapshot(deckId).then(function (snapshot) {
+         deck.deck_snapshot = snapshot;
+         return snapshot;
+      });
+   }
+
+   function sleep(ms) {
+      return new Promise(function (resolve) { setTimeout(resolve, ms); });
+   }
+
+   async function refreshAllDeckSnapshots() {
+      if (!bridgeAvailable()) {
+         setProfileStatus('Install Archidekt Deck Review Bridge userscript for live refresh.');
+         return;
+      }
+      if (!state.data || !state.data.decks.length) {
+         return;
+      }
+      var decks = state.data.decks;
+      var btn = state.ui.refreshAllDecksBtn;
+      if (btn) {
+         btn.disabled = true;
+      }
+      for (var i = 0; i < decks.length; i++) {
+         setProfileStatus('Refreshing Archidekt (' + (i + 1) + '/' + decks.length + '): ' + decks[i].deck_name + '…');
+         try {
+            await refreshDeckSnapshot(decks[i]);
+         } catch (err) {
+            setProfileStatus('Refresh failed for ' + decks[i].deck_name + ': ' + (err.message || String(err)));
+            if (btn) {
+               btn.disabled = false;
+            }
+            render();
+            return;
+         }
+         if (i < decks.length - 1) {
+            await sleep(150);
+         }
+      }
+      setProfileStatus('Refreshed ' + decks.length + ' decks from Archidekt.');
+      if (btn) {
+         btn.disabled = false;
+      }
+      render();
+   }
+
+   async function refreshActiveDeckSnapshot() {
+      var deck = getDeckById(state.activeDeckId);
+      if (!deck) {
+         return;
+      }
+      var btn = state.ui.refreshDeckBtn;
+      if (btn) {
+         btn.disabled = true;
+      }
+      try {
+         await refreshDeckSnapshot(deck);
+         setProfileStatus('Refreshed ' + deck.deck_name + ' from Archidekt.');
+         renderSuggestionPanel();
+         renderSwapPanel(deck);
+      } catch (err) {
+         setProfileStatus(err.message || String(err));
+      }
+      if (btn) {
+         btn.disabled = false;
+      }
+   }
+
    function deckCutOptions(deck) {
       var excluded = excludeCategories();
       var options = [];
@@ -295,14 +449,22 @@
          });
       }
 
-      if (!options.length && deck.analysis && deck.analysis.swap_queue) {
-         (deck.analysis.swap_queue.new_set_out || []).forEach(function (name) {
-            var key = name + '||';
-            if (!seen[key]) {
-               seen[key] = true;
-               options.push({ name: name, quantity: 1 });
-            }
-         });
+      if (!options.length) {
+         var queue = deriveSwapQueue(deck);
+         if (queue) {
+            (queue.new_set_out || []).forEach(function (card) {
+               var key = optionKey({ name: card.name, set_code: card.set_code, collector_number: card.collector_number });
+               if (!seen[key]) {
+                  seen[key] = true;
+                  options.push({
+                     name: card.name,
+                     quantity: 1,
+                     set_code: card.set_code,
+                     collector_number: card.collector_number
+                  });
+               }
+            });
+         }
       }
 
       (deck.suggestions || []).forEach(function (s) {
@@ -372,56 +534,303 @@
       return opt.name;
    }
 
-   function readCutOption(selectEl) {
-      var opt = selectEl.options[selectEl.selectedIndex];
-      if (!opt) {
+   function readCutSelection(cardEl) {
+      if (!cardEl) {
          return { name: '', quantity: 1 };
       }
+      var input = cardEl.querySelector('[data-dr-cut-value]');
+      var key = input ? input.value : '';
+      var options = cardEl._drCutOptions || [];
+      var opt = options.find(function (o) { return optionKey(o) === key; });
+      if (!opt && key === '') {
+         return { name: '', quantity: 1 };
+      }
+      if (!opt) {
+         var parts = key.split('|');
+         return {
+            name: parts[0] || '',
+            quantity: 1,
+            set_code: parts[1] || null,
+            collector_number: parts[2] || null
+         };
+      }
       return {
-         name: opt.dataset.name || opt.value,
+         name: opt.name,
          quantity: 1,
-         set_code: opt.dataset.setCode || null,
-         collector_number: opt.dataset.collectorNumber || null
+         set_code: opt.set_code || null,
+         collector_number: opt.collector_number || null
       };
    }
 
-   function updateInImage(printSelect, imgEl) {
-      if (!printSelect || !imgEl) {
-         return;
-      }
-      var printId = printSelect.value;
-      imgEl.src = scryfallImageFromId(printId);
+   function getPrintValue(cardEl) {
+      var input = cardEl && cardEl.querySelector('[data-dr-print-value]');
+      return input ? input.value : '';
    }
 
-   function updateOutImage(cutSelect, imgEl, deck) {
-      if (!cutSelect || !imgEl) {
+   function getCutValue(cardEl) {
+      var input = cardEl && cardEl.querySelector('[data-dr-cut-value]');
+      return input ? input.value : '';
+   }
+
+   function cutOptionImageSrc(opt, deck) {
+      if (opt.set_code && opt.collector_number) {
+         return scryfallImageFromPrinting(opt.set_code, opt.collector_number);
+      }
+      var snap = findSnapshotCard(deck, opt.name, opt.set_code, opt.collector_number);
+      if (snap && snap.set_code && snap.collector_number) {
+         return scryfallImageFromPrinting(snap.set_code, snap.collector_number);
+      }
+      return '';
+   }
+
+   function cutOptionLines(opt) {
+      if (opt.set_code && opt.collector_number) {
+         return [opt.name, opt.set_code.toUpperCase() + ' #' + opt.collector_number];
+      }
+      return [opt.name];
+   }
+
+   function printOptionLines(print) {
+      var set = (print.set_name || print.set || '').trim();
+      var num = print.collector_number || '';
+      var price = print.prices && print.prices.usd ? '$' + print.prices.usd : '';
+      var lines = [];
+      if (set || num) {
+         lines.push(set + (num ? ' #' + num : ''));
+      }
+      if (price) {
+         lines.push(price);
+      }
+      if (!lines.length) {
+         lines.push(printingLabel(print));
+      }
+      return lines;
+   }
+
+   function updatePrintSummary(cardEl, suggestion) {
+      var summary = cardEl.querySelector('[data-dr-print-summary]');
+      if (!summary) {
          return;
       }
-      var cut = readCutOption(cutSelect);
+      var printId = getPrintValue(cardEl);
+      if (!printId) {
+         summary.textContent = 'No printing selected';
+         return;
+      }
+      var prints = cardEl._drPrints || [];
+      var print = prints.find(function (p) { return p.id === printId; });
+      if (print) {
+         summary.textContent = printOptionLines(print).join(' · ');
+         return;
+      }
+      if (suggestion && suggestion.card && suggestion.card.scryfall_id === printId) {
+         summary.textContent = suggestion.card.set_code + ' #' + suggestion.card.collector_number;
+         return;
+      }
+      summary.textContent = 'Printing selected';
+   }
+
+   function updateCutSummary(cardEl) {
+      var summary = cardEl.querySelector('[data-dr-cut-summary]');
+      if (!summary) {
+         return;
+      }
+      var cut = readCutSelection(cardEl);
       if (!cut.name) {
-         imgEl.removeAttribute('src');
-         if (imgEl.parentElement) {
-            imgEl.parentElement.classList.add('dr-card-image-empty');
-         }
+         summary.textContent = 'No cut selected';
          return;
       }
-      if (imgEl.parentElement) {
-         imgEl.parentElement.classList.remove('dr-card-image-empty');
+      summary.textContent = optionLabel(cut);
+   }
+
+   function setPrintSelection(cardEl, printId, suggestion) {
+      var input = cardEl.querySelector('[data-dr-print-value]');
+      if (input) {
+         input.value = printId || '';
+      }
+      var imgIn = cardEl.querySelector('[data-dr-img-in]');
+      if (imgIn && printId) {
+         imgIn.src = scryfallImageFromId(printId);
+      }
+      updatePrintSummary(cardEl, suggestion);
+   }
+
+   function setCutSelection(cardEl, optionKeyValue, deck) {
+      var input = cardEl.querySelector('[data-dr-cut-value]');
+      if (input) {
+         input.value = optionKeyValue || '';
+      }
+      var imgOut = cardEl.querySelector('[data-dr-img-out]');
+      var cut = readCutSelection(cardEl);
+      if (!cut.name) {
+         if (imgOut) {
+            imgOut.removeAttribute('src');
+         }
+         if (imgOut && imgOut.parentElement) {
+            imgOut.parentElement.classList.add('dr-card-image-empty');
+         }
+         updateCutSummary(cardEl);
+         return;
+      }
+      if (imgOut && imgOut.parentElement) {
+         imgOut.parentElement.classList.remove('dr-card-image-empty');
       }
       if (cut.set_code && cut.collector_number) {
-         imgEl.src = scryfallImageFromPrinting(cut.set_code, cut.collector_number);
-         return;
-      }
-      var snap = findSnapshotCard(deck, cut.name, cut.set_code, cut.collector_number);
-      if (snap && snap.set_code && snap.collector_number) {
-         imgEl.src = scryfallImageFromPrinting(snap.set_code, snap.collector_number);
-         return;
-      }
-      fetchPrintings(cut.name, null).then(function (prints) {
-         if (prints.length && prints[0].id) {
-            imgEl.src = scryfallImageFromId(prints[0].id);
+         imgOut.src = scryfallImageFromPrinting(cut.set_code, cut.collector_number);
+      } else {
+         var snap = findSnapshotCard(deck, cut.name, cut.set_code, cut.collector_number);
+         if (snap && snap.set_code && snap.collector_number) {
+            imgOut.src = scryfallImageFromPrinting(snap.set_code, snap.collector_number);
+         } else {
+            fetchPrintings(cut.name, null).then(function (prints) {
+               if (prints.length && prints[0].id && imgOut) {
+                  imgOut.src = scryfallImageFromId(prints[0].id);
+               }
+            }).catch(function () { /* keep placeholder */ });
          }
-      }).catch(function () { /* keep placeholder */ });
+      }
+      updateCutSummary(cardEl);
+   }
+
+   function ensurePickerDialog() {
+      if (state.ui.pickerDialog) {
+         return state.ui.pickerDialog;
+      }
+      var dialog = document.createElement('dialog');
+      dialog.className = 'dr-picker-dialog';
+      dialog.id = 'dr-picker-dialog';
+      dialog.innerHTML =
+         '<div class="dr-picker-dialog-inner">' +
+         '<header class="dr-picker-dialog-header">' +
+         '<h3 id="dr-picker-title" class="dr-picker-title"></h3>' +
+         '<button type="button" class="dr-btn dr-btn-ghost" data-dr-picker-close aria-label="Close">Close</button>' +
+         '</header>' +
+         '<div class="dr-picker-grid" id="dr-picker-grid"></div>' +
+         '</div>';
+      document.body.appendChild(dialog);
+      dialog.querySelector('[data-dr-picker-close]').addEventListener('click', function () {
+         dialog.close();
+      });
+      dialog.addEventListener('click', function (e) {
+         if (e.target === dialog) {
+            dialog.close();
+         }
+      });
+      state.ui.pickerDialog = dialog;
+      return dialog;
+   }
+
+   function openPickerDialog(config) {
+      var dialog = ensurePickerDialog();
+      var titleEl = dialog.querySelector('#dr-picker-title');
+      var grid = dialog.querySelector('#dr-picker-grid');
+      titleEl.textContent = config.title || 'Choose an option';
+      grid.innerHTML = '';
+
+      (config.items || []).forEach(function (item) {
+         var btn = document.createElement('button');
+         btn.type = 'button';
+         btn.className = 'dr-picker-option';
+         if (item.value === config.selectedValue) {
+            btn.classList.add('selected');
+         }
+         var imgWrap = document.createElement('div');
+         imgWrap.className = 'dr-picker-option-image';
+         if (item.imgSrc) {
+            var img = document.createElement('img');
+            img.src = item.imgSrc;
+            img.alt = (item.lines && item.lines[0]) || '';
+            img.loading = 'lazy';
+            imgWrap.appendChild(img);
+         } else {
+            imgWrap.classList.add('dr-picker-option-image-empty');
+            imgWrap.textContent = 'No image';
+         }
+         var meta = document.createElement('div');
+         meta.className = 'dr-picker-option-meta';
+         (item.lines || []).forEach(function (line) {
+            var p = document.createElement('div');
+            p.className = 'dr-picker-option-line';
+            p.textContent = line;
+            meta.appendChild(p);
+         });
+         btn.appendChild(imgWrap);
+         btn.appendChild(meta);
+         btn.addEventListener('click', function () {
+            if (config.onPick) {
+               config.onPick(item.value, item);
+            }
+            dialog.close();
+         });
+         grid.appendChild(btn);
+      });
+
+      if (typeof dialog.showModal === 'function') {
+         dialog.showModal();
+      } else {
+         dialog.setAttribute('open', 'open');
+      }
+   }
+
+   function openPrintPicker(cardEl, suggestion) {
+      var prints = cardEl._drPrints || [];
+      var items = prints.map(function (p) {
+         return {
+            value: p.id,
+            imgSrc: scryfallImageFromId(p.id),
+            lines: printOptionLines(p)
+         };
+      });
+      if (!items.length && suggestion.card.scryfall_id) {
+         items.push({
+            value: suggestion.card.scryfall_id,
+            imgSrc: scryfallImageFromId(suggestion.card.scryfall_id),
+            lines: [suggestion.card.set_code + ' #' + suggestion.card.collector_number]
+         });
+      }
+      openPickerDialog({
+         title: 'Choose printing — ' + suggestion.card.name,
+         items: items,
+         selectedValue: getPrintValue(cardEl),
+         onPick: function (value) {
+            setPrintSelection(cardEl, value, suggestion);
+         }
+      });
+   }
+
+   function openCutPicker(cardEl, deck) {
+      var options = cardEl._drCutOptions || [];
+      var items = options.map(function (opt) {
+         return {
+            value: optionKey(opt),
+            imgSrc: cutOptionImageSrc(opt, deck),
+            lines: cutOptionLines(opt)
+         };
+      });
+      if (isMissingSuggestedCut(cardEl._drSuggestion)) {
+         items.unshift({
+            value: '',
+            imgSrc: '',
+            lines: ['No cut suggested', 'Choose manually']
+         });
+      }
+      var currentKey = getCutValue(cardEl);
+      if (currentKey && !items.some(function (item) { return item.value === currentKey; })) {
+         var currentCut = readCutSelection(cardEl);
+         items.unshift({
+            value: currentKey,
+            imgSrc: cutOptionImageSrc(currentCut, deck),
+            lines: cutOptionLines(currentCut)
+         });
+      }
+      openPickerDialog({
+         title: 'Choose card to cut',
+         items: items,
+         selectedValue: getCutValue(cardEl),
+         onPick: function (value) {
+            setCutSelection(cardEl, value, deck);
+         }
+      });
    }
 
    async function fetchPrintings(cardName, defaultScryfallId) {
@@ -602,21 +1011,34 @@
       }
    }
 
-   function renderDeckList() {
-      var html = state.data.decks.map(function (deck) {
-         var counts = deckProgressCounts(deck);
-         var cls = 'dr-deck-chip';
-         if (deck.deck_id === state.activeDeckId) {
-            cls += ' active';
-         }
-         if (counts.reviewed >= counts.total && counts.total > 0) {
-            cls += ' done';
-         }
-         return '<button type="button" class="' + cls + '" data-deck-id="' + escapeHtml(deck.deck_id) + '">' +
-            escapeHtml(deck.deck_name) + ' (' + counts.accepted + '/' + counts.total + ')' +
-            '</button>';
-      }).join('');
-      state.ui.deckList.innerHTML = html;
+   function deckSuggestionCount(deck) {
+      return (deck.suggestions || []).length;
+   }
+
+   function sortDecksByName(decks) {
+      return decks.slice().sort(function (a, b) {
+         return String(a.deck_name || a.deck_id).localeCompare(String(b.deck_name || b.deck_id));
+      });
+   }
+
+   function renderDeckChip(deck) {
+      var counts = deckProgressCounts(deck);
+      var cls = 'dr-deck-chip';
+      if (deck.deck_id === state.activeDeckId) {
+         cls += ' active';
+      }
+      if (counts.reviewed >= counts.total && counts.total > 0) {
+         cls += ' done';
+      }
+      if (!deckSuggestionCount(deck)) {
+         cls += ' dr-deck-chip-empty';
+      }
+      return '<button type="button" class="' + cls + '" data-deck-id="' + escapeHtml(deck.deck_id) + '">' +
+         escapeHtml(deck.deck_name) + ' (' + counts.accepted + '/' + counts.total + ')' +
+         '</button>';
+   }
+
+   function wireDeckListClicks() {
       state.ui.deckList.querySelectorAll('[data-deck-id]').forEach(function (btn) {
          btn.addEventListener('click', function () {
             state.activeDeckId = btn.getAttribute('data-deck-id');
@@ -629,6 +1051,34 @@
             renderProfilesNav();
          });
       });
+   }
+
+   function renderDeckList() {
+      var withSuggestions = [];
+      var withoutSuggestions = [];
+      state.data.decks.forEach(function (deck) {
+         if (deckSuggestionCount(deck) > 0) {
+            withSuggestions.push(deck);
+         } else {
+            withoutSuggestions.push(deck);
+         }
+      });
+
+      var html = sortDecksByName(withSuggestions).map(renderDeckChip).join('');
+      if (withoutSuggestions.length) {
+         var emptyOpen = withoutSuggestions.some(function (d) {
+            return d.deck_id === state.activeDeckId;
+         });
+         html +=
+            '<details class="dr-deck-empty-collapse"' + (emptyOpen ? ' open' : '') + '>' +
+            '<summary>No suggestions (' + withoutSuggestions.length + ')</summary>' +
+            '<div class="dr-deck-list-collapsed">' +
+            sortDecksByName(withoutSuggestions).map(renderDeckChip).join('') +
+            '</div></details>';
+      }
+
+      state.ui.deckList.innerHTML = html;
+      wireDeckListClicks();
    }
 
    function decisionStatusClass(status) {
@@ -675,8 +1125,17 @@
       }
    }
 
-   function suggestionBadgesHtml(suggestion) {
+   function suggestionBadgesHtml(suggestion, staleness) {
+      var staleBadge = '';
+      if (staleness && staleness.stale) {
+         if (staleness.level === 'fully_queued') {
+            staleBadge = '<span class="dr-badge dr-badge-queued">Already queued</span>';
+         } else {
+            staleBadge = '<span class="dr-badge dr-badge-stale">Stale</span>';
+         }
+      }
       return (suggestion.priority_tier === 'swap' ? '<span class="dr-badge dr-badge-swap">Swap</span>' : '') +
+         staleBadge +
          '<span class="dr-badge dr-badge-' + escapeHtml(suggestion.confidence) + '">' + escapeHtml(suggestion.confidence) + '</span>' +
          '<span class="dr-badge">' + escapeHtml(suggestion.action) + '</span>';
    }
@@ -716,6 +1175,11 @@
       var decisionClass = decision ? decisionStatusClass(decision.status) : '';
       var missingCut = isMissingSuggestedCut(suggestion);
       var missingCutClass = missingCut ? ' dr-missing-cut' : '';
+      var staleness = getSuggestionStaleness(deck, suggestion);
+      var staleClass = '';
+      if (staleness.stale) {
+         staleClass = staleness.level === 'fully_queued' ? ' dr-suggestion-fully-queued' : ' dr-suggestion-stale';
+      }
       var canWriteProfiles = global.ProfileSync && ProfileSync.canWriteProfiles();
       var neverBtnAttrs = canWriteProfiles
          ? ''
@@ -724,31 +1188,42 @@
          ? '<span class="dr-badge dr-badge-missing-cut">No cut suggested</span>'
          : '';
       var missingCutNotice = missingCut
-         ? '<p class="dr-cut-warning">No cut was suggested for this swap. Choose an Out card manually — the generator may have omitted <code>replaces</code>.</p>'
+         ? '<div class="dr-cut-warning-row"><p class="dr-cut-warning">No cut was suggested for this swap. Choose an Out card manually — the generator may have omitted <code>replaces</code>.</p></div>'
+         : '';
+      var staleNotice = staleness.stale
+         ? '<div class="dr-stale-notice-row"><p class="dr-stale-notice">' +
+            escapeHtml(staleness.reasons.join(' ')) + '</p></div>'
          : '';
 
-      return '<div class="dr-suggestion-card' + tierClass + decisionClass + missingCutClass + '" data-suggestion-id="' +
+      return '<div class="dr-suggestion-card' + tierClass + decisionClass + missingCutClass + staleClass + '" data-suggestion-id="' +
          escapeHtml(suggestion.suggestion_id) + '">' +
          '<div class="dr-reasoning">' +
-         '<div class="dr-badge-row">' + suggestionBadgesHtml(suggestion) + missingCutBadge +
+         '<div class="dr-badge-row">' + suggestionBadgesHtml(suggestion, staleness) + missingCutBadge +
          '<span data-dr-decision-label>' + (decision ? decisionStatusLabel(decision.status) : '') + '</span></div>' +
          '<h3>' + escapeHtml(suggestion.card.name) + '</h3>' +
          '<p class="dr-rationale">' + escapeHtml(suggestion.rationale) + '</p>' +
          '<p class="dr-roles">Roles: ' + escapeHtml((suggestion.roles_matched || []).join(', ')) + '</p>' +
          '</div>' +
          '<div class="dr-swap-pair">' +
+         staleNotice +
+         missingCutNotice +
          '<div class="dr-swap-col dr-swap-in">' +
          '<div class="dr-swap-label dr-swap-label-in">In</div>' +
-         '<div class="dr-card-image"><img data-dr-img-in src="' + escapeHtml(scryfallImageFromId(suggestion.card.scryfall_id)) + '" alt="Card in"></div>' +
-         '<select data-dr-print-select><option>Loading printings…</option></select>' +
+         '<button type="button" class="dr-card-image dr-card-image-btn" data-dr-open-print-picker aria-label="Choose printing">' +
+         '<img data-dr-img-in src="' + escapeHtml(scryfallImageFromId(suggestion.card.scryfall_id)) + '" alt="">' +
+         '</button>' +
+         '<p class="dr-picker-summary" data-dr-print-summary>Loading printings…</p>' +
+         '<input type="hidden" data-dr-print-value value="">' +
          '<button type="button" class="dr-btn dr-btn-ghost dr-never-btn" data-dr-never-in' + neverBtnAttrs + '>Never suggest again</button>' +
          '</div>' +
          '<div class="dr-swap-arrow" aria-hidden="true">→</div>' +
-         '<div class="dr-swap-col dr-swap-out' + (missingCut ? ' dr-swap-out-unspecified' : '') + '">' +
+         '<div class="dr-swap-col dr-swap-out">' +
          '<div class="dr-swap-label dr-swap-label-out">Out</div>' +
-         missingCutNotice +
-         '<div class="dr-card-image' + (missingCut ? ' dr-card-image-empty' : '') + '"><img data-dr-img-out src="" alt="Card out"></div>' +
-         '<select data-dr-cut-select></select>' +
+         '<button type="button" class="dr-card-image dr-card-image-btn' + (missingCut ? ' dr-card-image-empty' : '') + '" data-dr-open-cut-picker aria-label="Choose cut">' +
+         '<img data-dr-img-out src="" alt="">' +
+         '</button>' +
+         '<p class="dr-picker-summary" data-dr-cut-summary></p>' +
+         '<input type="hidden" data-dr-cut-value value="">' +
          '<button type="button" class="dr-btn dr-btn-ghost dr-never-btn" data-dr-never-out' + neverBtnAttrs + '>Never suggest again</button>' +
          '</div>' +
          '</div>' +
@@ -759,91 +1234,65 @@
          '</div></div>';
    }
 
-   function populateCutSelect(cutSelect, deck, suggestion, cutOptions) {
+   function resolveDefaultCutKey(deck, suggestion, cutOptions) {
       var outDefaults = defaultOutKeyForSuggestion(deck, suggestion);
       var defaultOut = outDefaults.defaultOut;
       var defaultOutKey = outDefaults.defaultOutKey;
       var missingCut = isMissingSuggestedCut(suggestion);
 
       if (missingCut) {
-         var placeholder = document.createElement('option');
-         placeholder.value = '';
-         placeholder.textContent = 'No cut suggested — choose manually';
-         placeholder.selected = true;
-         placeholder.dataset.name = '';
-         cutSelect.appendChild(placeholder);
+         return '';
       }
-
-      cutOptions.forEach(function (opt) {
-         var o = document.createElement('option');
-         o.value = optionKey(opt);
-         o.textContent = optionLabel(opt);
-         o.dataset.name = opt.name;
-         if (opt.set_code) {
-            o.dataset.setCode = opt.set_code;
-         }
-         if (opt.collector_number) {
-            o.dataset.collectorNumber = opt.collector_number;
-         }
-         if (!missingCut && (optionKey(opt) === defaultOutKey || (!defaultOutKey && opt.name === defaultOut))) {
-            o.selected = true;
-         }
-         cutSelect.appendChild(o);
-      });
-
-      if (!cutOptions.length && defaultOut) {
+      if (defaultOutKey) {
+         return defaultOutKey;
+      }
+      if (defaultOut) {
          var snap = findSnapshotCard(deck, defaultOut);
-         var fallback = document.createElement('option');
-         fallback.value = optionKey({ name: defaultOut, set_code: snap && snap.set_code, collector_number: snap && snap.collector_number });
-         fallback.textContent = optionLabel({ name: defaultOut, set_code: snap && snap.set_code, collector_number: snap && snap.collector_number });
-         fallback.dataset.name = defaultOut;
-         if (snap && snap.set_code) {
-            fallback.dataset.setCode = snap.set_code;
-         }
-         if (snap && snap.collector_number) {
-            fallback.dataset.collectorNumber = snap.collector_number;
-         }
-         fallback.selected = true;
-         cutSelect.appendChild(fallback);
+         return optionKey({
+            name: defaultOut,
+            set_code: snap && snap.set_code,
+            collector_number: snap && snap.collector_number
+         });
       }
+      if (cutOptions.length) {
+         return optionKey(cutOptions[0]);
+      }
+      return '';
    }
 
    async function mountSuggestionCard(cardEl, deck, suggestion, cutOptions, advanceOnAction) {
-      var cutSelect = cardEl.querySelector('[data-dr-cut-select]');
-      var imgOut = cardEl.querySelector('[data-dr-img-out]');
-      populateCutSelect(cutSelect, deck, suggestion, cutOptions);
-      updateOutImage(cutSelect, imgOut, deck);
-      cutSelect.addEventListener('change', function () {
-         updateOutImage(cutSelect, imgOut, deck);
-      });
+      cardEl._drCutOptions = cutOptions.slice();
+      cardEl._drSuggestion = suggestion;
 
-      var printSelect = cardEl.querySelector('[data-dr-print-select]');
-      var imgIn = cardEl.querySelector('[data-dr-img-in]');
-      try {
-         var prints = await fetchPrintings(suggestion.card.name, suggestion.card.scryfall_id);
-         printSelect.innerHTML = '';
-         prints.forEach(function (p) {
-            var o = document.createElement('option');
-            o.value = p.id;
-            o.textContent = printingLabel(p);
-            if (p.id === suggestion.card.scryfall_id) {
-               o.selected = true;
-            }
-            printSelect.appendChild(o);
+      var defaultCutKey = resolveDefaultCutKey(deck, suggestion, cutOptions);
+      setCutSelection(cardEl, defaultCutKey, deck);
+
+      var openCutBtn = cardEl.querySelector('[data-dr-open-cut-picker]');
+      if (openCutBtn) {
+         openCutBtn.addEventListener('click', function () {
+            openCutPicker(cardEl, deck);
          });
-         if (!prints.length) {
-            printSelect.innerHTML = '<option value="' + escapeHtml(suggestion.card.scryfall_id) + '">' +
-               escapeHtml(suggestion.card.set_code + ' #' + suggestion.card.collector_number) + '</option>';
-         }
-      } catch (err) {
-         printSelect.innerHTML = '<option value="' + escapeHtml(suggestion.card.scryfall_id) + '">' +
-            escapeHtml(suggestion.card.set_code + ' #' + suggestion.card.collector_number) + ' (default)</option>';
       }
 
-      updateInImage(printSelect, imgIn);
-      printSelect.addEventListener('change', function () {
-         updateInImage(printSelect, imgIn);
-      });
+      var openPrintBtn = cardEl.querySelector('[data-dr-open-print-picker]');
+      try {
+         var prints = await fetchPrintings(suggestion.card.name, suggestion.card.scryfall_id);
+         cardEl._drPrints = prints;
+         var defaultPrintId = suggestion.card.scryfall_id;
+         if (prints.length && !prints.some(function (p) { return p.id === defaultPrintId; })) {
+            defaultPrintId = prints[0].id;
+         }
+         setPrintSelection(cardEl, defaultPrintId, suggestion);
+      } catch (err) {
+         cardEl._drPrints = [];
+         setPrintSelection(cardEl, suggestion.card.scryfall_id, suggestion);
+      }
+
+      if (openPrintBtn) {
+         openPrintBtn.addEventListener('click', function () {
+            openPrintPicker(cardEl, suggestion);
+         });
+      }
 
       var existing = getDecision(suggestion.suggestion_id);
       if (existing && existing.accepted) {
@@ -875,25 +1324,15 @@
    }
 
    function restoreAcceptedSelections(cardEl, deck, suggestion, accepted) {
-      var printSelect = cardEl.querySelector('[data-dr-print-select]');
-      var cutSelect = cardEl.querySelector('[data-dr-cut-select]');
-      if (accepted.card_in && accepted.card_in.scryfall_id && printSelect) {
-         printSelect.value = accepted.card_in.scryfall_id;
-         updateInImage(printSelect, cardEl.querySelector('[data-dr-img-in]'));
+      if (accepted.card_in && accepted.card_in.scryfall_id) {
+         setPrintSelection(cardEl, accepted.card_in.scryfall_id, suggestion);
       }
-      if (accepted.card_out && accepted.card_out.name && cutSelect) {
-         var outKey = optionKey({
+      if (accepted.card_out && accepted.card_out.name) {
+         setCutSelection(cardEl, optionKey({
             name: accepted.card_out.name,
             set_code: accepted.card_out.set_code,
             collector_number: accepted.card_out.collector_number
-         });
-         for (var i = 0; i < cutSelect.options.length; i++) {
-            if (cutSelect.options[i].value === outKey) {
-               cutSelect.selectedIndex = i;
-               break;
-            }
-         }
-         updateOutImage(cutSelect, cardEl.querySelector('[data-dr-img-out]'), deck);
+         }), deck);
       }
    }
 
@@ -916,23 +1355,65 @@
    }
 
    function renderSwapPanel(deck) {
-      var sq = deck.analysis && deck.analysis.swap_queue;
-      if (!sq) {
+      var queue = deriveSwapQueue(deck);
+      var bridge = bridgeAvailable();
+
+      if (!queue && !deck.deck_snapshot) {
+         var hints = '<p class="dr-bridge-hint">No Archidekt snapshot. Re-run <code>enrich_suggestions.ps1</code>';
+         if (!bridge) {
+            hints += ' or install the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript for live refresh';
+         }
+         hints += '.</p>';
+         state.ui.swapPanel.hidden = false;
+         state.ui.swapPanel.innerHTML =
+            '<h3>Swap queue</h3>' + hints;
+         return;
+      }
+
+      if (!queue) {
          state.ui.swapPanel.innerHTML = '';
          state.ui.swapPanel.hidden = true;
          return;
       }
+
       state.ui.swapPanel.hidden = false;
-      var inList = (sq.new_set_in || []).map(function (n) { return '<li>' + escapeHtml(n) + '</li>'; }).join('') || '<li><em>empty</em></li>';
-      var outList = (sq.new_set_out || []).map(function (n) { return '<li>' + escapeHtml(n) + '</li>'; }).join('') || '<li><em>empty</em></li>';
-      var flags = (sq.metadata_flags || []).map(function (f) { return '<div>' + escapeHtml(f) + '</div>'; }).join('');
+      var inList = (queue.new_set_in || []).map(function (c) {
+         return '<li>' + escapeHtml(formatSwapQueueItem(c)) + '</li>';
+      }).join('') || '<li><em>empty</em></li>';
+      var outList = (queue.new_set_out || []).map(function (c) {
+         return '<li>' + escapeHtml(formatSwapQueueItem(c)) + '</li>';
+      }).join('') || '<li><em>empty</em></li>';
+      var flags = (queue.metadata_flags || []).map(function (f) {
+         return '<div>' + escapeHtml(f) + '</div>';
+      }).join('');
+      var fetchedAt = queue.fetched_at ? escapeHtml(queue.fetched_at) : 'unknown';
+      var refreshBtn = bridge
+         ? '<button type="button" class="dr-btn dr-btn-ghost dr-swap-refresh" id="dr-refresh-deck-snapshot">Refresh</button>'
+         : '';
+      var bridgeHint = bridge
+         ? ''
+         : '<p class="dr-bridge-hint">Install the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript for live refresh.</p>';
+
       state.ui.swapPanel.innerHTML =
+         '<div class="dr-swap-panel-header">' +
          '<h3>Swap queue</h3>' +
+         '<div class="dr-swap-panel-meta">' +
+         '<span class="dr-swap-source">From Archidekt · as of ' + fetchedAt + '</span>' +
+         refreshBtn +
+         '</div></div>' +
          '<div class="dr-swap-cols">' +
          '<div><strong>In</strong><ul>' + inList + '</ul></div>' +
          '<div><strong>Out</strong><ul>' + outList + '</ul></div>' +
          '</div>' +
-         (flags ? '<div class="dr-flags">' + flags + '</div>' : '');
+         (flags ? '<div class="dr-flags">' + flags + '</div>' : '') +
+         bridgeHint;
+
+      state.ui.refreshDeckBtn = document.getElementById('dr-refresh-deck-snapshot');
+      if (state.ui.refreshDeckBtn) {
+         state.ui.refreshDeckBtn.addEventListener('click', function () {
+            refreshActiveDeckSnapshot();
+         });
+      }
    }
 
    async function renderSuggestionPanel() {
@@ -1007,16 +1488,15 @@
    }
 
    function acceptSuggestionFromCard(deck, suggestion, cardEl, advanceOnAction) {
-      var printSelect = cardEl.querySelector('[data-dr-print-select]');
-      var cutSelect = cardEl.querySelector('[data-dr-cut-select]');
       var qty = 1;
 
-      var selectedPrintId = printSelect.value;
-      var prints = state.printCache[(suggestion.card.name || '').toLowerCase()] || [];
+      var selectedPrintId = getPrintValue(cardEl);
+      var prints = cardEl._drPrints ||
+         state.printCache[(suggestion.card.name || '').toLowerCase()] || [];
       var print = prints.find(function (p) { return p.id === selectedPrintId; }) || suggestion.card;
       var cardIn = printingToCardIn(print, suggestion.card);
 
-      var cutMeta = readCutOption(cutSelect);
+      var cutMeta = readCutSelection(cardEl);
       if (isMissingSuggestedCut(suggestion) && !cutMeta.name) {
          showError('No Out card selected. This suggestion had no cut in the JSON — pick one manually or skip.');
          return;
@@ -1130,6 +1610,12 @@
       renderSuggestionPanel();
       renderAcceptedPanel();
       renderProfilesNav();
+      if (state.ui.refreshAllDecksBtn) {
+         state.ui.refreshAllDecksBtn.disabled = !bridgeAvailable();
+         state.ui.refreshAllDecksBtn.title = bridgeAvailable()
+            ? 'Fetch latest deck lists from Archidekt'
+            : 'Requires Archidekt Deck Review Bridge userscript';
+      }
    }
 
    function renderEmptyShell(root) {
@@ -1166,6 +1652,10 @@
          '<div id="dr-profile-status" class="dr-profiles-status" hidden></div>' +
          '<div id="dr-pref-counts" class="dr-pref-counts"></div>' +
          '</div>' +
+         '<div class="dr-nav-actions">' +
+         '<h3>Archidekt</h3>' +
+         '<button type="button" class="dr-btn dr-btn-ghost" id="dr-refresh-all-decks">Refresh all decks</button>' +
+         '</div>' +
          '<div>' +
          '<h3>Decks</h3>' +
          '<div class="dr-deck-list" id="dr-deck-list"></div>' +
@@ -1185,7 +1675,9 @@
          connectProfilesBtn: document.getElementById('dr-connect-profiles'),
          profileStatusEl: document.getElementById('dr-profile-status'),
          prefCountsEl: document.getElementById('dr-pref-counts'),
-         tabletProfilesNote: document.getElementById('dr-tablet-profiles-note')
+         tabletProfilesNote: document.getElementById('dr-tablet-profiles-note'),
+         refreshAllDecksBtn: document.getElementById('dr-refresh-all-decks'),
+         refreshDeckBtn: null
       };
 
       initRightNav();
@@ -1223,6 +1715,11 @@
             showError(err.message || String(err));
          });
       });
+      if (state.ui.refreshAllDecksBtn) {
+         state.ui.refreshAllDecksBtn.addEventListener('click', function () {
+            refreshAllDeckSnapshots();
+         });
+      }
    }
 
    function showLoadedUi() {

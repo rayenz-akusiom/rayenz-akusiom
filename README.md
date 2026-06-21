@@ -33,7 +33,7 @@ Clone the monorepo with submodules: `git clone --recurse-submodules https://gith
 2. Enrich with deck snapshots and profile preferences (`protected_cards`, `blocked_cards`):
 
    ```powershell
-   .\scripts\enrich_suggestions.ps1 -Input ~\mtg\decks\suggestions\MSH-2026-06-19.json -Output data\suggestions\latest.json
+   .\scripts\enrich_suggestions.ps1 -InputPath ~\mtg\decks\suggestions\MSH-2026-06-19.json -Output data\suggestions\latest.json
    ```
 
 3. Commit and push `data/suggestions/latest.json` to **this repo** (or upload JSON on the Deck Review page).
