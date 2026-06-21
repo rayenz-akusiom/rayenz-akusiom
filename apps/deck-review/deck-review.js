@@ -20,6 +20,7 @@
       profileStatus: '',
       profilesConnected: false,
       showAllMode: false,
+      statusCardTab: 'decisions',
       ui: {}
    };
 
@@ -497,7 +498,7 @@
          await refreshDeckSnapshot(deck);
          setProfileStatus('Refreshed ' + deck.deck_name + ' from Archidekt.');
          renderSuggestionPanel();
-         renderSwapPanel(deck);
+         renderDeckStatusCard(deck);
       } catch (err) {
          setProfileStatus(err.message || String(err));
       }
@@ -1135,7 +1136,7 @@
             HubStorage.saveReviewProgress(state.fileId, state.progress);
             renderSuggestionPanel();
             renderDeckList();
-            renderAcceptedPanel();
+            renderDeckStatusCard(getDeckById(state.activeDeckId));
             renderProfilesNav();
          });
       });
@@ -1192,7 +1193,31 @@
       if (status === 'skipped') {
          return '<span class="dr-decision-label dr-decision-label-skipped">Skipped</span>';
       }
+      if (status === 'pending') {
+         return '<span class="dr-decision-label dr-decision-label-pending">Pending</span>';
+      }
       return '';
+   }
+
+   function decisionRecapInOut(suggestion, decision) {
+      var inName = '';
+      var inSet = '';
+      var outName = '';
+      if (decision && decision.status === 'accepted' && decision.accepted) {
+         if (decision.accepted.card_in) {
+            inName = decision.accepted.card_in.name || '';
+            inSet = decision.accepted.card_in.set_code || '';
+         }
+         if (decision.accepted.card_out && decision.accepted.card_out.name) {
+            outName = decision.accepted.card_out.name;
+         }
+      } else {
+         inName = (suggestion.card && suggestion.card.name) || '';
+         inSet = (suggestion.card && suggestion.card.set_code) || '';
+         var rep = suggestion.replaces && suggestion.replaces[0];
+         outName = rep && rep.name ? rep.name : '';
+      }
+      return { inName: inName, inSet: inSet, outName: outName };
    }
 
    function applyCardDecisionUi(cardEl, status) {
@@ -1452,7 +1477,7 @@
          '</button></div>';
    }
 
-   function renderSwapPanel(deck) {
+   function renderArchidektQueuePane(deck) {
       var queue = deriveSwapQueue(deck);
       var bridge = bridgeAvailable();
 
@@ -1462,21 +1487,13 @@
             hints += ' or install the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript for live refresh';
          }
          hints += '.</p>';
-         state.ui.swapPanel.hidden = false;
-         state.ui.swapPanel.innerHTML =
-            '<h3>Swap queue</h3>' +
-            archidektDeckLinkHtml(deck, 'View deck on Archidekt') +
-            hints;
-         return;
+         return archidektDeckLinkHtml(deck, 'View deck on Archidekt') + hints;
       }
 
       if (!queue) {
-         state.ui.swapPanel.innerHTML = '';
-         state.ui.swapPanel.hidden = true;
-         return;
+         return '<p class="dr-empty">No swap queue on this deck.</p>';
       }
 
-      state.ui.swapPanel.hidden = false;
       var recon = getSwapQueueReconciliation(deck);
       var inList = (queue.new_set_in || []).map(function (c) {
          return swapQueueListItem(c, recon.uncoveredIn);
@@ -1495,14 +1512,11 @@
          ? ''
          : '<p class="dr-bridge-hint">Install the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript for live refresh.</p>';
 
-      state.ui.swapPanel.innerHTML =
-         '<div class="dr-swap-panel-header">' +
-         '<h3>Swap queue</h3>' +
-         '<div class="dr-swap-panel-meta">' +
+      return '<div class="dr-swap-panel-meta">' +
          archidektDeckLinkHtml(deck, 'View deck') +
          '<span class="dr-swap-source">From Archidekt · as of ' + fetchedAt + '</span>' +
          refreshBtn +
-         '</div></div>' +
+         '</div>' +
          '<div class="dr-swap-cols">' +
          '<div><strong>In</strong><ul>' + inList + '</ul></div>' +
          '<div><strong>Out</strong><ul>' + outList + '</ul></div>' +
@@ -1510,6 +1524,81 @@
          swapReconcileWarningHtml(recon) +
          (flags ? '<div class="dr-flags">' + flags + '</div>' : '') +
          bridgeHint;
+   }
+
+   function renderDecisionsPane(deck) {
+      var suggestions = allVisibleSuggestions(deck);
+      if (!suggestions.length) {
+         return '<p class="dr-empty">No suggestions for this deck.</p>';
+      }
+      var progress = ArchidektExport.deckReviewComplete(suggestions, getDecision);
+      var rows = suggestions.map(function (s) {
+         var decision = getDecision(s.suggestion_id);
+         var status = decision && decision.status ? decision.status : 'pending';
+         var recap = decisionRecapInOut(s, decision);
+         var stale = getSuggestionStaleness(deck, s);
+         var staleHtml = stale.stale ? ' <span class="dr-badge dr-badge-stale">Stale</span>' : '';
+         var outHtml = recap.outName
+            ? ' → ' + escapeHtml(recap.outName)
+            : (needsSuggestedCut(s) ? ' → <em>(pick cut)</em>' : '');
+         return '<div class="dr-decision-recap-row dr-decision-recap-' + escapeHtml(status) + '">' +
+            '<div class="dr-decision-recap-status">' + decisionStatusLabel(status) + staleHtml + '</div>' +
+            '<div class="dr-decision-recap-swap"><strong>' + escapeHtml(recap.inName) + '</strong>' +
+            (recap.inSet ? ' <span class="dr-decision-recap-set">(' + escapeHtml(recap.inSet) + ')</span>' : '') +
+            outHtml + '</div>' +
+            '</div>';
+      }).join('');
+      return '<p class="dr-decision-recap-meta">' + progress.reviewed + '/' + progress.total + ' reviewed</p>' +
+         '<div class="dr-decision-recap-list">' + rows + '</div>';
+   }
+
+   function renderUpdatePane(deck) {
+      var suggestions = allVisibleSuggestions(deck);
+      var progress = ArchidektExport.deckReviewComplete(suggestions, getDecision);
+      var hasSnapshot = !!(deck.deck_snapshot && Array.isArray(deck.deck_snapshot.cards));
+      var accepted = acceptedForDeck(deck.deck_id);
+      var acceptedSwaps = ArchidektExport.buildTargetAcceptedSwaps(accepted);
+      var importText = hasSnapshot ? ArchidektExport.buildFullDeckImport(deck, acceptedSwaps) : '';
+      var canApply = progress.complete && hasSnapshot && importText.trim().length > 0;
+      var gateMsg = '';
+      if (!hasSnapshot) {
+         gateMsg = '<p class="dr-update-gate">Refresh or enrich deck snapshot before applying.</p>';
+      } else if (!progress.complete) {
+         gateMsg = '<p class="dr-update-gate">Review all suggestions first (' + progress.reviewed + '/' + progress.total + ').</p>';
+      } else if (!importText.trim()) {
+         gateMsg = '<p class="dr-update-gate">Nothing to export for this deck.</p>';
+      } else {
+         gateMsg = '<p class="dr-update-ready">All ' + progress.total + ' suggestions reviewed. Ready to update Archidekt.</p>';
+      }
+
+      var bridgeBtn = bridgeAvailable()
+         ? '<button type="button" class="dr-btn dr-btn-primary" id="dr-apply-bridge"' +
+            (canApply ? '' : ' disabled') + '>Apply via bridge</button>'
+         : '<p class="dr-bridge-hint">Install the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript to apply from desktop.</p>';
+
+      return gateMsg +
+         '<div class="dr-toolbar dr-update-actions">' +
+         '<button type="button" class="dr-btn dr-btn-primary" id="dr-copy-full-import"' +
+         (canApply ? '' : ' disabled') + '>Copy full deck import</button>' +
+         bridgeBtn +
+         archidektDeckLinkHtml(deck, 'Open on Archidekt') +
+         '</div>' +
+         '<p class="dr-import-hint">Tablet: Archidekt → Import → <strong>Replace deck</strong> → paste → Save Changes. Swap categories reflect accepted decisions only.</p>' +
+         '<textarea id="dr-full-import-text" class="dr-import-preview" readonly' +
+         (canApply ? '' : ' disabled') + '>' + escapeHtml(importText) + '</textarea>';
+   }
+
+   function wireDeckStatusCard(deck) {
+      var card = state.ui.deckStatusCard;
+      if (!card) {
+         return;
+      }
+      card.querySelectorAll('[data-status-tab]').forEach(function (btn) {
+         btn.addEventListener('click', function () {
+            state.statusCardTab = btn.getAttribute('data-status-tab');
+            renderDeckStatusCard(deck);
+         });
+      });
 
       state.ui.refreshDeckBtn = document.getElementById('dr-refresh-deck-snapshot');
       if (state.ui.refreshDeckBtn) {
@@ -1517,6 +1606,82 @@
             refreshActiveDeckSnapshot();
          });
       }
+
+      var copyBtn = document.getElementById('dr-copy-full-import');
+      if (copyBtn) {
+         copyBtn.addEventListener('click', async function () {
+            var accepted = acceptedForDeck(deck.deck_id);
+            var text = ArchidektExport.buildFullDeckImport(deck, ArchidektExport.buildTargetAcceptedSwaps(accepted));
+            await ArchidektExport.copyText(text);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(function () { copyBtn.textContent = 'Copy full deck import'; }, 1500);
+         });
+      }
+
+      var applyBtn = document.getElementById('dr-apply-bridge');
+      if (applyBtn) {
+         applyBtn.addEventListener('click', function () {
+            var accepted = acceptedForDeck(deck.deck_id);
+            var text = ArchidektExport.buildFullDeckImport(deck, ArchidektExport.buildTargetAcceptedSwaps(accepted));
+            var deckId = ArchidektExport.parseDeckId(deck.archidekt_url);
+            if (!deckId || !text.trim()) {
+               showError('Cannot stage apply — missing deck id or import text.');
+               return;
+            }
+            try {
+               ArchidektExport.stageDeckApply(deckId, text);
+               if (global.RayenzArchidektBridge && RayenzArchidektBridge.stageApply) {
+                  RayenzArchidektBridge.stageApply(deckId, text);
+               }
+               window.open(deck.archidekt_url, '_blank', 'noopener');
+               setProfileStatus('Staged update for ' + deck.deck_name + '. Use Apply on the Archidekt tab.');
+            } catch (err) {
+               showError(err.message || String(err));
+            }
+         });
+      }
+   }
+
+   function renderDeckStatusCard(deck) {
+      if (!deck || !state.ui.deckStatusCard) {
+         return;
+      }
+      var tab = state.statusCardTab || 'decisions';
+      var tabClass = function (name) {
+         return 'dr-status-tab' + (tab === name ? ' active' : '');
+      };
+
+      state.ui.deckStatusCard.hidden = false;
+      state.ui.deckStatusCard.innerHTML =
+         '<div class="dr-deck-status-header">' +
+         '<h3>Deck status</h3>' +
+         '<div class="dr-status-tabs">' +
+         '<button type="button" class="' + tabClass('decisions') + '" data-status-tab="decisions">Decisions</button>' +
+         '<button type="button" class="' + tabClass('queue') + '" data-status-tab="queue">Archidekt queue</button>' +
+         '<button type="button" class="' + tabClass('update') + '" data-status-tab="update">Update</button>' +
+         '</div></div>' +
+         '<div class="dr-status-pane" id="dr-status-pane-decisions"' + (tab === 'decisions' ? '' : ' hidden') + '>' +
+         renderDecisionsPane(deck) +
+         '</div>' +
+         '<div class="dr-status-pane" id="dr-status-pane-queue"' + (tab === 'queue' ? '' : ' hidden') + '>' +
+         renderArchidektQueuePane(deck) +
+         '</div>' +
+         '<div class="dr-status-pane" id="dr-status-pane-update"' + (tab === 'update' ? '' : ' hidden') + '>' +
+         renderUpdatePane(deck) +
+         '</div>';
+
+      wireDeckStatusCard(deck);
+   }
+
+   function renderDeckStatusCardOrHide(deck) {
+      if (!deck) {
+         if (state.ui.deckStatusCard) {
+            state.ui.deckStatusCard.innerHTML = '';
+            state.ui.deckStatusCard.hidden = true;
+         }
+         return;
+      }
+      renderDeckStatusCard(deck);
    }
 
    async function renderSuggestionPanel() {
@@ -1524,10 +1689,11 @@
       var deck = getDeckById(state.activeDeckId);
       if (!deck) {
          state.ui.suggestionPanel.innerHTML = '<div class="dr-empty">Select a deck.</div>';
+         renderDeckStatusCardOrHide(null);
          return;
       }
 
-      renderSwapPanel(deck);
+      renderDeckStatusCard(deck);
 
       if (state.showAllMode) {
          var allSuggestions = allVisibleSuggestions(deck);
@@ -1581,13 +1747,13 @@
          HubStorage.saveReviewProgress(state.fileId, state.progress);
          renderDeckList();
          renderSuggestionPanel();
-         renderAcceptedPanel();
+         renderDeckStatusCard(getDeckById(state.activeDeckId));
          return;
       }
       HubStorage.saveReviewProgress(state.fileId, state.progress);
       applyCardDecisionUi(cardEl, status);
       renderDeckList();
-      renderAcceptedPanel();
+      renderDeckStatusCard(getDeckById(state.activeDeckId));
    }
 
    function acceptSuggestionFromCard(deck, suggestion, cardEl, advanceOnAction) {
@@ -1640,65 +1806,13 @@
          HubStorage.saveReviewProgress(state.fileId, state.progress);
          renderDeckList();
          renderSuggestionPanel();
-         renderAcceptedPanel();
+         renderDeckStatusCard(getDeckById(state.activeDeckId));
          return;
       }
       HubStorage.saveReviewProgress(state.fileId, state.progress);
       applyCardDecisionUi(cardEl, 'accepted');
       renderDeckList();
-      renderAcceptedPanel();
-   }
-
-   function renderAcceptedPanel() {
-      var deck = getDeckById(state.activeDeckId);
-      if (!deck) {
-         state.ui.acceptedPanel.innerHTML = '';
-         return;
-      }
-      var accepted = acceptedForDeck(deck.deck_id);
-      if (!accepted.length) {
-         state.ui.acceptedPanel.innerHTML =
-            '<h3>Accepted swaps</h3>' +
-            archidektDeckLinkHtml(deck, 'View deck on Archidekt') +
-            '<p class="dr-empty">None yet for this deck.</p>';
-         return;
-      }
-
-      var items = accepted.map(function (a) {
-         var outName = a.card_out && a.card_out.name ? a.card_out.name : '(none)';
-         return '<div class="dr-accepted-item"><strong>' + escapeHtml(a.card_in.name) + '</strong> (' +
-            escapeHtml(a.card_in.set_code) + ') → ' + escapeHtml(outName) + '</div>';
-      }).join('');
-
-      var importText = ArchidektExport.buildImportTextForDeck(accepted);
-
-      state.ui.acceptedPanel.innerHTML =
-         '<h3>Accepted (' + accepted.length + ')</h3>' +
-         items +
-         '<div class="dr-import-box">' +
-         '<div class="dr-toolbar" style="margin-top:12px">' +
-         '<button type="button" class="dr-btn dr-btn-primary" id="dr-copy-import">Copy Import Text</button>' +
-         '<button type="button" class="dr-btn dr-btn-ghost" id="dr-copy-manifest">Copy Apply Manifest</button>' +
-         '<a class="dr-btn dr-btn-ghost" href="' + escapeHtml(deck.archidekt_url) + '" target="_blank" rel="noopener">Open in Archidekt</a>' +
-         '</div>' +
-         '<textarea id="dr-import-text" readonly>' + escapeHtml(importText) + '</textarea>' +
-         '<p class="dr-import-hint">On Archidekt: open deck → Import → paste → Save Changes. Uses `New Set In` / `New Set Out` categories.</p>' +
-         '</div>';
-
-      document.getElementById('dr-copy-import').addEventListener('click', async function () {
-         await ArchidektExport.copyText(importText);
-         this.textContent = 'Copied!';
-         var btn = this;
-         setTimeout(function () { btn.textContent = 'Copy Import Text'; }, 1500);
-      });
-
-      document.getElementById('dr-copy-manifest').addEventListener('click', async function () {
-         var manifest = ArchidektExport.buildApplyManifest(state.data.meta, allAcceptedByDeck());
-         await ArchidektExport.copyText(JSON.stringify(manifest, null, 2));
-         this.textContent = 'Copied!';
-         var btn = this;
-         setTimeout(function () { btn.textContent = 'Copy Apply Manifest'; }, 1500);
-      });
+      renderDeckStatusCard(getDeckById(state.activeDeckId));
    }
 
    function render() {
@@ -1714,7 +1828,6 @@
 
       renderDeckList();
       renderSuggestionPanel();
-      renderAcceptedPanel();
       renderProfilesNav();
       if (state.ui.refreshAllDecksBtn) {
          state.ui.refreshAllDecksBtn.disabled = !bridgeAvailable();
@@ -1740,9 +1853,8 @@
          '<div class="dr-body" id="dr-body">' +
          '<div class="dr-empty" id="dr-empty-state">Upload a suggestions file or refresh latest from the repo.</div>' +
          '<div id="dr-content" hidden>' +
-         '<div class="dr-swap-panel" id="dr-swap-panel" hidden></div>' +
+         '<div class="dr-deck-status-card" id="dr-deck-status-card" hidden></div>' +
          '<div id="dr-suggestion-panel"></div>' +
-         '<div class="dr-accepted-panel" id="dr-accepted-panel"></div>' +
          '</div></div></div>' +
          '<aside id="dr-right-nav" class="dr-right-nav" aria-label="Deck navigation">' +
          '<div class="dr-nav-actions">' +
@@ -1774,9 +1886,8 @@
          emptyState: document.getElementById('dr-empty-state'),
          content: document.getElementById('dr-content'),
          deckList: document.getElementById('dr-deck-list'),
-         swapPanel: document.getElementById('dr-swap-panel'),
+         deckStatusCard: document.getElementById('dr-deck-status-card'),
          suggestionPanel: document.getElementById('dr-suggestion-panel'),
-         acceptedPanel: document.getElementById('dr-accepted-panel'),
          profilesSection: document.getElementById('dr-profiles-section'),
          connectProfilesBtn: document.getElementById('dr-connect-profiles'),
          profileStatusEl: document.getElementById('dr-profile-status'),

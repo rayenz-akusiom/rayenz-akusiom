@@ -5,7 +5,7 @@ Personal multi-app hub hosted on GitHub Pages at [rayenz-akusiom.github.io/rayen
 ## Apps
 
 - **Dailies** — Neopets dailies launcher (requires [rayenz-dailies.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/rayenz-dailies.user.js) for automation)
-- **Deck Review** — Review MTG set-update suggestions and export Archidekt swap-queue import text
+- **Deck Review** — Review MTG set-update suggestions; export full-deck Archidekt import or apply via bridge
 
 ## Publishing
 
@@ -33,13 +33,17 @@ Clone the monorepo with submodules: `git clone --recurse-submodules https://gith
 2. Enrich with deck snapshots and profile preferences (`protected_cards`, `blocked_cards`):
 
    ```powershell
-   .\scripts\enrich_suggestions.ps1 -InputPath ~\mtg\decks\suggestions\MSH-2026-06-19.json -Output data\suggestions\latest.json
+   .\scripts\enrich_suggestions.ps1 -InputPath ~\mtg\decks\suggestions\MSH-2026-06-21.json -Output data\suggestions\latest.json
    ```
 
 3. Commit and push `data/suggestions/latest.json` to **this repo** (or upload JSON on the Deck Review page).
-4. Review swaps on tablet or PC. On **desktop Chrome**, connect your profiles folder in the right nav and use **Never suggest again** to update `~/mtg/decks/profiles/{deck_id}.yaml` directly.
-5. After changing profiles on PC, re-run `enrich_suggestions` so tablet-loaded `latest.json` reflects new blocklists.
-6. Copy import text into Archidekt (or use [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js) on Safari/desktop).
+4. Review every suggestion for each deck (Accept / Reject / Skip). The **Deck status** card at the top shows a **Decisions** recap, live **Archidekt queue**, and **Update** actions.
+5. On **desktop** with [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js): when all suggestions are reviewed, open the **Update** tab → **Apply via bridge** (opens Archidekt and shows an apply banner).
+6. On **tablet** (no userscript): when all suggestions are reviewed, **Update** tab → **Copy full deck import** → Archidekt deck → **Import** → **Replace deck** → paste → Save Changes.
+7. On **desktop Chrome**, connect your profiles folder in the right nav and use **Never suggest again** to update `~/mtg/decks/profiles/{deck_id}.yaml` directly.
+8. After changing profiles on PC, re-run `enrich_suggestions` so tablet-loaded `latest.json` reflects new blocklists.
+
+**Update is blocked** until every visible suggestion for the deck has a decision. The exported import is a **full deck replace**: main-deck cards keep their categories; `New Set In` / `New Set Out` are rebuilt from **accepted** swaps only (rejected/skipped queue slots are cleared).
 
 ### Never suggest again (fallback CLI)
 

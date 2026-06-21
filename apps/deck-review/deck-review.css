@@ -248,12 +248,9 @@
    display: none;
 }
 
-.dr-swap-panel,
-.dr-accepted-panel {
+.dr-deck-status-card {
    width: 100%;
    max-width: 720px;
-}
-.dr-swap-panel {
    background: #fff;
    border: 1px solid #e2e8f0;
    border-radius: 8px;
@@ -261,18 +258,134 @@
    margin-bottom: 16px;
 }
 
-.dr-swap-panel h3 {
-   margin: 0;
-   font-size: 1rem;
-}
-
-.dr-swap-panel-header {
+.dr-deck-status-header {
    display: flex;
    flex-wrap: wrap;
    align-items: center;
    justify-content: space-between;
    gap: 8px 12px;
+   margin-bottom: 12px;
+}
+
+.dr-deck-status-header h3 {
+   margin: 0;
+   font-size: 1rem;
+}
+
+.dr-status-tabs {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 6px;
+}
+
+.dr-status-tab {
+   border: 1px solid #cbd5e0;
+   background: #f7fafc;
+   color: #4a5568;
+   border-radius: 6px;
+   padding: 6px 12px;
+   font-size: 0.82rem;
+   font-weight: 600;
+   cursor: pointer;
+}
+
+.dr-status-tab.active {
+   background: #2b6cb0;
+   border-color: #2b6cb0;
+   color: #fff;
+}
+
+.dr-status-pane {
+   font-size: 0.9rem;
+}
+
+.dr-decision-recap-meta {
+   margin: 0 0 10px;
+   font-size: 0.82rem;
+   color: #718096;
+}
+
+.dr-decision-recap-list {
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+}
+
+.dr-decision-recap-row {
+   display: grid;
+   grid-template-columns: 100px 1fr;
+   gap: 10px;
+   align-items: start;
+   padding: 8px 10px;
+   border-radius: 6px;
+   border: 1px solid #edf2f7;
+   background: #fafafa;
+}
+
+.dr-decision-recap-accepted {
+   background: #f0fff4;
+   border-color: #c6f6d5;
+}
+
+.dr-decision-recap-rejected {
+   background: #fff5f5;
+   border-color: #fed7d7;
+}
+
+.dr-decision-recap-skipped {
+   background: #f7fafc;
+   border-color: #e2e8f0;
+}
+
+.dr-decision-recap-pending {
+   background: #fff;
+}
+
+.dr-decision-recap-set {
+   font-size: 0.8rem;
+   color: #718096;
+   font-weight: normal;
+}
+
+.dr-decision-label-pending {
+   background: #edf2f7;
+   color: #4a5568;
+}
+
+.dr-update-gate {
+   margin: 0 0 12px;
+   padding: 10px 12px;
+   background: #fffaf0;
+   border: 1px solid #fbd38d;
+   border-radius: 6px;
+   color: #744210;
+   font-size: 0.85rem;
+}
+
+.dr-update-ready {
+   margin: 0 0 12px;
+   padding: 10px 12px;
+   background: #f0fff4;
+   border: 1px solid #c6f6d5;
+   border-radius: 6px;
+   color: #22543d;
+   font-size: 0.85rem;
+}
+
+.dr-update-actions {
    margin-bottom: 10px;
+}
+
+.dr-import-preview {
+   width: 100%;
+   min-height: 140px;
+   font-family: ui-monospace, monospace;
+   font-size: 0.75rem;
+   padding: 10px;
+   border: 1px solid #cbd5e0;
+   border-radius: 6px;
+   box-sizing: border-box;
+   margin-top: 8px;
 }
 
 .dr-swap-panel-meta {
@@ -611,23 +724,9 @@
    justify-content: center;
 }
 
-.dr-accepted-panel {
-   background: #fff;
-   border: 1px solid #e2e8f0;
-   border-radius: 8px;
-   padding: 14px 16px;
-   margin-top: 20px;
-}
-
-.dr-accepted-panel h3 {
-   margin: 0 0 10px;
-   font-size: 1rem;
-}
-
-.dr-accepted-item {
+.dr-accepted-item,
+.dr-decision-recap-swap {
    font-size: 0.9rem;
-   padding: 6px 0;
-   border-bottom: 1px solid #edf2f7;
 }
 
 .dr-empty {
@@ -674,12 +773,18 @@
    }
 
    .dr-suggestion-card,
-   .dr-swap-panel,
-   .dr-accepted-panel,
+   .dr-deck-status-card,
    .dr-empty,
    .dr-view-toolbar,
    .dr-profile-status-global {
       max-width: 820px;
+   }
+}
+
+@media (max-width: 600px) {
+   .dr-decision-recap-row {
+      grid-template-columns: 1fr;
+      gap: 4px;
    }
 }
 
