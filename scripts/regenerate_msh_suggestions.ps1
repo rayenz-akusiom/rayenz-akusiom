@@ -11,6 +11,72 @@ $ErrorActionPreference = 'Stop'
 $MARVEL_SETS = @('msh','msc','mar')
 $ARCHIDEKT_API = 'https://archidekt.com/api'
 $DELAY_MS = 150
+$Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
+function Read-Utf8Text([string]$Path) {
+    return [System.IO.File]::ReadAllText($Path, $Utf8NoBom)
+}
+
+function Write-JsonFile([string]$Path, $Object, [int]$Depth = 20) {
+    $json = $Object | ConvertTo-Json -Depth $Depth
+    [System.IO.File]::WriteAllText($Path, $json + "`n", $Utf8NoBom)
+}
+
+function Repair-MojibakeText([string]$Text) {
+    if ([string]::IsNullOrEmpty($Text)) { return $Text }
+    $emDash = [string][char]0x2014
+    $badDash = [string][char]0xE2 + [char]0x20AC + [char]0x201D
+    if ($Text.Contains($badDash)) {
+        $Text = $Text.Replace($badDash, $emDash)
+    }
+    $badDash2 = [string][char]0xE2 + [char]0x20AC + [char]0x201C
+    if ($Text.Contains($badDash2)) {
+        $Text = $Text.Replace($badDash2, $emDash)
+    }
+    if ($Text -match 'â|Ã') {
+        $encoding1252 = [System.Text.Encoding]::GetEncoding(1252)
+        $current = $Text
+        for ($i = 0; $i -lt 3; $i++) {
+            try {
+                $bytes = $encoding1252.GetBytes($current)
+                $next = [System.Text.Encoding]::UTF8.GetString($bytes)
+                if ($next -eq $current) { break }
+                $current = $next
+            } catch {
+                break
+            }
+        }
+        $Text = $current
+    }
+    return $Text
+}
+
+function Repair-ObjectStrings($Object) {
+    if ($null -eq $Object) { return $null }
+    if ($Object -is [string]) {
+        return Repair-MojibakeText $Object
+    }
+    if ($Object -is [System.Collections.IEnumerable] -and $Object -isnot [string]) {
+        $repaired = @()
+        foreach ($item in $Object) {
+            $repaired += ,(Repair-ObjectStrings $item)
+        }
+        return $repaired
+    }
+    if ($Object -is [pscustomobject]) {
+        foreach ($prop in $Object.PSObject.Properties) {
+            $prop.Value = Repair-ObjectStrings $prop.Value
+        }
+        return $Object
+    }
+    return $Object
+}
+
+function Read-JsonFile([string]$Path) {
+    $data = (Read-Utf8Text $Path) | ConvertFrom-Json
+    return Repair-ObjectStrings $data
+}
+
 $global:ValidationReport = [ordered]@{
     replaces_added = 0
     overlaps_resolved = 0
@@ -56,7 +122,7 @@ function Parse-YamlColors([string]$Text) {
 }
 
 function Get-Profile([string]$Path) {
-    $text = Get-Content $Path -Raw
+    $text = Read-Utf8Text $Path
     $deckId = Parse-YamlScalar $text 'deck_id'
     return [ordered]@{
         deck_id = $deckId
@@ -519,9 +585,9 @@ function ReId-Suggestions($deckId, $suggestions) {
 }
 
 # --- main ---
-$cache = Get-Content $CachePath -Raw | ConvertFrom-Json
+$cache = Read-JsonFile $CachePath
 $marvelLookup = Build-MarvelLookup $cache
-$old = Get-Content $OldPath -Raw | ConvertFrom-Json
+$old = Read-JsonFile $OldPath
 $oldById = @{}
 foreach ($d in $old.decks) { $oldById[$d.deck_id] = $d }
 
@@ -636,15 +702,14 @@ $out = [ordered]@{
     decks = @($decksOut)
 }
 
-$json = $out | ConvertTo-Json -Depth 25
-[System.IO.File]::WriteAllText($OutPath, $json + "`n", [System.Text.UTF8Encoding]::new($false))
+Write-JsonFile $OutPath $out 25
 
 $reportPath = [System.IO.Path]::ChangeExtension($OutPath, '.report.json')
-@{
+Write-JsonFile $reportPath @{
     per_deck_counts = $perDeckCounts
     swap_queue_changes = $swapChanges
     validation = $global:ValidationReport
-} | ConvertTo-Json -Depth 8 | Set-Content $reportPath -Encoding UTF8
+} 8
 
 Write-Host "Wrote $OutPath ($((Get-Item $OutPath).Length) bytes)"
 Write-Host "Report: $reportPath"

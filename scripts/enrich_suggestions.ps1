@@ -8,6 +8,71 @@ param(
 $ErrorActionPreference = 'Stop'
 $ARCHIDEKT_API = 'https://archidekt.com/api'
 $DELAY_MS = 150
+$Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
+function Read-Utf8Text([string]$Path) {
+    return [System.IO.File]::ReadAllText($Path, $Utf8NoBom)
+}
+
+function Write-JsonFile([string]$Path, $Object, [int]$Depth = 20) {
+    $json = $Object | ConvertTo-Json -Depth $Depth
+    [System.IO.File]::WriteAllText($Path, $json + "`n", $Utf8NoBom)
+}
+
+function Repair-MojibakeText([string]$Text) {
+    if ([string]::IsNullOrEmpty($Text)) { return $Text }
+    $emDash = [string][char]0x2014
+    $badDash = [string][char]0xE2 + [char]0x20AC + [char]0x201D
+    if ($Text.Contains($badDash)) {
+        $Text = $Text.Replace($badDash, $emDash)
+    }
+    $badDash2 = [string][char]0xE2 + [char]0x20AC + [char]0x201C
+    if ($Text.Contains($badDash2)) {
+        $Text = $Text.Replace($badDash2, $emDash)
+    }
+    if ($Text -match 'â|Ã') {
+        $encoding1252 = [System.Text.Encoding]::GetEncoding(1252)
+        $current = $Text
+        for ($i = 0; $i -lt 3; $i++) {
+            try {
+                $bytes = $encoding1252.GetBytes($current)
+                $next = [System.Text.Encoding]::UTF8.GetString($bytes)
+                if ($next -eq $current) { break }
+                $current = $next
+            } catch {
+                break
+            }
+        }
+        $Text = $current
+    }
+    return $Text
+}
+
+function Repair-ObjectStrings($Object) {
+    if ($null -eq $Object) { return $null }
+    if ($Object -is [string]) {
+        return Repair-MojibakeText $Object
+    }
+    if ($Object -is [System.Collections.IEnumerable] -and $Object -isnot [string]) {
+        $repaired = @()
+        foreach ($item in $Object) {
+            $repaired += ,(Repair-ObjectStrings $item)
+        }
+        return $repaired
+    }
+    if ($Object -is [pscustomobject]) {
+        foreach ($prop in $Object.PSObject.Properties) {
+            $prop.Value = Repair-ObjectStrings $prop.Value
+        }
+        return $Object
+    }
+    return $Object
+}
+
+function Read-JsonFile([string]$Path) {
+    $data = (Read-Utf8Text $Path) | ConvertFrom-Json
+    return Repair-ObjectStrings $data
+}
 
 function Parse-YamlList([string]$Text, [string]$FieldName) {
     $items = @()
@@ -31,7 +96,7 @@ function Parse-YamlList([string]$Text, [string]$FieldName) {
 function Get-ProfilePreferences([string]$DeckId, [string]$Dir) {
     $path = Join-Path $Dir ($DeckId + '.yaml')
     if (-not (Test-Path $path)) { return $null }
-    $text = Get-Content $path -Raw
+    $text = Read-Utf8Text $path
     return [ordered]@{
         protected_cards = @(Parse-YamlList $text 'protected_cards')
         blocked_cards = @(Parse-YamlList $text 'blocked_cards')
@@ -90,7 +155,7 @@ function Build-Snapshot($deck) {
     }
 }
 
-$data = Get-Content $InputPath -Raw | ConvertFrom-Json
+$data = Read-JsonFile $InputPath
 foreach ($deckEntry in $data.decks) {
     $deckId = Get-DeckIdFromUrl $deckEntry.archidekt_url
     Write-Host "Fetching $($deckEntry.deck_name) ($deckId)..."
@@ -103,6 +168,5 @@ foreach ($deckEntry in $data.decks) {
 }
 
 $outPath = if ($Output) { $Output } else { [System.IO.Path]::ChangeExtension($InputPath, '.enriched.json') }
-$json = $data | ConvertTo-Json -Depth 20
-[System.IO.File]::WriteAllText($outPath, $json + "`n", [System.Text.UTF8Encoding]::new($false))
+Write-JsonFile $outPath $data 20
 Write-Host "Wrote $outPath ($((Get-Item $outPath).Length) bytes)"
