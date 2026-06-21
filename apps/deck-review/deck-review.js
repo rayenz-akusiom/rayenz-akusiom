@@ -342,6 +342,94 @@
       return { stale: reasons.length > 0, level: level, reasons: reasons };
    }
 
+   function suggestionCoversQueueIn(suggestion, inName) {
+      if (!inName || !suggestion) {
+         return false;
+      }
+      if (suggestion.fills_swap_slot === inName) {
+         return true;
+      }
+      if (suggestion.overrides_queue_in === inName) {
+         return true;
+      }
+      return suggestion.card && suggestion.card.name === inName;
+   }
+
+   function suggestionCoversQueueOut(suggestion, outName) {
+      if (!outName || !suggestion) {
+         return false;
+      }
+      return (suggestion.replaces || []).some(function (r) {
+         return r.name === outName;
+      });
+   }
+
+   function getSwapQueueReconciliation(deck) {
+      var queue = deriveSwapQueue(deck);
+      if (!queue) {
+         return { uncoveredIn: [], uncoveredOut: [], unpairedIn: [], unpairedOut: [] };
+      }
+      var suggestions = deck.suggestions || [];
+      var uncoveredIn = [];
+      var uncoveredOut = [];
+      (queue.new_set_in || []).forEach(function (c) {
+         var covered = suggestions.some(function (s) {
+            return suggestionCoversQueueIn(s, c.name);
+         });
+         if (!covered) {
+            uncoveredIn.push(c.name);
+         }
+      });
+      (queue.new_set_out || []).forEach(function (c) {
+         var covered = suggestions.some(function (s) {
+            return suggestionCoversQueueOut(s, c.name);
+         });
+         if (!covered) {
+            uncoveredOut.push(c.name);
+         }
+      });
+      var unpairedIn = [];
+      var unpairedOut = [];
+      var inLen = queue.new_set_in.length;
+      var outLen = queue.new_set_out.length;
+      if (inLen > outLen) {
+         queue.new_set_in.slice(outLen).forEach(function (c) {
+            unpairedIn.push(c.name);
+         });
+      } else if (outLen > inLen) {
+         queue.new_set_out.slice(inLen).forEach(function (c) {
+            unpairedOut.push(c.name);
+         });
+      }
+      return {
+         uncoveredIn: uncoveredIn,
+         uncoveredOut: uncoveredOut,
+         unpairedIn: unpairedIn,
+         unpairedOut: unpairedOut
+      };
+   }
+
+   function swapQueueListItem(card, uncoveredNames) {
+      var uncovered = uncoveredNames.indexOf(card.name) >= 0;
+      return '<li' + (uncovered ? ' class="dr-swap-item-uncovered"' : '') + '>' +
+         escapeHtml(formatSwapQueueItem(card)) + '</li>';
+   }
+
+   function swapReconcileWarningHtml(recon) {
+      var parts = [];
+      if (recon.uncoveredIn.length) {
+         parts.push('In: ' + recon.uncoveredIn.join(', '));
+      }
+      if (recon.uncoveredOut.length) {
+         parts.push('Out: ' + recon.uncoveredOut.join(', '));
+      }
+      if (!parts.length) {
+         return '';
+      }
+      return '<div class="dr-swap-reconcile-warning">No suggestion yet for ' +
+         escapeHtml(parts.join(' · ')) + '</div>';
+   }
+
    function refreshDeckSnapshot(deck) {
       if (!bridgeAvailable()) {
          return Promise.reject(new Error('Archidekt bridge userscript not installed'));
@@ -1347,8 +1435,18 @@
       });
    }
 
-   function viewToolbarHtml() {
+   function archidektDeckLinkHtml(deck, label) {
+      if (!deck || !deck.archidekt_url) {
+         return '';
+      }
+      var text = label || ('Open ' + deck.deck_name + ' on Archidekt');
+      return '<a class="dr-deck-archidekt-link" href="' + escapeHtml(deck.archidekt_url) +
+         '" target="_blank" rel="noopener">' + escapeHtml(text) + '</a>';
+   }
+
+   function viewToolbarHtml(deck) {
       return '<div class="dr-view-toolbar">' +
+         archidektDeckLinkHtml(deck) +
          '<button type="button" class="dr-btn dr-btn-ghost" id="dr-toggle-view">' +
          (state.showAllMode ? 'One at a time' : 'Show all') +
          '</button></div>';
@@ -1366,7 +1464,9 @@
          hints += '.</p>';
          state.ui.swapPanel.hidden = false;
          state.ui.swapPanel.innerHTML =
-            '<h3>Swap queue</h3>' + hints;
+            '<h3>Swap queue</h3>' +
+            archidektDeckLinkHtml(deck, 'View deck on Archidekt') +
+            hints;
          return;
       }
 
@@ -1377,11 +1477,12 @@
       }
 
       state.ui.swapPanel.hidden = false;
+      var recon = getSwapQueueReconciliation(deck);
       var inList = (queue.new_set_in || []).map(function (c) {
-         return '<li>' + escapeHtml(formatSwapQueueItem(c)) + '</li>';
+         return swapQueueListItem(c, recon.uncoveredIn);
       }).join('') || '<li><em>empty</em></li>';
       var outList = (queue.new_set_out || []).map(function (c) {
-         return '<li>' + escapeHtml(formatSwapQueueItem(c)) + '</li>';
+         return swapQueueListItem(c, recon.uncoveredOut);
       }).join('') || '<li><em>empty</em></li>';
       var flags = (queue.metadata_flags || []).map(function (f) {
          return '<div>' + escapeHtml(f) + '</div>';
@@ -1398,6 +1499,7 @@
          '<div class="dr-swap-panel-header">' +
          '<h3>Swap queue</h3>' +
          '<div class="dr-swap-panel-meta">' +
+         archidektDeckLinkHtml(deck, 'View deck') +
          '<span class="dr-swap-source">From Archidekt · as of ' + fetchedAt + '</span>' +
          refreshBtn +
          '</div></div>' +
@@ -1405,6 +1507,7 @@
          '<div><strong>In</strong><ul>' + inList + '</ul></div>' +
          '<div><strong>Out</strong><ul>' + outList + '</ul></div>' +
          '</div>' +
+         swapReconcileWarningHtml(recon) +
          (flags ? '<div class="dr-flags">' + flags + '</div>' : '') +
          bridgeHint;
 
@@ -1429,13 +1532,13 @@
       if (state.showAllMode) {
          var allSuggestions = allVisibleSuggestions(deck);
          if (!allSuggestions.length) {
-            state.ui.suggestionPanel.innerHTML = viewToolbarHtml() +
+            state.ui.suggestionPanel.innerHTML = viewToolbarHtml(deck) +
                '<div class="dr-empty">No suggestions for ' + escapeHtml(deck.deck_name) + '.</div>';
             wireViewToggle();
             return;
          }
 
-         state.ui.suggestionPanel.innerHTML = viewToolbarHtml() +
+         state.ui.suggestionPanel.innerHTML = viewToolbarHtml(deck) +
             (state.profileStatus ? '<p class="dr-profile-status dr-profile-status-global">' + escapeHtml(state.profileStatus) + '</p>' : '') +
             '<div class="dr-suggestions-all" id="dr-suggestions-all"></div>';
          wireViewToggle();
@@ -1454,14 +1557,14 @@
 
       var suggestion = currentSuggestion(deck);
       if (!suggestion) {
-         state.ui.suggestionPanel.innerHTML = viewToolbarHtml() +
+         state.ui.suggestionPanel.innerHTML = viewToolbarHtml(deck) +
             '<div class="dr-empty">All suggestions reviewed for ' + escapeHtml(deck.deck_name) + '.</div>';
          wireViewToggle();
          return;
       }
 
       var decision = getDecision(suggestion.suggestion_id);
-      state.ui.suggestionPanel.innerHTML = viewToolbarHtml() +
+      state.ui.suggestionPanel.innerHTML = viewToolbarHtml(deck) +
          (state.profileStatus ? '<p class="dr-profile-status dr-profile-status-global">' + escapeHtml(state.profileStatus) + '</p>' : '') +
          buildSuggestionCardHtml(suggestion, deck, decision);
       wireViewToggle();
@@ -1554,7 +1657,10 @@
       }
       var accepted = acceptedForDeck(deck.deck_id);
       if (!accepted.length) {
-         state.ui.acceptedPanel.innerHTML = '<h3>Accepted swaps</h3><p class="dr-empty">None yet for this deck.</p>';
+         state.ui.acceptedPanel.innerHTML =
+            '<h3>Accepted swaps</h3>' +
+            archidektDeckLinkHtml(deck, 'View deck on Archidekt') +
+            '<p class="dr-empty">None yet for this deck.</p>';
          return;
       }
 

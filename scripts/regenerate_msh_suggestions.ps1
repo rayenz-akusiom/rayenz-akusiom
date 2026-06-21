@@ -127,6 +127,24 @@ function ConvertTo-SuggestionCard($scryfallCard) {
     }
 }
 
+$script:ScryfallCache = @{}
+
+function Get-ScryfallNamed([string]$Name) {
+    $key = Normalize-Name $Name
+    if ($script:ScryfallCache.ContainsKey($key)) { return $script:ScryfallCache[$key] }
+    Start-Sleep -Milliseconds 100
+    $encoded = [uri]::EscapeDataString($Name)
+    $headers = @{ 'User-Agent' = 'msh-regen/1.1'; 'Accept' = 'application/json' }
+    foreach ($q in @("exact=$encoded", "fuzzy=$encoded")) {
+        try {
+            $r = Invoke-RestMethod -Uri "https://api.scryfall.com/cards/named?$q" -Headers $headers
+            $script:ScryfallCache[$key] = $r
+            return $r
+        } catch { }
+    }
+    return $null
+}
+
 function Get-DeckCardsInfo($rawDeck) {
     $cards = @()
     foreach ($entry in $rawDeck.cards) {
@@ -136,16 +154,95 @@ function Get-DeckCardsInfo($rawDeck) {
         if (-not $name) { continue }
         $cats = @($entry.categories)
         $primary = if ($cats.Count -gt 0) { $cats[0] } else { $null }
+        $edition = $entry.card.edition
+        $setCode = $null
+        if ($edition) {
+            if ($edition.editioncode) { $setCode = $edition.editioncode }
+            elseif ($edition.editionCode) { $setCode = $edition.editionCode }
+        }
         $cards += [pscustomobject]@{
             name = $name
             quantity = if ($entry.quantity) { $entry.quantity } else { 1 }
             primary_category = $primary
             categories = $cats
             is_commander = ($cats -contains 'Commander') -or ($primary -eq 'Commander')
-            type_line = $oracle.types -join ' '
+            type_line = if ($oracle.types) { ($oracle.types -join ' ') } else { '' }
+            set_code = if ($setCode) { $setCode.ToUpper() } else { $null }
+            collector_number = if ($null -ne $entry.card.collectorNumber) { [string]$entry.card.collectorNumber } else { $null }
+            mana_cost = $oracle.manaCost
+            cmc = $oracle.cmc
+            scryfall_uri = $oracle.scryfallUri
         }
     }
     return $cards
+}
+
+function Test-BasicLandName([string]$Name, $deckCards) {
+    $k = Normalize-Name $Name
+    foreach ($c in $deckCards) {
+        if ((Normalize-Name $c.name) -eq $k) {
+            return ($c.type_line -match 'Basic Land')
+        }
+    }
+    return ($Name -match '^(Plains|Island|Swamp|Mountain|Forest|Wastes|Snow-Covered (Plains|Island|Swamp|Mountain|Forest))$')
+}
+
+function Add-SwapQueueReconciliation($swapQueue) {
+    $in = @($swapQueue.new_set_in)
+    $out = @($swapQueue.new_set_out)
+    $paired = [Math]::Min($in.Count, $out.Count)
+    $unpairedIn = @()
+    for ($i = $paired; $i -lt $in.Count; $i++) { $unpairedIn += $in[$i] }
+    $unpairedOut = @()
+    for ($i = $paired; $i -lt $out.Count; $i++) { $unpairedOut += $out[$i] }
+    $notes = [System.Collections.Generic.List[string]]::new()
+    foreach ($n in $unpairedIn) { $notes.Add("$n`: no Out paired — cut suggested from main deck") }
+    foreach ($n in $unpairedOut) { $notes.Add("$n`: no In paired — Marvel add suggested") }
+    return [ordered]@{
+        new_set_in = $in
+        new_set_out = $out
+        metadata_flags = @($swapQueue.metadata_flags)
+        in_count = $in.Count
+        out_count = $out.Count
+        unpaired_in = $unpairedIn
+        unpaired_out = $unpairedOut
+        reconciliation_notes = @($notes)
+    }
+}
+
+function Get-QueueInCard([string]$InName, $deckCards, $marvelLookup) {
+    $key = Normalize-Name $InName
+    if ($marvelLookup.ContainsKey($key)) {
+        return ConvertTo-SuggestionCard $marvelLookup[$key]
+    }
+    $deckCard = $deckCards | Where-Object {
+        (Normalize-Name $_.name) -eq $key -and $_.primary_category -eq 'New Set In'
+    } | Select-Object -First 1
+    if ($deckCard -and $deckCard.set_code) {
+        $sf = Get-ScryfallNamed $InName
+        return [ordered]@{
+            name = $deckCard.name
+            set_code = $deckCard.set_code
+            collector_number = $deckCard.collector_number
+            scryfall_id = if ($sf) { $sf.id } else { $null }
+            scryfall_uri = if ($sf) { $sf.scryfall_uri } elseif ($deckCard.scryfall_uri) { $deckCard.scryfall_uri } else { $null }
+            mana_cost = if ($sf) { $sf.mana_cost } else { $deckCard.mana_cost }
+            cmc = if ($sf) { $sf.cmc } else { $deckCard.cmc }
+            type_line = if ($sf) { $sf.type_line } else { $deckCard.type_line }
+        }
+    }
+    $sf = Get-ScryfallNamed $InName
+    if ($sf) { return ConvertTo-SuggestionCard $sf }
+    return [ordered]@{
+        name = $InName
+        set_code = 'UNK'
+        collector_number = '0'
+        scryfall_id = $null
+        scryfall_uri = $null
+        mana_cost = $null
+        cmc = 0
+        type_line = ''
+    }
 }
 
 function Get-SwapQueue($deckCards) {
@@ -233,6 +330,27 @@ function Get-CutCandidates($deckCards, $protected, $reservedCuts) {
     return $result
 }
 
+function Set-SuggestionProperty($s, [string]$Name, $Value) {
+    if ($s -is [System.Collections.IDictionary]) {
+        $s[$Name] = $Value
+    } else {
+        $s | Add-Member -NotePropertyName $Name -NotePropertyValue $Value -Force
+    }
+}
+
+function Normalize-SuggestionArrays($s) {
+    foreach ($field in @('roles_matched', 'tags')) {
+        $val = if ($s -is [System.Collections.IDictionary]) { $s[$field] } else { $s.$field }
+        if ($null -eq $val) {
+            Set-SuggestionProperty $s $field @('synergy')
+        } elseif ($val -is [string]) {
+            Set-SuggestionProperty $s $field @($val)
+        } else {
+            Set-SuggestionProperty $s $field @($val)
+        }
+    }
+}
+
 function Ensure-Replaces($suggestions, $deckCards, $swapQueue, $protected) {
     $reserved = @()
     foreach ($s in $suggestions) {
@@ -252,7 +370,7 @@ function Ensure-Replaces($suggestions, $deckCards, $swapQueue, $protected) {
             if ($pairIdx -ge 0 -and $pairIdx -lt $swapQueue.new_set_out.Count) {
                 $outName = $swapQueue.new_set_out[$pairIdx]
                 if ($outName -and (Get-CutCandidates $deckCards $protected ($reserved + @($outName)) | Where-Object { Normalize-Name $_ -eq Normalize-Name $outName })) {
-                    $s.replaces = @([ordered]@{ name = $outName; quantity = 1 })
+                    Set-SuggestionProperty $s 'replaces' @([ordered]@{ name = $outName; quantity = 1 })
                     $reserved += $outName
                     $global:ValidationReport.replaces_added++
                     continue
@@ -261,7 +379,7 @@ function Ensure-Replaces($suggestions, $deckCards, $swapQueue, $protected) {
         }
         $pick = $candidates | Select-Object -First 1
         if ($pick) {
-            $s | Add-Member -NotePropertyName replaces -NotePropertyValue @([ordered]@{ name = $pick; quantity = 1 }) -Force
+            Set-SuggestionProperty $s 'replaces' @([ordered]@{ name = $pick; quantity = 1 })
             $reserved += $pick
             $global:ValidationReport.replaces_added++
         }
@@ -279,11 +397,11 @@ function Resolve-Overlaps($suggestions, $deckCards, $swapQueue, $protected, $rol
         if ($s.replaces -and $s.replaces.Count -gt 0) { $cutName = $s.replaces[0].name }
         $cutKey = if ($cutName) { Normalize-Name $cutName } else { $null }
 
-        if ($cutKey -and $usedCuts.ContainsKey($cutKey)) {
+        if ($cutKey -and $usedCuts.ContainsKey($cutKey) -and -not (Test-BasicLandName $cutName $deckCards)) {
             $candidates = Get-CutCandidates $deckCards $protected ($usedCuts.Keys + @($usedCuts.Values))
             $alt = $candidates | Where-Object { -not $usedCuts.ContainsKey((Normalize-Name $_)) } | Select-Object -First 1
             if ($alt) {
-                $s.replaces = @([ordered]@{ name = $alt; quantity = 1 })
+                Set-SuggestionProperty $s 'replaces' @([ordered]@{ name = $alt; quantity = 1 })
                 $cutKey = Normalize-Name $alt
                 $global:ValidationReport.overlaps_resolved++
             } else {
@@ -304,28 +422,72 @@ function Resolve-Overlaps($suggestions, $deckCards, $swapQueue, $protected, $rol
     return @($kept)
 }
 
-function Build-SwapSuggestions($deckId, $swapQueue, $marvelLookup, $oldSwapBySlot) {
+function Build-SwapSuggestions($deckId, $swapQueue, $marvelLookup, $deckCards, $oldSwapBySlot) {
     $result = @()
-    $n = [Math]::Min($swapQueue.new_set_in.Count, $swapQueue.new_set_out.Count)
-    for ($i = 0; $i -lt $n; $i++) {
+    for ($i = 0; $i -lt $swapQueue.new_set_in.Count; $i++) {
         $inName = $swapQueue.new_set_in[$i]
-        $outName = $swapQueue.new_set_out[$i]
-        if (-not (Test-MarvelName $inName $marvelLookup)) { continue }
-        $key = Normalize-Name $inName
-        $sc = $marvelLookup[$key]
-        $cardObj = ConvertTo-SuggestionCard $sc
+        $outName = if ($i -lt $swapQueue.new_set_out.Count) { $swapQueue.new_set_out[$i] } else { $null }
+        $cardObj = Get-QueueInCard $inName $deckCards $marvelLookup
         $oldMatch = $oldSwapBySlot[$inName]
+        $rep = @()
+        if ($outName) { $rep = @([ordered]@{ name = $outName; quantity = 1 }) }
+        $rationale = if ($outName) {
+            "Queued add — paired with $outName cut."
+        } else {
+            "Queued add — no Out paired; cut suggested from main deck."
+        }
         $s = [ordered]@{
             action = 'replace'
             card = $cardObj
             quantity = 1
             roles_matched = if ($oldMatch -and $oldMatch.roles_matched) { @($oldMatch.roles_matched) } else { @('synergy') }
             confidence = if ($oldMatch -and $oldMatch.confidence) { $oldMatch.confidence } else { 'high' }
-            rationale = if ($oldMatch -and $oldMatch.rationale) { $oldMatch.rationale } else { "Planned Marvel swap for tagged New Set In slot." }
-            tags = if ($oldMatch -and $oldMatch.tags) { @($oldMatch.tags) } else { @('marvel','swap') }
-            replaces = @([ordered]@{ name = $outName; quantity = 1 })
+            rationale = if ($oldMatch -and $oldMatch.rationale -and $outName) { $oldMatch.rationale } else { $rationale }
+            tags = if ($oldMatch -and $oldMatch.tags) { @($oldMatch.tags) } else { @('swap') }
+            replaces = $rep
             fills_swap_slot = $inName
             priority_tier = 'swap'
+            swap_source = 'queue_in'
+        }
+        $result += $s
+        $global:ValidationReport.swap_regenerated++
+    }
+    return $result
+}
+
+function Build-QueueOutFillSuggestions($swapQueue, $marvelLookup, $oldDeck, $usedIncoming) {
+    $result = @()
+    $inCount = $swapQueue.new_set_in.Count
+    for ($i = $inCount; $i -lt $swapQueue.new_set_out.Count; $i++) {
+        $outName = $swapQueue.new_set_out[$i]
+        $pick = $null
+        if ($oldDeck -and $oldDeck.suggestions) {
+            $sorted = $oldDeck.suggestions | Sort-Object { Get-ConfidenceRank $_.confidence }
+            foreach ($os in $sorted) {
+                if ($os.priority_tier -eq 'swap') { continue }
+                $inKey = Normalize-Name $os.card.name
+                if ($usedIncoming.ContainsKey($inKey)) { continue }
+                if (Test-MarvelName $os.card.name $marvelLookup) {
+                    $pick = $os
+                    break
+                }
+            }
+        }
+        if (-not $pick) { continue }
+        $usedIncoming[(Normalize-Name $pick.card.name)] = $true
+        $key = Normalize-Name $pick.card.name
+        $cardObj = ConvertTo-SuggestionCard $marvelLookup[$key]
+        $s = [ordered]@{
+            action = 'replace'
+            card = $cardObj
+            quantity = 1
+            roles_matched = if ($pick.roles_matched) { @($pick.roles_matched) } else { @('synergy') }
+            confidence = if ($pick.confidence) { $pick.confidence } else { 'medium' }
+            rationale = "Unpaired Out slot — suggested Marvel add for $outName."
+            tags = if ($pick.tags) { @($pick.tags) } else { @('marvel') }
+            replaces = @([ordered]@{ name = $outName; quantity = 1 })
+            priority_tier = 'swap'
+            swap_source = 'queue_out_fill'
         }
         $result += $s
         $global:ValidationReport.swap_regenerated++
@@ -375,7 +537,7 @@ foreach ($pf in ($profileFiles | Sort-Object Name)) {
     $aid = Get-DeckIdFromUrl $profile.archidekt_url
     $raw = Get-ArchidektDeck $aid
     $deckCards = Get-DeckCardsInfo $raw
-    $swapQueue = Get-SwapQueue $deckCards
+    $swapQueue = Add-SwapQueueReconciliation (Get-SwapQueue $deckCards)
 
     $oldDeck = $oldById[$deckId]
     if ($oldDeck -and $oldDeck.analysis -and $oldDeck.analysis.swap_queue) {
@@ -421,12 +583,16 @@ foreach ($pf in ($profileFiles | Sort-Object Name)) {
     }
 
     $suggestions = [System.Collections.Generic.List[object]]::new()
-    foreach ($sw in (Build-SwapSuggestions $deckId $swapQueue $marvelLookup $oldSwapBySlot)) {
+    foreach ($sw in (Build-SwapSuggestions $deckId $swapQueue $marvelLookup $deckCards $oldSwapBySlot)) {
         $suggestions.Add($sw)
     }
 
     $blocked = @{}; foreach ($b in $profile.blocked_cards) { $blocked[(Normalize-Name $b)] = $true }
-    $swapIncoming = @{}; foreach ($sw in $suggestions) { $swapIncoming[(Normalize-Name $sw.card.name)] = $true }
+    $swapIncoming = @{}
+    foreach ($sw in $suggestions) { $swapIncoming[(Normalize-Name $sw.card.name)] = $true }
+    foreach ($sw in (Build-QueueOutFillSuggestions $swapQueue $marvelLookup $oldDeck $swapIncoming)) {
+        $suggestions.Add($sw)
+    }
 
     if ($oldDeck -and $oldDeck.suggestions) {
         foreach ($os in $oldDeck.suggestions) {
@@ -438,6 +604,7 @@ foreach ($pf in ($profileFiles | Sort-Object Name)) {
             $copy = $os | ConvertTo-Json -Depth 12 | ConvertFrom-Json
             if (-not $copy.tags -or @($copy.tags).Count -eq 0) { $copy.tags = @('marvel') }
             if (-not $copy.roles_matched -or @($copy.roles_matched).Count -eq 0) { $copy.roles_matched = @('synergy') }
+            if (-not $copy.swap_source) { $copy | Add-Member -NotePropertyName swap_source -NotePropertyValue 'analysis' -Force }
             $suggestions.Add($copy)
         }
     }
@@ -446,6 +613,7 @@ foreach ($pf in ($profileFiles | Sort-Object Name)) {
     Ensure-Replaces $list $deckCards $swapQueue $profile.protected_cards
     $list = Resolve-Overlaps $list $deckCards $swapQueue $profile.protected_cards $profile.role_priority
     $list = Sort-Suggestions $list $profile.role_priority
+    foreach ($s in $list) { Normalize-SuggestionArrays $s }
     ReId-Suggestions $deckId $list
 
     $perDeckCounts[$deckId] = $list.Count

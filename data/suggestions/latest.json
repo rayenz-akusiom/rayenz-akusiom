@@ -56,15 +56,26 @@
                                                              "finisher":  "filled"
                                                          },
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -1091,22 +1102,131 @@
                                        "curve_summary":  null,
                                        "role_coverage":  null,
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
-                                                          "new_set_out":  [
-                                                                              "Plains"
-                                                                          ],
                                                           "new_set_in":  [
                                                                              "Caretaker\u0027s Talent",
                                                                              "Sunbillow Verge",
                                                                              "Patrolling Peacemaker"
-                                                                         ]
+                                                                         ],
+                                                          "new_set_out":  [
+                                                                              "Plains"
+                                                                          ],
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  3,
+                                                          "out_count":  1,
+                                                          "unpaired_in":  [
+                                                                              "Sunbillow Verge",
+                                                                              "Patrolling Peacemaker"
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+                                                                                       "Sunbillow Verge: no Out paired â€” cut suggested from main deck",
+                                                                                       "Patrolling Peacemaker: no Out paired â€” cut suggested from main deck"
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
                                           {
-                                              "suggestion_id":  "baird-001",
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Caretaker\u0027s Talent",
+                                                           "set_code":  "BLB",
+                                                           "collector_number":  "6",
+                                                           "scryfall_id":  "ad5ea98a-e36e-4ab9-b4da-cc572f3777db",
+                                                           "scryfall_uri":  "https://scryfall.com/card/blb/6/caretakers-talent?utm_source=api",
+                                                           "mana_cost":  "{2}{W}",
+                                                           "cmc":  3.0,
+                                                           "type_line":  "Enchantment â€” Class"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Plains cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Plains",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Caretaker\u0027s Talent",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "baird-001"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Sunbillow Verge",
+                                                           "set_code":  "DFT",
+                                                           "collector_number":  "264",
+                                                           "scryfall_id":  "94ed132f-b818-4dbf-9b4a-e5acb067e0a4",
+                                                           "scryfall_uri":  "https://scryfall.com/card/dft/264/sunbillow-verge?utm_source=api",
+                                                           "mana_cost":  "",
+                                                           "cmc":  0.0,
+                                                           "type_line":  "Land"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” no Out paired; cut suggested from main deck.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Sacred Foundry",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Sunbillow Verge",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "baird-002"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Patrolling Peacemaker",
+                                                           "set_code":  "EOC",
+                                                           "collector_number":  "5",
+                                                           "scryfall_id":  "1e06d6be-c2a3-4c73-a916-89674c0ddfed",
+                                                           "scryfall_uri":  "https://scryfall.com/card/eoc/5/patrolling-peacemaker?utm_source=api",
+                                                           "mana_cost":  "{2}{W}",
+                                                           "cmc":  3.0,
+                                                           "type_line":  "Artifact Creature â€” Robot Soldier"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” no Out paired; cut suggested from main deck.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Endless Foot Assault",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Patrolling Peacemaker",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "baird-003"
+                                          },
+                                          {
+                                              "suggestion_id":  "baird-004",
                                               "action":  "consider",
                                               "card":  {
                                                            "name":  "Take Up the Shield",
@@ -1118,22 +1238,23 @@
                                                            "type_line":  "Instant"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "Instant indestructible for Baird Ã¢â‚¬â€ Marvel alternative while Caretaker/Peacemaker swaps are BLB/EOC not MSH.",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Turbulent Steppe",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "protection"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "Instant indestructible for Baird Ã¢â‚¬â€ Marvel alternative while Caretaker/Peacemaker swaps are BLB/EOC not MSH.",
                                               "tags":  [
                                                            "protection",
                                                            "instant",
                                                            "commander-protection"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Plains",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -2240,15 +2361,26 @@
                                        "curve_summary":  null,
                                        "role_coverage":  null,
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -3408,19 +3540,30 @@
                                                              "ramp":  "filled"
                                                          },
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Icetill Explorer",
+                                                                             "Cool but Rude",
+                                                                             "Mole Man, Moloid Master"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Ramunap Excavator",
                                                                               "Regrowth",
                                                                               "Conduit of Worlds"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Icetill Explorer",
-                                                                             "Cool but Rude",
-                                                                             "Mole Man, Moloid Master"
-                                                                         ]
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  3,
+                                                          "out_count":  3,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -3456,10 +3599,75 @@
                                                            ],
                                               "fills_swap_slot":  "Mole Man, Moloid Master",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "big-ol-borbs-landscaping-irl-001"
                                           },
                                           {
-                                              "suggestion_id":  "big-ol-borbs-landscaping-irl-002",
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Icetill Explorer",
+                                                           "set_code":  "EOE",
+                                                           "collector_number":  "192",
+                                                           "scryfall_id":  "d9482aab-6ddf-48e1-84fa-b13d5ff81e69",
+                                                           "scryfall_uri":  "https://scryfall.com/card/eoe/192/icetill-explorer?utm_source=api",
+                                                           "mana_cost":  "{2}{G}{G}",
+                                                           "cmc":  4.0,
+                                                           "type_line":  "Creature â€” Insect Scout"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Ramunap Excavator cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Ramunap Excavator",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Icetill Explorer",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "big-ol-borbs-landscaping-irl-002"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Cool but Rude",
+                                                           "set_code":  "TMT",
+                                                           "collector_number":  "89",
+                                                           "scryfall_id":  "a566ab2d-6ec8-4833-8ad6-210378b1a20e",
+                                                           "scryfall_uri":  "https://scryfall.com/card/tmt/89/cool-but-rude?utm_source=api",
+                                                           "mana_cost":  "{1}{R}",
+                                                           "cmc":  2.0,
+                                                           "type_line":  "Enchantment â€” Class"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Regrowth cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Regrowth",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Cool but Rude",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "big-ol-borbs-landscaping-irl-003"
+                                          },
+                                          {
+                                              "suggestion_id":  "big-ol-borbs-landscaping-irl-004",
                                               "action":  "consider",
                                               "card":  {
                                                            "name":  "Return of the Mole Man",
@@ -3471,22 +3679,23 @@
                                                            "type_line":  "Enchantment"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "Landfall mill + Moloid token finisher from graveyard permanents Ã¢â‚¬â€ pairs with Mole Man (Icetill/Cool but Rude are EOE/TMT not Marvel).",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Lotus Field",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "ramp",
                                                                     "finisher"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "Landfall mill + Moloid token finisher from graveyard permanents Ã¢â‚¬â€ pairs with Mole Man (Icetill/Cool but Rude are EOE/TMT not Marvel).",
                                               "tags":  [
                                                            "landfall",
                                                            "enchantment"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Ramunap Excavator",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -4537,19 +4746,30 @@
                                                              "finisher":  "filled"
                                                          },
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Dependable Quinjet",
+                                                                             "N\u0027Yami-Class Mother Ship",
+                                                                             "The Thanos-Copter"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Calamity, Galloping Inferno",
                                                                               "Push the Limit",
                                                                               "Wake the Past"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Dependable Quinjet",
-                                                                             "N\u0027Yami-Class Mother Ship",
-                                                                             "The Thanos-Copter"
-                                                                         ]
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  3,
+                                                          "out_count":  3,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -4584,6 +4804,7 @@
                                                            ],
                                               "fills_swap_slot":  "Dependable Quinjet",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "dad-energy-racing-001"
                                           },
                                           {
@@ -4599,11 +4820,12 @@
                                                            "type_line":  "Artifact â€” Vehicle"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  "synergy",
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
                                               "confidence":  "high",
-                                              "rationale":  "Planned Marvel swap for tagged New Set In slot.",
+                                              "rationale":  "Queued add â€” paired with Push the Limit cut.",
                                               "tags":  [
-                                                           "marvel",
                                                            "swap"
                                                        ],
                                               "replaces":  [
@@ -4614,6 +4836,7 @@
                                                            ],
                                               "fills_swap_slot":  "N\u0027Yami-Class Mother Ship",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "dad-energy-racing-002"
                                           },
                                           {
@@ -4629,11 +4852,12 @@
                                                            "type_line":  "Legendary Artifact â€” Vehicle"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  "synergy",
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
                                               "confidence":  "high",
-                                              "rationale":  "Planned Marvel swap for tagged New Set In slot.",
+                                              "rationale":  "Queued add â€” paired with Wake the Past cut.",
                                               "tags":  [
-                                                           "marvel",
                                                            "swap"
                                                        ],
                                               "replaces":  [
@@ -4644,6 +4868,7 @@
                                                            ],
                                               "fills_swap_slot":  "The Thanos-Copter",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "dad-energy-racing-003"
                                           },
                                           {
@@ -4659,22 +4884,23 @@
                                                            "type_line":  "Artifact Ã¢â‚¬â€ Vehicle"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  [
-                                                                    "finisher",
-                                                                    "enabler"
-                                                                ],
                                               "confidence":  "medium",
                                               "rationale":  "Low-CMC Vehicle backup after mass artifact removal Ã¢â‚¬â€ easier to rebuild than Wake the Past.",
-                                              "tags":  [
-                                                           "vehicle",
-                                                           "low-cmc"
-                                                       ],
+                                              "swap_source":  "analysis",
                                               "replaces":  [
                                                                {
                                                                    "name":  "Glittering Massif",
                                                                    "quantity":  1
                                                                }
-                                                           ]
+                                                           ],
+                                              "roles_matched":  [
+                                                                    "finisher",
+                                                                    "enabler"
+                                                                ],
+                                              "tags":  [
+                                                           "vehicle",
+                                                           "low-cmc"
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -5763,21 +5989,95 @@
                                        "curve_summary":  null,
                                        "role_coverage":  null,
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Decorum Dissertation",
+                                                                             "Defiling Daemogoth"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Braids, Arisen Nightmare",
                                                                               "Orca, Siege Demon"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Decorum Dissertation",
-                                                                             "Defiling Daemogoth"
-                                                                         ]
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  2,
+                                                          "out_count":  2,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
-
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Decorum Dissertation",
+                                                           "set_code":  "SOS",
+                                                           "collector_number":  "78",
+                                                           "scryfall_id":  "f4ab2d9b-c73d-478d-aac7-4d3bb24296d2",
+                                                           "scryfall_uri":  "https://scryfall.com/card/sos/78/decorum-dissertation?utm_source=api",
+                                                           "mana_cost":  "{3}{B}{B}",
+                                                           "cmc":  5.0,
+                                                           "type_line":  "Sorcery â€” Lesson"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Braids, Arisen Nightmare cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Braids, Arisen Nightmare",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Decorum Dissertation",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "devils-by-the-horns-001"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Defiling Daemogoth",
+                                                           "set_code":  "SOC",
+                                                           "collector_number":  "25",
+                                                           "scryfall_id":  "2cde79eb-91c3-4a42-a2d3-e733e3b56846",
+                                                           "scryfall_uri":  "https://scryfall.com/card/soc/25/defiling-daemogoth?utm_source=api",
+                                                           "mana_cost":  "{3}{B}{B}",
+                                                           "cmc":  5.0,
+                                                           "type_line":  "Creature â€” Demon"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Orca, Siege Demon cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Orca, Siege Demon",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Defiling Daemogoth",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "devils-by-the-horns-002"
+                                          }
                                       ],
                       "deck_snapshot":  {
                                             "fetched_at":  "2026-06-21",
@@ -6767,15 +7067,26 @@
                                        "curve_summary":  null,
                                        "role_coverage":  null,
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -7880,52 +8191,97 @@
                                                              "ramp":  "underfilled"
                                                          },
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Soaring Lightbringer",
+                                                                             "Decorum Dissertation"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Sanctum of Stone Fangs",
                                                                               "Phyrexian Arena"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Soaring Lightbringer",
-                                                                             "Decorum Dissertation"
-                                                                         ]
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  2,
+                                                          "out_count":  2,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
                                           {
-                                              "suggestion_id":  "enchanted-dreamer-001",
-                                              "action":  "add",
+                                              "action":  "replace",
                                               "card":  {
-                                                           "name":  "Gleaming Bastion",
-                                                           "set_code":  "MSH",
-                                                           "collector_number":  "267",
-                                                           "scryfall_id":  "c9131bf5-17e3-4aa6-97ed-ed6426b247d0",
-                                                           "scryfall_uri":  "https://scryfall.com/card/msh/267/gleaming-bastion",
-                                                           "cmc":  0,
-                                                           "type_line":  "Land"
+                                                           "name":  "Soaring Lightbringer",
+                                                           "set_code":  "DSC",
+                                                           "collector_number":  "11",
+                                                           "scryfall_id":  "fc7895bf-a5fe-45bd-bc57-c4abe0703900",
+                                                           "scryfall_uri":  "https://scryfall.com/card/dsc/11/soaring-lightbringer?utm_source=api",
+                                                           "mana_cost":  "{4}{W}",
+                                                           "cmc":  5.0,
+                                                           "type_line":  "Enchantment Creature â€” Bird Glimmer"
                                                        },
                                               "quantity":  1,
                                               "roles_matched":  [
-                                                                    "ramp"
+                                                                    "synergy"
                                                                 ],
                                               "confidence":  "high",
-                                              "rationale":  "Fixes white and blue for Zur\u0027s {1}{W} ability Ã¢â‚¬â€ profile called out white mana as high value.",
+                                              "rationale":  "Queued add â€” paired with Sanctum of Stone Fangs cut.",
                                               "tags":  [
-                                                           "land",
-                                                           "white-mana",
-                                                           "multicolor-mana"
+                                                           "swap"
                                                        ],
                                               "replaces":  [
                                                                {
                                                                    "name":  "Sanctum of Stone Fangs",
                                                                    "quantity":  1
                                                                }
-                                                           ]
+                                                           ],
+                                              "fills_swap_slot":  "Soaring Lightbringer",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "enchanted-dreamer-001"
                                           },
                                           {
-                                              "suggestion_id":  "enchanted-dreamer-002",
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Decorum Dissertation",
+                                                           "set_code":  "SOS",
+                                                           "collector_number":  "78",
+                                                           "scryfall_id":  "f4ab2d9b-c73d-478d-aac7-4d3bb24296d2",
+                                                           "scryfall_uri":  "https://scryfall.com/card/sos/78/decorum-dissertation?utm_source=api",
+                                                           "mana_cost":  "{3}{B}{B}",
+                                                           "cmc":  5.0,
+                                                           "type_line":  "Sorcery â€” Lesson"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Phyrexian Arena cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Phyrexian Arena",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Decorum Dissertation",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "enchanted-dreamer-002"
+                                          },
+                                          {
+                                              "suggestion_id":  "enchanted-dreamer-003",
                                               "action":  "consider",
                                               "card":  {
                                                            "name":  "Blur of Heroism",
@@ -7937,25 +8293,26 @@
                                                            "type_line":  "Enchantment"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "Enchantment that draws and grants flash to Heroes Ã¢â‚¬â€ note Soaring Lightbringer/Decorum swaps are non-Marvel (DSC/SOS).",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Kiora Bests the Sea God",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "draw",
                                                                     "protection"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "Enchantment that draws and grants flash to Heroes Ã¢â‚¬â€ note Soaring Lightbringer/Decorum swaps are non-Marvel (DSC/SOS).",
                                               "tags":  [
                                                            "enchantment",
                                                            "draw"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Phyrexian Arena",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           },
                                           {
-                                              "suggestion_id":  "enchanted-dreamer-003",
+                                              "suggestion_id":  "enchanted-dreamer-004",
                                               "action":  "consider",
                                               "card":  {
                                                            "name":  "Matt Murdock, Justice Seeker",
@@ -7967,22 +8324,23 @@
                                                            "type_line":  "Legendary Creature Ã¢â‚¬â€ Human Advisor Hero"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "Ward {1} blanket for countered creatures Ã¢â‚¬â€ soft Zur protection without being a full counter package.",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Trouble in Pairs",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "protection"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "Ward {1} blanket for countered creatures Ã¢â‚¬â€ soft Zur protection without being a full counter package.",
                                               "tags":  [
                                                            "protection",
                                                            "creature",
                                                            "hexproof"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Kiora Bests the Sea God",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -9051,7 +9409,7 @@
                                                                       ],
                                                   "blocked_cards":  [
                                                                         [
-
+                                                                            "Gleaming Bastion"
                                                                         ]
                                                                     ]
                                               }
@@ -9078,19 +9436,30 @@
                                                              "finisher":  "filled"
                                                          },
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Thor, Asgard\u0027s Avenger",
+                                                                             "Thor, God of Thunder",
+                                                                             "Loki, Lord of Misrule"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Taurean Mauler",
                                                                               "Urabrask\u0027s Forge",
                                                                               "Zuko, Firebending Master"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Thor, Asgard\u0027s Avenger",
-                                                                             "Thor, God of Thunder",
-                                                                             "Loki, Lord of Misrule"
-                                                                         ]
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  3,
+                                                          "out_count":  3,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -9125,6 +9494,7 @@
                                                            ],
                                               "fills_swap_slot":  "Thor, Asgard\u0027s Avenger",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "god-bane-001"
                                           },
                                           {
@@ -9140,11 +9510,12 @@
                                                            "type_line":  "Legendary Creature â€” God Warrior Hero"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  "synergy",
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
                                               "confidence":  "high",
-                                              "rationale":  "Planned Marvel swap for tagged New Set In slot.",
+                                              "rationale":  "Queued add â€” paired with Urabrask\u0027s Forge cut.",
                                               "tags":  [
-                                                           "marvel",
                                                            "swap"
                                                        ],
                                               "replaces":  [
@@ -9155,6 +9526,7 @@
                                                            ],
                                               "fills_swap_slot":  "Thor, God of Thunder",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "god-bane-002"
                                           },
                                           {
@@ -9170,11 +9542,12 @@
                                                            "type_line":  "Legendary Creature â€” God Sorcerer Villain"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  "synergy",
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
                                               "confidence":  "high",
-                                              "rationale":  "Planned Marvel swap for tagged New Set In slot.",
+                                              "rationale":  "Queued add â€” paired with Zuko, Firebending Master cut.",
                                               "tags":  [
-                                                           "marvel",
                                                            "swap"
                                                        ],
                                               "replaces":  [
@@ -9185,6 +9558,7 @@
                                                            ],
                                               "fills_swap_slot":  "Loki, Lord of Misrule",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "god-bane-003"
                                           },
                                           {
@@ -9200,23 +9574,24 @@
                                                            "type_line":  "Artifact"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  [
-                                                                    "synergy",
-                                                                    "finisher"
-                                                                ],
                                               "confidence":  "high",
                                               "rationale":  "Choose God Ã¢â‚¬â€ every god spell grows the team; helps cohesive god strategy and Kratos counters.",
-                                              "tags":  [
-                                                           "god",
-                                                           "artifact",
-                                                           "cohesive-god-strategy"
-                                                       ],
+                                              "swap_source":  "analysis",
                                               "replaces":  [
                                                                {
                                                                    "name":  "Heliod, Sun-Crowned",
                                                                    "quantity":  1
                                                                }
-                                                           ]
+                                                           ],
+                                              "roles_matched":  [
+                                                                    "synergy",
+                                                                    "finisher"
+                                                                ],
+                                              "tags":  [
+                                                           "god",
+                                                           "artifact",
+                                                           "cohesive-god-strategy"
+                                                       ]
                                           },
                                           {
                                               "suggestion_id":  "god-bane-005",
@@ -9231,22 +9606,23 @@
                                                            "type_line":  "Legendary Creature Ã¢â‚¬â€ Human Doctor"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  [
-                                                                    "synergy",
-                                                                    "finisher"
-                                                                ],
                                               "confidence":  "medium",
                                               "rationale":  "Power-up turns into a God Warrior Hero Ã¢â‚¬â€ on-theme god creation outside the Thor swap slot.",
-                                              "tags":  [
-                                                           "god",
-                                                           "creature"
-                                                       ],
+                                              "swap_source":  "analysis",
                                               "replaces":  [
                                                                {
                                                                    "name":  "Thassa, Deep-Dwelling",
                                                                    "quantity":  1
                                                                }
-                                                           ]
+                                                           ],
+                                              "roles_matched":  [
+                                                                    "synergy",
+                                                                    "finisher"
+                                                                ],
+                                              "tags":  [
+                                                           "god",
+                                                           "creature"
+                                                       ]
                                           },
                                           {
                                               "suggestion_id":  "god-bane-006",
@@ -9261,22 +9637,23 @@
                                                            "type_line":  "Legendary Creature Ã¢â‚¬â€ Human Shapeshifter Villain"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  [
-                                                                    "synergy"
-                                                                ],
                                               "confidence":  "medium",
                                               "rationale":  "Clone your best God to duplicate triggers; partial Maskwood Nexus plan.",
-                                              "tags":  [
-                                                           "token-to-god",
-                                                           "copy",
-                                                           "creature"
-                                                       ],
+                                              "swap_source":  "analysis",
                                               "replaces":  [
                                                                {
                                                                    "name":  "Thassa, God of the Sea",
                                                                    "quantity":  1
                                                                }
-                                                           ]
+                                                           ],
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "tags":  [
+                                                           "token-to-god",
+                                                           "copy",
+                                                           "creature"
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -10556,15 +10933,26 @@
                                        "role_coverage":  null,
                                        "constraint_summary":  "ex-designed deck Ã¢â‚¬â€ changes only if extremely obvious",
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -11591,38 +11979,83 @@
                                        "curve_summary":  null,
                                        "role_coverage":  null,
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Shark Shredder, Killer Clone"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Noxious Gearhulk",
                                                                               "Heartless Conscription",
                                                                               "Woodfall Primus"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Shark Shredder, Killer Clone"
-                                                                         ]
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  1,
+                                                          "out_count":  3,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+                                                                               "Heartless Conscription",
+                                                                               "Woodfall Primus"
+                                                                           ],
+                                                          "reconciliation_notes":  [
+                                                                                       "Heartless Conscription: no In paired â€” Marvel add suggested",
+                                                                                       "Woodfall Primus: no In paired â€” Marvel add suggested"
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
                                           {
-                                              "suggestion_id":  "henzie-001",
-                                              "action":  "consider",
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Shark Shredder, Killer Clone",
+                                                           "set_code":  "TMT",
+                                                           "collector_number":  "73",
+                                                           "scryfall_id":  "8f946b3d-7d2a-4210-a909-d16078757e3b",
+                                                           "scryfall_uri":  "https://scryfall.com/card/tmt/73/shark-shredder-killer-clone?utm_source=api",
+                                                           "mana_cost":  "{2}{B}{B}",
+                                                           "cmc":  4.0,
+                                                           "type_line":  "Legendary Creature â€” Shark Octopus Ninja"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Noxious Gearhulk cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Noxious Gearhulk",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Shark Shredder, Killer Clone",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "henzie-001"
+                                          },
+                                          {
+                                              "action":  "replace",
                                               "card":  {
                                                            "name":  "Galactus, Devourer of Worlds",
                                                            "set_code":  "MSC",
                                                            "collector_number":  "8",
                                                            "scryfall_id":  "3a9df9dd-a480-406c-ba28-94895fbfb574",
-                                                           "scryfall_uri":  "https://scryfall.com/card/msc/8/galactus-devourer-of-worlds",
-                                                           "cmc":  10,
-                                                           "type_line":  "Legendary Creature Ã¢â‚¬â€ Elder Alien"
+                                                           "scryfall_uri":  "https://scryfall.com/card/msc/8/galactus-devourer-of-worlds?utm_source=api",
+                                                           "mana_cost":  "{10}",
+                                                           "cmc":  10.0,
+                                                           "type_line":  "Legendary Creature â€” Elder Alien"
                                                        },
                                               "quantity":  1,
                                               "roles_matched":  [
                                                                     "finisher"
                                                                 ],
                                               "confidence":  "low",
-                                              "rationale":  "MV10 blitz bomb with exile ETB Ã¢â‚¬â€ Shark Shredder swap is TMT not Marvel; this is a speculative Henzie target.",
+                                              "rationale":  "Unpaired Out slot â€” suggested Marvel add for Heartless Conscription.",
                                               "tags":  [
                                                            "mv-4-plus",
                                                            "creature",
@@ -11630,10 +12063,13 @@
                                                        ],
                                               "replaces":  [
                                                                {
-                                                                   "name":  "Noxious Gearhulk",
+                                                                   "name":  "Heartless Conscription",
                                                                    "quantity":  1
                                                                }
-                                                           ]
+                                                           ],
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_out_fill",
+                                              "suggestion_id":  "henzie-002"
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -12742,15 +13178,26 @@
                                        "role_coverage":  null,
                                        "constraint_summary":  "ex-designed deck Ã¢â‚¬â€ premium reprints only",
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -13614,21 +14061,32 @@
                                                          },
                                        "constraint_summary":  "max_cmc 8; steal/copy should hit each opponent",
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-                                                                                 "Improvisation Capstone: secondary In/Out tag (primary=Maybeboard)"
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Raph \u0026 Mikey, Troublemakers",
+                                                                             "Cosmic Cube",
+                                                                             "Loki\u0027s Scepter",
+                                                                             "Professor Hulk"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Zopandrel, Hunger Dominus",
                                                                               "Selvala\u0027s Stampede",
                                                                               "Chromatic Lantern",
                                                                               "Cavalier of Gales"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Raph \u0026 Mikey, Troublemakers",
-                                                                             "Cosmic Cube",
-                                                                             "Loki\u0027s Scepter",
-                                                                             "Professor Hulk"
-                                                                         ]
+                                                          "metadata_flags":  [
+                                                                                 "Improvisation Capstone: secondary In/Out tag (primary=Maybeboard)"
+                                                                             ],
+                                                          "in_count":  4,
+                                                          "out_count":  4,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -13663,7 +14121,40 @@
                                                            ],
                                               "fills_swap_slot":  "Cosmic Cube",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "milkshake-maelstrom-irl-001"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Raph \u0026 Mikey, Troublemakers",
+                                                           "set_code":  "TMT",
+                                                           "collector_number":  "167",
+                                                           "scryfall_id":  "8795fba4-0ff3-4c04-a81c-60408608a00c",
+                                                           "scryfall_uri":  "https://scryfall.com/card/tmt/167/raph-\u0026-mikey-troublemakers?utm_source=api",
+                                                           "mana_cost":  "{5}{R/G}{R/G}",
+                                                           "cmc":  7.0,
+                                                           "type_line":  "Legendary Creature â€” Mutant Ninja Turtle"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Zopandrel, Hunger Dominus cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Zopandrel, Hunger Dominus",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Raph \u0026 Mikey, Troublemakers",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "milkshake-maelstrom-irl-002"
                                           },
                                           {
                                               "action":  "replace",
@@ -13678,11 +14169,12 @@
                                                            "type_line":  "Legendary Artifact"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  "synergy",
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
                                               "confidence":  "high",
-                                              "rationale":  "Planned Marvel swap for tagged New Set In slot.",
+                                              "rationale":  "Queued add â€” paired with Chromatic Lantern cut.",
                                               "tags":  [
-                                                           "marvel",
                                                            "swap"
                                                        ],
                                               "replaces":  [
@@ -13693,7 +14185,8 @@
                                                            ],
                                               "fills_swap_slot":  "Loki\u0027s Scepter",
                                               "priority_tier":  "swap",
-                                              "suggestion_id":  "milkshake-maelstrom-irl-002"
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "milkshake-maelstrom-irl-003"
                                           },
                                           {
                                               "action":  "replace",
@@ -13708,11 +14201,12 @@
                                                            "type_line":  "Legendary Creature â€” Gamma Scientist Hero"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  "synergy",
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
                                               "confidence":  "high",
-                                              "rationale":  "Planned Marvel swap for tagged New Set In slot.",
+                                              "rationale":  "Queued add â€” paired with Cavalier of Gales cut.",
                                               "tags":  [
-                                                           "marvel",
                                                            "swap"
                                                        ],
                                               "replaces":  [
@@ -13723,10 +14217,11 @@
                                                            ],
                                               "fills_swap_slot":  "Professor Hulk",
                                               "priority_tier":  "swap",
-                                              "suggestion_id":  "milkshake-maelstrom-irl-003"
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "milkshake-maelstrom-irl-004"
                                           },
                                           {
-                                              "suggestion_id":  "milkshake-maelstrom-irl-004",
+                                              "suggestion_id":  "milkshake-maelstrom-irl-005",
                                               "action":  "consider",
                                               "card":  {
                                                            "name":  "Quantum Misalignment",
@@ -13738,21 +14233,22 @@
                                                            "type_line":  "Sorcery"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "Nonlegendary copy of your best permanent; doubles milkshake value (verify CMC Ã¢â€°Â¤ 8).",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Flamekin Herald",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "synergy"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "Nonlegendary copy of your best permanent; doubles milkshake value (verify CMC Ã¢â€°Â¤ 8).",
                                               "tags":  [
                                                            "copy",
                                                            "sorcery"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Zopandrel, Hunger Dominus",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -14956,15 +15452,26 @@
                                        "curve_summary":  null,
                                        "role_coverage":  null,
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -16032,21 +16539,96 @@
                                        "curve_summary":  null,
                                        "role_coverage":  null,
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
-                                                          "new_set_out":  [
-                                                                              "Plains"
-                                                                          ],
                                                           "new_set_in":  [
                                                                              "Witch Enchanter // Witch-Blessed Meadow",
                                                                              "War Room"
-                                                                         ]
+                                                                         ],
+                                                          "new_set_out":  [
+                                                                              "Plains"
+                                                                          ],
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  2,
+                                                          "out_count":  1,
+                                                          "unpaired_in":  [
+                                                                              "War Room"
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+                                                                                       "War Room: no Out paired â€” cut suggested from main deck"
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
                                           {
-                                              "suggestion_id":  "one-hobbit-army-001",
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Witch Enchanter // Witch-Blessed Meadow",
+                                                           "set_code":  "MH3",
+                                                           "collector_number":  "239",
+                                                           "scryfall_id":  "62061e7c-cf19-4f03-b8fa-2bdba62d6b0b",
+                                                           "scryfall_uri":  "https://scryfall.com/card/mh3/239/witch-enchanter-witch-blessed-meadow?utm_source=api",
+                                                           "mana_cost":  null,
+                                                           "cmc":  4.0,
+                                                           "type_line":  "Creature â€” Human Warlock // Land"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Plains cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Plains",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Witch Enchanter // Witch-Blessed Meadow",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "one-hobbit-army-001"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "War Room",
+                                                           "set_code":  "MKC",
+                                                           "collector_number":  "310",
+                                                           "scryfall_id":  "0775b4be-881c-4832-8954-d961064315b6",
+                                                           "scryfall_uri":  "https://scryfall.com/card/soc/422/war-room?utm_source=api",
+                                                           "mana_cost":  "",
+                                                           "cmc":  0.0,
+                                                           "type_line":  "Land"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” no Out paired; cut suggested from main deck.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Redress Fate",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "War Room",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "one-hobbit-army-002"
+                                          },
+                                          {
+                                              "suggestion_id":  "one-hobbit-army-003",
                                               "action":  "consider",
                                               "card":  {
                                                            "name":  "Iconic Shield",
@@ -16058,22 +16640,23 @@
                                                            "type_line":  "Artifact Ã¢â‚¬â€ Equipment"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "MV1 Equipment for Frodo auto-attach Ã¢â‚¬â€ Witch Enchanter/War Room swaps are MH3/others not Marvel.",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Resurrection Orb",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "synergy",
                                                                     "protection"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "MV1 Equipment for Frodo auto-attach Ã¢â‚¬â€ Witch Enchanter/War Room swaps are MH3/others not Marvel.",
                                               "tags":  [
                                                            "equipment",
                                                            "low-cmc"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Plains",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
@@ -17122,15 +17705,26 @@
 
                                                          },
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -22237,47 +22831,30 @@
                                                          },
                                        "constraint_summary":  "actively seeking Purphoros, God of the Spark Ã¢â‚¬â€ not in MSH/MSC/MAR",
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
+                                                          "new_set_in":  [
 
-                                                                             ],
+                                                                         ],
                                                           "new_set_out":  [
 
                                                                           ],
-                                                          "new_set_in":  [
+                                                          "metadata_flags":  [
 
-                                                                         ]
+                                                                             ],
+                                                          "in_count":  0,
+                                                          "out_count":  0,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
-                                          {
-                                              "suggestion_id":  "shrines-to-all-001",
-                                              "action":  "consider",
-                                              "card":  {
-                                                           "name":  "Folk Hero",
-                                                           "set_code":  "MSC",
-                                                           "collector_number":  "132",
-                                                           "scryfall_id":  "85bf7c95-4534-435b-bb25-f39340ecf9be",
-                                                           "scryfall_uri":  "https://scryfall.com/card/msc/132/folk-hero",
-                                                           "cmc":  0,
-                                                           "type_line":  "Legendary Enchantment Ã¢â‚¬â€ Background"
-                                                       },
-                                              "quantity":  1,
-                                              "roles_matched":  [
-                                                                    "synergy"
-                                                                ],
-                                              "confidence":  "low",
-                                              "rationale":  "No new Shrines or Purphoros in this product Ã¢â‚¬â€ Folk Hero is a weak stretch for legendary enchantment density.",
-                                              "tags":  [
-                                                           "shrine",
-                                                           "legendary-enchantment"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Redress Fate",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
-                                          }
+
                                       ],
                       "deck_snapshot":  {
                                             "fetched_at":  "2026-06-21",
@@ -23431,7 +24008,7 @@
                                                                       ],
                                                   "blocked_cards":  [
                                                                         [
-
+                                                                            "Folk Hero"
                                                                         ]
                                                                     ]
                                               }
@@ -23457,15 +24034,26 @@
                                                          },
                                        "constraint_summary":  "39 protected premium/expensive slots; upgrades otherwise welcome",
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Black Widow, Super Spy"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Thieving Amalgam"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Black Widow, Super Spy"
-                                                                         ]
+                                                          "metadata_flags":  [
+
+                                                                             ],
+                                                          "in_count":  1,
+                                                          "out_count":  1,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
@@ -23482,7 +24070,9 @@
                                                            "type_line":  "Legendary Creature â€” Human Spy Hero"
                                                        },
                                               "quantity":  1,
-                                              "roles_matched":  "synergy",
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
                                               "confidence":  "high",
                                               "rationale":  "Planned Marvel swap Ã¢â‚¬â€ combat theft into cast-from-exile synergizes with Arvinox better than manifest Amalgam.",
                                               "tags":  [
@@ -23497,6 +24087,7 @@
                                                            ],
                                               "fills_swap_slot":  "Black Widow, Super Spy",
                                               "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
                                               "suggestion_id":  "upside-down-klepto-001"
                                           }
                                       ],
@@ -24404,26 +24995,165 @@
                                                          },
                                        "constraint_summary":  "avoid extra-turn and sorcery-speed payoffs",
                                        "swap_queue":  {
-                                                          "metadata_flags":  [
-                                                                                 "Lightning Greaves: secondary In/Out tag (primary=Maybeboard)"
-                                                                             ],
+                                                          "new_set_in":  [
+                                                                             "Emeritus of Conflict // Lightning Bolt",
+                                                                             "Pyretic Ritual",
+                                                                             "Emeritus of Ideation // Ancestral Recall",
+                                                                             "Veil of Summer"
+                                                                         ],
                                                           "new_set_out":  [
                                                                               "Peregrine Drake",
                                                                               "Proctor\u0027s Gaze",
                                                                               "Staggershock",
                                                                               "Brain Freeze"
                                                                           ],
-                                                          "new_set_in":  [
-                                                                             "Emeritus of Conflict // Lightning Bolt",
-                                                                             "Pyretic Ritual",
-                                                                             "Emeritus of Ideation // Ancestral Recall",
-                                                                             "Veil of Summer"
-                                                                         ]
+                                                          "metadata_flags":  [
+                                                                                 "Lightning Greaves: secondary In/Out tag (primary=Maybeboard)"
+                                                                             ],
+                                                          "in_count":  4,
+                                                          "out_count":  4,
+                                                          "unpaired_in":  [
+
+                                                                          ],
+                                                          "unpaired_out":  [
+
+                                                                           ],
+                                                          "reconciliation_notes":  [
+
+                                                                                   ]
                                                       }
                                    },
                       "suggestions":  [
                                           {
-                                              "suggestion_id":  "winds-heed-my-command-001",
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Emeritus of Conflict // Lightning Bolt",
+                                                           "set_code":  "SOS",
+                                                           "collector_number":  "113",
+                                                           "scryfall_id":  "f58dba4f-1abb-47a3-a684-29c32bab95c0",
+                                                           "scryfall_uri":  "https://scryfall.com/card/sos/113/emeritus-of-conflict-lightning-bolt?utm_source=api",
+                                                           "mana_cost":  "{1}{R} // {R}",
+                                                           "cmc":  2.0,
+                                                           "type_line":  "Creature â€” Human Wizard // Instant"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Peregrine Drake cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Peregrine Drake",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Emeritus of Conflict // Lightning Bolt",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "winds-heed-my-command-001"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Pyretic Ritual",
+                                                           "set_code":  "SOA",
+                                                           "collector_number":  "46",
+                                                           "scryfall_id":  "1e577638-a7ed-4bcc-90fb-0cffe87d5a28",
+                                                           "scryfall_uri":  "https://scryfall.com/card/m11/153/pyretic-ritual?utm_source=api",
+                                                           "mana_cost":  "{1}{R}",
+                                                           "cmc":  2.0,
+                                                           "type_line":  "Instant"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Proctor\u0027s Gaze cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Proctor\u0027s Gaze",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Pyretic Ritual",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "winds-heed-my-command-002"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Emeritus of Ideation // Ancestral Recall",
+                                                           "set_code":  "SOS",
+                                                           "collector_number":  "45",
+                                                           "scryfall_id":  "75961d36-acf6-425f-9698-0bf52af74f31",
+                                                           "scryfall_uri":  "https://scryfall.com/card/sos/45/emeritus-of-ideation-ancestral-recall?utm_source=api",
+                                                           "mana_cost":  "{3}{U}{U} // {U}",
+                                                           "cmc":  5.0,
+                                                           "type_line":  "Creature â€” Human Wizard // Instant"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Staggershock cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Staggershock",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Emeritus of Ideation // Ancestral Recall",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "winds-heed-my-command-003"
+                                          },
+                                          {
+                                              "action":  "replace",
+                                              "card":  {
+                                                           "name":  "Veil of Summer",
+                                                           "set_code":  "SOA",
+                                                           "collector_number":  "60",
+                                                           "scryfall_id":  "aa686c34-1c11-469f-93c2-f9891aea521f",
+                                                           "scryfall_uri":  "https://scryfall.com/card/m20/198/veil-of-summer?utm_source=api",
+                                                           "mana_cost":  "{G}",
+                                                           "cmc":  1.0,
+                                                           "type_line":  "Instant"
+                                                       },
+                                              "quantity":  1,
+                                              "roles_matched":  [
+                                                                    "synergy"
+                                                                ],
+                                              "confidence":  "high",
+                                              "rationale":  "Queued add â€” paired with Brain Freeze cut.",
+                                              "tags":  [
+                                                           "swap"
+                                                       ],
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Brain Freeze",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
+                                              "fills_swap_slot":  "Veil of Summer",
+                                              "priority_tier":  "swap",
+                                              "swap_source":  "queue_in",
+                                              "suggestion_id":  "winds-heed-my-command-004"
+                                          },
+                                          {
+                                              "suggestion_id":  "winds-heed-my-command-005",
                                               "action":  "add",
                                               "card":  {
                                                            "name":  "Unexpected Windfall",
@@ -24435,28 +25165,29 @@
                                                            "type_line":  "Instant"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "high",
+                                              "rationale":  "Instant-speed ritual that draws 2 and makes Treasures Ã¢â‚¬â€ reloads storm turn without sorcery timing issues.",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Fog",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "ramp",
                                                                     "draw",
                                                                     "synergy"
                                                                 ],
-                                              "confidence":  "high",
-                                              "rationale":  "Instant-speed ritual that draws 2 and makes Treasures Ã¢â‚¬â€ reloads storm turn without sorcery timing issues.",
                                               "tags":  [
                                                            "instant",
                                                            "draw",
                                                            "ritual",
                                                            "instant-speed"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Peregrine Drake",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           },
                                           {
-                                              "suggestion_id":  "winds-heed-my-command-002",
+                                              "suggestion_id":  "winds-heed-my-command-006",
                                               "action":  "add",
                                               "card":  {
                                                            "name":  "Crossover Collaboration",
@@ -24468,26 +25199,27 @@
                                                            "type_line":  "Instant"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "Instant impulse draw + optional Treasure; storm copies multiply the reload.",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Favorable Winds",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "synergy",
                                                                     "draw"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "Instant impulse draw + optional Treasure; storm copies multiply the reload.",
                                               "tags":  [
                                                            "instant",
                                                            "draw",
                                                            "impulse-draw"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Proctor\u0027s Gaze",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           },
                                           {
-                                              "suggestion_id":  "winds-heed-my-command-003",
+                                              "suggestion_id":  "winds-heed-my-command-007",
                                               "action":  "consider",
                                               "card":  {
                                                            "name":  "Punishing Punch",
@@ -24499,22 +25231,23 @@
                                                            "type_line":  "Instant"
                                                        },
                                               "quantity":  1,
+                                              "confidence":  "medium",
+                                              "rationale":  "Instant burn finisher that scales with graveyard Ã¢â‚¬â€ fits bolt-style kill pattern at instant speed.",
+                                              "swap_source":  "analysis",
+                                              "replaces":  [
+                                                               {
+                                                                   "name":  "Crimson Wisps",
+                                                                   "quantity":  1
+                                                               }
+                                                           ],
                                               "roles_matched":  [
                                                                     "finisher"
                                                                 ],
-                                              "confidence":  "medium",
-                                              "rationale":  "Instant burn finisher that scales with graveyard Ã¢â‚¬â€ fits bolt-style kill pattern at instant speed.",
                                               "tags":  [
                                                            "instant",
                                                            "burn",
                                                            "lightning-bolt"
-                                                       ],
-                                              "replaces":  [
-                                                               {
-                                                                   "name":  "Staggershock",
-                                                                   "quantity":  1
-                                                               }
-                                                           ]
+                                                       ]
                                           }
                                       ],
                       "deck_snapshot":  {
