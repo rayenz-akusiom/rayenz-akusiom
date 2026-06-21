@@ -1806,7 +1806,7 @@
          card_in: cardIn,
          card_out: {
             name: cutMeta.name,
-            quantity: 1,
+            quantity: qty,
             set_code: cutMeta.set_code,
             collector_number: cutMeta.collector_number
          },

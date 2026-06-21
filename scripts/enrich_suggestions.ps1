@@ -49,6 +49,18 @@ function Get-ArchidektDeck([int]$DeckId) {
     return Invoke-RestMethod -Uri "$ARCHIDEKT_API/decks/$DeckId/" -Headers $headers
 }
 
+function Build-CategorySettings($deck) {
+    $map = @{}
+    foreach ($cat in @($deck.categories)) {
+        if (-not $cat -or -not $cat.name) { continue }
+        $map[$cat.name] = @{
+            includedInDeck = ($cat.includedInDeck -ne $false)
+            includedInPrice = ($cat.includedInPrice -ne $false)
+        }
+    }
+    return $map
+}
+
 function Build-Snapshot($deck) {
     $cards = @()
     foreach ($entry in $deck.cards) {
@@ -74,6 +86,7 @@ function Build-Snapshot($deck) {
     return @{
         fetched_at = (Get-Date -Format 'yyyy-MM-dd')
         cards = $cards
+        category_settings = (Build-CategorySettings $deck)
     }
 }
 
