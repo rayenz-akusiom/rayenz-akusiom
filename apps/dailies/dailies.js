@@ -456,7 +456,6 @@
 
                initCoconutShyAutomation();
                initWishingWellAutomation();
-            })();
 
             function initDailiesPage() {
                // Preview/testing override — set enabled: false for normal NST behaviour.
