@@ -28,6 +28,12 @@ for deck in data.get('decks', []):
         deck['suggestions'] = []
     elif isinstance(suggestions, dict):
         deck['suggestions'] = [suggestions]
+    for suggestion in deck.get('suggestions', []):
+        replaces = suggestion.get('replaces')
+        if replaces is None:
+            suggestion['replaces'] = []
+        elif isinstance(replaces, dict):
+            suggestion['replaces'] = [replaces]
 path.write_text(json.dumps(data, indent=4, ensure_ascii=False) + '\n', encoding='utf-8')
 "@
     & python -c $code
@@ -100,9 +106,25 @@ function Normalize-SuggestionsProperty($Value) {
     return ,@($Value)
 }
 
+function Normalize-SuggestionReplaces($Suggestion) {
+    if ($null -eq $Suggestion.replaces) {
+        $Suggestion.replaces = @()
+        return $Suggestion
+    }
+    if ($Suggestion.replaces -is [System.Collections.IList]) {
+        $Suggestion.replaces = @($Suggestion.replaces)
+    } else {
+        $Suggestion.replaces = ,@($Suggestion.replaces)
+    }
+    return $Suggestion
+}
+
 function Normalize-DeckSuggestions($Data) {
     foreach ($deck in $Data.decks) {
         $deck.suggestions = Normalize-SuggestionsProperty $deck.suggestions
+        foreach ($suggestion in $deck.suggestions) {
+            Normalize-SuggestionReplaces $suggestion | Out-Null
+        }
     }
     return $Data
 }

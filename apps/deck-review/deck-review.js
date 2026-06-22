@@ -45,11 +45,19 @@
          .replace(/"/g, '&quot;');
    }
 
-   function normalizeSuggestions(value) {
+   function normalizeArrayValue(value) {
       if (!value) {
          return [];
       }
       return Array.isArray(value) ? value : [value];
+   }
+
+   function normalizeSuggestion(suggestion) {
+      if (!suggestion) {
+         return suggestion;
+      }
+      suggestion.replaces = normalizeArrayValue(suggestion.replaces);
+      return suggestion;
    }
 
    function validateSuggestions(data) {
@@ -63,7 +71,7 @@
          throw new Error('Missing decks array');
       }
       data.decks.forEach(function (deck) {
-         deck.suggestions = normalizeSuggestions(deck.suggestions);
+         deck.suggestions = normalizeArrayValue(deck.suggestions).map(normalizeSuggestion);
       });
       return data;
    }

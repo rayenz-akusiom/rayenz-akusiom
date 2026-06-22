@@ -1200,10 +1200,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Plains cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Plains",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Plains",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Caretaker's Talent",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -1226,10 +1228,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — no Out paired; cut suggested from main deck.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Sacred Foundry",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Sacred Foundry",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Sunbillow Verge",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -1252,10 +1256,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — no Out paired; cut suggested from main deck.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Endless Foot Assault",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Endless Foot Assault",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Patrolling Peacemaker",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -1277,10 +1283,12 @@
                     "confidence": "medium",
                     "rationale": "Instant indestructible for Baird — Marvel alternative while Caretaker/Peacemaker swaps are BLB/EOC not MSH.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Turbulent Steppe",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Turbulent Steppe",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": "protection",
                     "tags": [
                         "protection",
@@ -3784,10 +3792,12 @@
                         "landfall",
                         "creature"
                     ],
-                    "replaces": {
-                        "name": "Conduit of Worlds",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Conduit of Worlds",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Mole Man, Moloid Master",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -3810,10 +3820,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Ramunap Excavator cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Ramunap Excavator",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Ramunap Excavator",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Icetill Explorer",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -3836,10 +3848,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Regrowth cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Regrowth",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Regrowth",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Cool but Rude",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -3861,10 +3875,12 @@
                     "confidence": "medium",
                     "rationale": "Landfall mill + Moloid token finisher from graveyard permanents — pairs with Mole Man (Icetill/Cool but Rude are EOE/TMT not Marvel).",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Lotus Field",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Lotus Field",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "ramp",
                         "finisher"
@@ -5051,10 +5067,12 @@
                         "vehicle",
                         "mana-rock"
                     ],
-                    "replaces": {
-                        "name": "Calamity, Galloping Inferno",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Calamity, Galloping Inferno",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Dependable Quinjet",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -5077,10 +5095,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Push the Limit cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Push the Limit",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Push the Limit",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "N'Yami-Class Mother Ship",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -5103,10 +5123,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Wake the Past cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Wake the Past",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Wake the Past",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "The Thanos-Copter",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -5128,10 +5150,12 @@
                     "confidence": "medium",
                     "rationale": "Low-CMC Vehicle backup after mass artifact removal — easier to rebuild than Wake the Past.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Glittering Massif",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Glittering Massif",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "finisher",
                         "enabler"
@@ -6332,10 +6356,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Braids, Arisen Nightmare cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Braids, Arisen Nightmare",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Braids, Arisen Nightmare",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Decorum Dissertation",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -6358,10 +6384,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Orca, Siege Demon cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Orca, Siege Demon",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Orca, Siege Demon",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Defiling Daemogoth",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -8676,10 +8704,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Sanctum of Stone Fangs cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Sanctum of Stone Fangs",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Sanctum of Stone Fangs",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Soaring Lightbringer",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -8702,10 +8732,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Phyrexian Arena cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Phyrexian Arena",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Phyrexian Arena",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Decorum Dissertation",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -8727,10 +8759,12 @@
                     "confidence": "medium",
                     "rationale": "Enchantment that draws and grants flash to Heroes — note Soaring Lightbringer/Decorum swaps are non-Marvel (DSC/SOS).",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Kiora Bests the Sea God",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Kiora Bests the Sea God",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "draw",
                         "protection"
@@ -8756,10 +8790,12 @@
                     "confidence": "medium",
                     "rationale": "Ward {1} blanket for countered creatures — soft Zur protection without being a full counter package.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Trouble in Pairs",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Trouble in Pairs",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": "protection",
                     "tags": [
                         "protection",
@@ -9995,10 +10031,12 @@
                         "god",
                         "creature"
                     ],
-                    "replaces": {
-                        "name": "Taurean Mauler",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Taurean Mauler",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Thor, Asgard's Avenger",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -10021,10 +10059,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Urabrask's Forge cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Urabrask's Forge",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Urabrask's Forge",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Thor, God of Thunder",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -10047,10 +10087,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Zuko, Firebending Master cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Zuko, Firebending Master",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Zuko, Firebending Master",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Loki, Lord of Misrule",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -10072,10 +10114,12 @@
                     "confidence": "high",
                     "rationale": "Choose God — every god spell grows the team; helps cohesive god strategy and Kratos counters.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Heliod, Sun-Crowned",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Heliod, Sun-Crowned",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "synergy",
                         "finisher"
@@ -10102,10 +10146,12 @@
                     "confidence": "medium",
                     "rationale": "Power-up turns into a God Warrior Hero — on-theme god creation outside the Thor swap slot.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Thassa, Deep-Dwelling",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Thassa, Deep-Dwelling",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "synergy",
                         "finisher"
@@ -10131,10 +10177,12 @@
                     "confidence": "medium",
                     "rationale": "Clone your best God to duplicate triggers; partial Maskwood Nexus plan.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Thassa, God of the Sea",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Thassa, God of the Sea",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": "synergy",
                     "tags": [
                         "token-to-god",
@@ -12660,10 +12708,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Noxious Gearhulk cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Noxious Gearhulk",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Noxious Gearhulk",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Shark Shredder, Killer Clone",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -12690,10 +12740,12 @@
                         "creature",
                         "etb"
                     ],
-                    "replaces": {
-                        "name": "Heartless Conscription",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Heartless Conscription",
+                            "quantity": 1
+                        }
+                    ],
                     "priority_tier": "swap",
                     "swap_source": "queue_out_fill",
                     "suggestion_id": "henzie-002"
@@ -14874,10 +14926,12 @@
                         "artifact",
                         "steal"
                     ],
-                    "replaces": {
-                        "name": "Selvala's Stampede",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Selvala's Stampede",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Cosmic Cube",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -14900,10 +14954,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Zopandrel, Hunger Dominus cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Zopandrel, Hunger Dominus",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Zopandrel, Hunger Dominus",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Raph & Mikey, Troublemakers",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -14926,10 +14982,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Chromatic Lantern cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Chromatic Lantern",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Chromatic Lantern",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Loki's Scepter",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -14952,10 +15010,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Cavalier of Gales cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Cavalier of Gales",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Cavalier of Gales",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Professor Hulk",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -14977,10 +15037,12 @@
                     "confidence": "medium",
                     "rationale": "Nonlegendary copy of your best permanent; doubles milkshake value (verify CMC â‰¤ 8).",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Flamekin Herald",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Flamekin Herald",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": "synergy",
                     "tags": [
                         "copy",
@@ -17479,10 +17541,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Plains cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Plains",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Plains",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Witch Enchanter // Witch-Blessed Meadow",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -17505,10 +17569,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — no Out paired; cut suggested from main deck.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Redress Fate",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Redress Fate",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "War Room",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -17530,10 +17596,12 @@
                     "confidence": "medium",
                     "rationale": "MV1 Equipment for Frodo auto-attach — Witch Enchanter/War Room swaps are MH3/others not Marvel.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Resurrection Orb",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Resurrection Orb",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "synergy",
                         "protection"
@@ -25248,10 +25316,12 @@
                         "steal",
                         "creature"
                     ],
-                    "replaces": {
-                        "name": "Thieving Amalgam",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Thieving Amalgam",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Black Widow, Super Spy",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -26276,10 +26346,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Peregrine Drake cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Peregrine Drake",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Peregrine Drake",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Emeritus of Conflict // Lightning Bolt",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -26302,10 +26374,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Proctor's Gaze cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Proctor's Gaze",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Proctor's Gaze",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Pyretic Ritual",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -26328,10 +26402,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Staggershock cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Staggershock",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Staggershock",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Emeritus of Ideation // Ancestral Recall",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -26354,10 +26430,12 @@
                     "confidence": "high",
                     "rationale": "Queued add — paired with Brain Freeze cut.",
                     "tags": "swap",
-                    "replaces": {
-                        "name": "Brain Freeze",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Brain Freeze",
+                            "quantity": 1
+                        }
+                    ],
                     "fills_swap_slot": "Veil of Summer",
                     "priority_tier": "swap",
                     "swap_source": "queue_in",
@@ -26379,10 +26457,12 @@
                     "confidence": "high",
                     "rationale": "Instant-speed ritual that draws 2 and makes Treasures — reloads storm turn without sorcery timing issues.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Fog",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Fog",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "ramp",
                         "draw",
@@ -26411,10 +26491,12 @@
                     "confidence": "medium",
                     "rationale": "Instant impulse draw + optional Treasure; storm copies multiply the reload.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Favorable Winds",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Favorable Winds",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": [
                         "synergy",
                         "draw"
@@ -26441,10 +26523,12 @@
                     "confidence": "medium",
                     "rationale": "Instant burn finisher that scales with graveyard — fits bolt-style kill pattern at instant speed.",
                     "swap_source": "analysis",
-                    "replaces": {
-                        "name": "Crimson Wisps",
-                        "quantity": 1
-                    },
+                    "replaces": [
+                        {
+                            "name": "Crimson Wisps",
+                            "quantity": 1
+                        }
+                    ],
                     "roles_matched": "finisher",
                     "tags": [
                         "instant",
