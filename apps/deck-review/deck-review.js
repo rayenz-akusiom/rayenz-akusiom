@@ -45,6 +45,13 @@
          .replace(/"/g, '&quot;');
    }
 
+   function normalizeSuggestions(value) {
+      if (!value) {
+         return [];
+      }
+      return Array.isArray(value) ? value : [value];
+   }
+
    function validateSuggestions(data) {
       if (!data || typeof data !== 'object') {
          throw new Error('Invalid JSON: expected an object');
@@ -55,6 +62,9 @@
       if (!Array.isArray(data.decks)) {
          throw new Error('Missing decks array');
       }
+      data.decks.forEach(function (deck) {
+         deck.suggestions = normalizeSuggestions(deck.suggestions);
+      });
       return data;
    }
 

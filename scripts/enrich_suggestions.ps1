@@ -14,8 +14,31 @@ function Read-Utf8Text([string]$Path) {
     return [System.IO.File]::ReadAllText($Path, $Utf8NoBom)
 }
 
+function Repair-SuggestionsJsonFile([string]$Path) {
+    $code = @"
+import json, pathlib
+path = pathlib.Path(r'''$Path''')
+data = json.loads(path.read_text(encoding='utf-8'))
+for deck in data.get('decks', []):
+    suggestions = deck.get('suggestions')
+    if suggestions is None:
+        deck['suggestions'] = []
+    elif isinstance(suggestions, dict):
+        deck['suggestions'] = [suggestions]
+path.write_text(json.dumps(data, indent=4, ensure_ascii=False) + '\n', encoding='utf-8')
+"@
+    & python -c $code
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to repair suggestions arrays in $Path"
+    }
+}
+
 function Write-JsonFile([string]$Path, $Object, [int]$Depth = 20) {
+    if ($Object.decks) {
+        Normalize-DeckSuggestions $Object | Out-Null
+    }
     $json = $Object | ConvertTo-Json -Depth $Depth
+    $json = $json -replace '"suggestions":\s*null', '"suggestions": []'
     [System.IO.File]::WriteAllText($Path, $json + "`n", $Utf8NoBom)
 }
 
@@ -53,12 +76,11 @@ function Repair-ObjectStrings($Object) {
     if ($Object -is [string]) {
         return Repair-MojibakeText $Object
     }
-    if ($Object -is [System.Collections.IEnumerable] -and $Object -isnot [string]) {
-        $repaired = @()
-        foreach ($item in $Object) {
-            $repaired += ,(Repair-ObjectStrings $item)
+    if ($Object -is [System.Collections.IList]) {
+        for ($i = 0; $i -lt $Object.Count; $i++) {
+            $Object[$i] = Repair-ObjectStrings $Object[$i]
         }
-        return $repaired
+        return $Object
     }
     if ($Object -is [pscustomobject]) {
         foreach ($prop in $Object.PSObject.Properties) {
@@ -69,9 +91,23 @@ function Repair-ObjectStrings($Object) {
     return $Object
 }
 
+function Normalize-SuggestionsProperty($Value) {
+    if ($null -eq $Value) { return @() }
+    if ($Value -is [System.Collections.IList]) { return @($Value) }
+    return ,@($Value)
+}
+
+function Normalize-DeckSuggestions($Data) {
+    foreach ($deck in $Data.decks) {
+        $deck.suggestions = Normalize-SuggestionsProperty $deck.suggestions
+    }
+    return $Data
+}
+
 function Read-JsonFile([string]$Path) {
     $data = (Read-Utf8Text $Path) | ConvertFrom-Json
-    return Repair-ObjectStrings $data
+    $data = Repair-ObjectStrings $data
+    return Normalize-DeckSuggestions $data
 }
 
 function Parse-YamlList([string]$Text, [string]$FieldName) {
@@ -169,4 +205,5 @@ foreach ($deckEntry in $data.decks) {
 
 $outPath = if ($Output) { $Output } else { [System.IO.Path]::ChangeExtension($InputPath, '.enriched.json') }
 Write-JsonFile $outPath $data 20
+Repair-SuggestionsJsonFile $outPath
 Write-Host "Wrote $outPath ($((Get-Item $outPath).Length) bytes)"
