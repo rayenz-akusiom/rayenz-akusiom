@@ -392,6 +392,14 @@
          background: linear-gradient(135deg, #1a0a2e, #4a148c);
       }
 
+      .seasonal-alert--altador {
+         background: linear-gradient(135deg, #e65100, #f9a825);
+      }
+
+      .seasonal-alert--kiko {
+         background: linear-gradient(135deg, #006064, #26c6da);
+      }
+
       .automated-panel {
          text-align: left;
       }

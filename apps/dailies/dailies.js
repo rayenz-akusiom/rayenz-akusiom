@@ -473,7 +473,41 @@
                   return nst.getHours() === 0;
                }
 
+               function isAltadorCupActive(nst) {
+                  var month = nst.getMonth();
+                  var day = nst.getDate();
+                  if (month === 5 && day >= 22) {
+                     return true;
+                  }
+                  return month === 6 && day <= 14;
+               }
+
+               function isKikoMatchMadnessActive(nst) {
+                  var month = nst.getMonth();
+                  var day = nst.getDate();
+                  if (month === 5 && day >= 22) {
+                     return true;
+                  }
+                  return month === 6 && day <= 6;
+               }
+
                var SEASONAL_EVENTS = [
+                  {
+                     name: 'Altador Cup',
+                     url: 'https://www.neopets.com/altador/colosseum/',
+                     img: 'https://images.neopets.com/items/toy_altador_cup_gold_whistle.gif',
+                     note: 'Press tour trivia · sign-ups · tournament through July 14',
+                     styleClass: 'seasonal-alert--altador',
+                     isActive: isAltadorCupActive
+                  },
+                  {
+                     name: 'Kiko Match Madness',
+                     url: 'https://www.neopets.com/games/kiko/',
+                     img: 'https://images.neopets.com/items/toy_kiko_plushie.gif',
+                     note: 'New challenge every 3 days · through July 6',
+                     styleClass: 'seasonal-alert--kiko',
+                     isActive: isKikoMatchMadnessActive
+                  },
                   {
                      name: 'Advent Calendar',
                      url: 'https://www.neopets.com/winter/adventcalendar.phtml',
