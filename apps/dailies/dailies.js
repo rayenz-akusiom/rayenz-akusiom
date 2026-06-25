@@ -1,6 +1,12 @@
 (function () {
    'use strict';
 
+               var __dailiesTimersStarted = false;
+               var __dailiesSettingsGlobalsBound = false;
+               var __dailiesBridgeBound = false;
+               var __dailiesCloseSettings = null;
+               var __dailiesBridgeHandler = null;
+
                var COCOSHY_URL = 'https://www.neopets.com/halloween/process_cocoshy.phtml?coconut=3';
                var MAX_THROWS = 20;
                var THROW_DELAY_MS = 400;
@@ -454,9 +460,6 @@
                   refreshWishingWellStatus();
                }
 
-               initCoconutShyAutomation();
-               initWishingWellAutomation();
-
             function initDailiesPage() {
                // Preview/testing override — set enabled: false for normal NST behaviour.
                // mode: 'all' shows every event; 'simulate' runs isActive() against simulateNst.
@@ -590,6 +593,10 @@
 
                function scheduleSeasonalAlerts() {
                   renderSeasonalAlerts();
+                  if (__dailiesTimersStarted) {
+                     return;
+                  }
+                  __dailiesTimersStarted = true;
                   setInterval(renderSeasonalAlerts, 60000);
                   (function waitForNstMidnight() {
                      setTimeout(function () {
@@ -752,11 +759,16 @@
                      settingsBackdrop.addEventListener('click', closeSettings);
                   }
 
-                  document.addEventListener('keydown', function (event) {
-                     if (event.key === 'Escape' && settingsTray.classList.contains('open')) {
-                        closeSettings();
-                     }
-                  });
+                  __dailiesCloseSettings = closeSettings;
+                  if (!__dailiesSettingsGlobalsBound) {
+                     __dailiesSettingsGlobalsBound = true;
+                     document.addEventListener('keydown', function (event) {
+                        var tray = document.getElementById('settings-tray');
+                        if (event.key === 'Escape' && tray && tray.classList.contains('open') && __dailiesCloseSettings) {
+                           __dailiesCloseSettings();
+                        }
+                     });
+                  }
 
                   if (mainPetInput) {
                      var storedPet = localStorage.getItem(MAIN_PET_KEY) || DEFAULT_PET;
@@ -776,11 +788,17 @@
                      refreshPetSlug(petName);
                   }
 
+                  __dailiesBridgeHandler = onBridgeReady;
                   if (typeof window.__neopetsFetch === 'function') {
                      onBridgeReady();
                   }
-                  else {
-                     document.addEventListener('neopets-dailies-ready', onBridgeReady);
+                  else if (!__dailiesBridgeBound) {
+                     __dailiesBridgeBound = true;
+                     document.addEventListener('neopets-dailies-ready', function () {
+                        if (__dailiesBridgeHandler) {
+                           __dailiesBridgeHandler();
+                        }
+                     });
                   }
                })();
 
@@ -796,5 +814,11 @@
                }
             }
 
-            initDailiesPage();
+            function initDailiesApp() {
+               initCoconutShyAutomation();
+               initWishingWellAutomation();
+               initDailiesPage();
+            }
+
+            window.__initDailiesApp = initDailiesApp;
 })();

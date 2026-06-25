@@ -49,6 +49,9 @@
          html +
          '</div></div></div>';
       await loadScript();
+      if (typeof window.__initDailiesApp === 'function') {
+         window.__initDailiesApp();
+      }
       if (typeof window.__neopetsFetch === 'function') {
          document.dispatchEvent(new CustomEvent('neopets-dailies-ready'));
       }
