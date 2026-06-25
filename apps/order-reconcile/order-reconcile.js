@@ -327,10 +327,27 @@
       return candidates;
    }
 
+   async function resolveCubeCandidateCategories(candidates) {
+      for (var i = 0; i < candidates.length; i++) {
+         var c = candidates[i];
+         if (!c.is_cube || c.destination_category) {
+            continue;
+         }
+         var deck = getDeckById(c.deck_id);
+         if (!deck || !deck.deck_snapshot) {
+            continue;
+         }
+         var ci = await fetchColorIdentity(c.queued_in && c.queued_in.name);
+         c.destination_category = OrderReconcileExport.resolveCubeDestinationCategory(
+            deck.deck_snapshot, ci);
+      }
+      return candidates;
+   }
+
    function makeAssignment(copy, candidate, reason) {
       var deck = getDeckById(candidate.deck_id);
       var destCat = candidate.destination_category;
-      if (!destCat && deck && deck.deck_snapshot) {
+      if (!destCat && deck && deck.deck_snapshot && !candidate.is_cube) {
          var cats = OrderReconcileExport.deckCategories(deck.deck_snapshot);
          destCat = cats[0] || '';
       }
@@ -349,7 +366,7 @@
       };
    }
 
-   function buildAssignmentPlan() {
+   async function buildAssignmentPlan() {
       state.copies = expandToCopies(state.acquiredCards);
       state.assignments = [];
       state.needsReview = [];
@@ -368,9 +385,12 @@
          return candidates.filter(function (c) { return !usedSlots[c.slot_key]; });
       }
 
-      Object.keys(byName).forEach(function (nameKey) {
+      var nameKeys = Object.keys(byName);
+      for (var ki = 0; ki < nameKeys.length; ki++) {
+         var nameKey = nameKeys[ki];
          var copies = byName[nameKey];
-         var candidates = findCandidatesForName(copies[0].card_name);
+         var candidates = await resolveCubeCandidateCategories(
+            findCandidatesForName(copies[0].card_name));
          var n = copies.length;
          var s = candidates.length;
 
@@ -384,7 +404,7 @@
                   destination_category: ''
                });
             });
-            return;
+            continue;
          }
 
          if (n >= s) {
@@ -404,7 +424,7 @@
                   destination_category: ''
                });
             }
-            return;
+            continue;
          }
 
          var freeForConflict = freeCandidates(candidates);
@@ -427,7 +447,7 @@
                conflict_note: conflictNote
             });
          });
-      });
+      }
       saveProgress();
    }
 
@@ -514,9 +534,10 @@
             acq.name = newName;
          }
       });
-      buildAssignmentPlan();
-      saveProgress();
-      render();
+      buildAssignmentPlan().then(function () {
+         saveProgress();
+         render();
+      });
    }
 
    function deckOptionTags(decks, selectedId, disabledSet) {
@@ -726,6 +747,29 @@
          encodeURIComponent(String(collectorNumber)) + '?format=image&version=normal';
    }
 
+   async function fetchColorIdentity(cardName) {
+      if (!cardName) {
+         return [];
+      }
+      var cacheKey = cardName.toLowerCase();
+      if (state.colorIdentityCache[cacheKey]) {
+         return state.colorIdentityCache[cacheKey];
+      }
+      try {
+         var url = 'https://api.scryfall.com/cards/named?exact=' + encodeURIComponent(cardName);
+         var resp = await fetch(url);
+         if (!resp.ok) {
+            return [];
+         }
+         var json = await resp.json();
+         var ci = json.color_identity || [];
+         state.colorIdentityCache[cacheKey] = ci;
+         return ci;
+      } catch (e) {
+         return [];
+      }
+   }
+
    async function resolveCubeDestinationForCard(deck, cardName) {
       if (!deck || !deck.deck_snapshot || !cardName) {
          return '';
@@ -743,24 +787,8 @@
       if (matched && matched.color_identity && matched.color_identity.length) {
          return OrderReconcileExport.resolveCubeDestinationCategory(snapshot, matched.color_identity);
       }
-      var cacheKey = cardName.toLowerCase();
-      if (state.colorIdentityCache[cacheKey]) {
-         return OrderReconcileExport.resolveCubeDestinationCategory(
-            snapshot, state.colorIdentityCache[cacheKey]);
-      }
-      try {
-         var url = 'https://api.scryfall.com/cards/named?exact=' + encodeURIComponent(cardName);
-         var resp = await fetch(url);
-         if (!resp.ok) {
-            return '';
-         }
-         var json = await resp.json();
-         var ci = json.color_identity || [];
-         state.colorIdentityCache[cacheKey] = ci;
-         return OrderReconcileExport.resolveCubeDestinationCategory(snapshot, ci);
-      } catch (e) {
-         return '';
-      }
+      var ci = await fetchColorIdentity(cardName);
+      return OrderReconcileExport.resolveCubeDestinationCategory(snapshot, ci);
    }
 
    async function fetchPrintings(cardName) {
@@ -924,6 +952,24 @@
       return null;
    }
 
+   function setReconcileImage(img, src) {
+      if (!img) {
+         return;
+      }
+      var btn = img.closest('.or-card-image');
+      if (src) {
+         img.src = src;
+         if (btn) {
+            btn.classList.remove('or-card-image-empty');
+         }
+      } else {
+         img.removeAttribute('src');
+         if (btn) {
+            btn.classList.add('or-card-image-empty');
+         }
+      }
+   }
+
    function applyCutToCardEl(cardEl, cut) {
       if (!cut) {
          return;
@@ -931,8 +977,10 @@
       cardEl.querySelector('[data-or-cut-value]').value = cutValueFromOpt(cut);
       cardEl.querySelector('[data-or-cut-summary]').textContent = formatCardLabel(cut);
       var imgOut = cardEl.querySelector('[data-or-img-out]');
-      if (imgOut && cut.set_code && cut.collector_number) {
-         imgOut.src = scryfallImageFromPrinting(cut.set_code, cut.collector_number);
+      if (imgOut) {
+         setReconcileImage(imgOut, (cut.set_code && cut.collector_number)
+            ? scryfallImageFromPrinting(cut.set_code, cut.collector_number)
+            : '');
       }
    }
 
@@ -957,168 +1005,6 @@
          return raw ? JSON.parse(raw) : null;
       } catch (e) {
          return null;
-      }
-   }
-
-   function loadPickerCardSize() {
-      try {
-         var raw = localStorage.getItem('rayenzHubPickerCardSize');
-         if (raw === 'M' || raw === 'L' || raw === 'XL') {
-            return raw;
-         }
-         return 'S';
-      } catch (e) {
-         return 'S';
-      }
-   }
-
-   function savePickerCardSize(size) {
-      try {
-         localStorage.setItem('rayenzHubPickerCardSize', size);
-      } catch (e) {
-         /* ignore */
-      }
-   }
-
-   var PICKER_CARD_SIZE_PX = { S: 140, M: 180, L: 230, XL: 300 };
-
-   function applyPickerGridSize(grid, sizeKey) {
-      var px = PICKER_CARD_SIZE_PX[sizeKey] || PICKER_CARD_SIZE_PX.S;
-      grid.style.setProperty('--or-picker-card-min', px + 'px');
-   }
-
-   function updatePickerSizeButtons(dialog, sizeKey) {
-      dialog.querySelectorAll('[data-picker-size]').forEach(function (btn) {
-         btn.classList.toggle('active', btn.getAttribute('data-picker-size') === sizeKey);
-      });
-   }
-
-   function sortPickerItems(items) {
-      return items.slice().sort(function (a, b) {
-         var aLines = a.lines || [];
-         var bLines = b.lines || [];
-         var cmp = String(aLines[0] || '').toLowerCase().localeCompare(String(bLines[0] || '').toLowerCase());
-         if (cmp !== 0) {
-            return cmp;
-         }
-         return String(aLines[1] || '').toLowerCase().localeCompare(String(bLines[1] || '').toLowerCase());
-      });
-   }
-
-   function appendPickerOptionMeta(meta, lines) {
-      var nonEmpty = (lines || []).filter(function (line) { return line; });
-      if (!nonEmpty.length) {
-         return;
-      }
-      var nameEl = document.createElement('div');
-      nameEl.className = 'or-picker-option-name';
-      nameEl.textContent = nonEmpty[0];
-      nameEl.title = nonEmpty[0];
-      meta.appendChild(nameEl);
-      if (nonEmpty.length > 1) {
-         var badges = document.createElement('div');
-         badges.className = 'or-picker-option-badges';
-         for (var i = 1; i < nonEmpty.length; i++) {
-            var badge = document.createElement('span');
-            badge.className = 'or-picker-option-badge';
-            badge.textContent = nonEmpty[i];
-            badges.appendChild(badge);
-         }
-         meta.appendChild(badges);
-      }
-   }
-
-   function ensurePickerDialog() {
-      var dialog = document.getElementById('or-picker-dialog-el');
-      if (dialog) {
-         return dialog;
-      }
-      dialog = document.createElement('dialog');
-      dialog.className = 'or-picker-dialog-el';
-      dialog.id = 'or-picker-dialog-el';
-      dialog.innerHTML =
-         '<div class="or-picker-dialog-inner">' +
-         '<header class="or-picker-dialog-header">' +
-         '<h3 id="or-picker-title"></h3>' +
-         '<div class="or-picker-header-controls">' +
-         '<div class="or-picker-size-group" role="group" aria-label="Card size">' +
-         '<button type="button" class="or-picker-size-btn" data-picker-size="S">S</button>' +
-         '<button type="button" class="or-picker-size-btn" data-picker-size="M">M</button>' +
-         '<button type="button" class="or-picker-size-btn" data-picker-size="L">L</button>' +
-         '<button type="button" class="or-picker-size-btn" data-picker-size="XL">XL</button>' +
-         '</div>' +
-         '<button type="button" class="or-btn or-btn-ghost" data-or-picker-close>Close</button>' +
-         '</div></header>' +
-         '<div class="or-picker-grid" id="or-picker-grid"></div></div>';
-      document.body.appendChild(dialog);
-      var grid = dialog.querySelector('#or-picker-grid');
-      var initialSize = loadPickerCardSize();
-      applyPickerGridSize(grid, initialSize);
-      updatePickerSizeButtons(dialog, initialSize);
-      dialog.querySelectorAll('[data-picker-size]').forEach(function (btn) {
-         btn.addEventListener('click', function () {
-            var sizeKey = btn.getAttribute('data-picker-size');
-            savePickerCardSize(sizeKey);
-            applyPickerGridSize(grid, sizeKey);
-            updatePickerSizeButtons(dialog, sizeKey);
-         });
-      });
-      dialog.querySelector('[data-or-picker-close]').addEventListener('click', function () {
-         dialog.close();
-      });
-      dialog.addEventListener('click', function (e) {
-         if (e.target === dialog) {
-            dialog.close();
-         }
-      });
-      return dialog;
-   }
-
-   function openPickerDialog(config) {
-      var dialog = ensurePickerDialog();
-      dialog.querySelector('#or-picker-title').textContent = config.title || 'Choose';
-      var grid = dialog.querySelector('#or-picker-grid');
-      var sizeKey = loadPickerCardSize();
-      applyPickerGridSize(grid, sizeKey);
-      updatePickerSizeButtons(dialog, sizeKey);
-      grid.innerHTML = '';
-      var items = config.items || [];
-      if (config.sort) {
-         items = sortPickerItems(items);
-      }
-      items.forEach(function (item) {
-         var btn = document.createElement('button');
-         btn.type = 'button';
-         btn.className = 'or-picker-option' + (item.value === config.selectedValue ? ' selected' : '');
-         var imgWrap = document.createElement('div');
-         imgWrap.className = 'or-picker-option-image';
-         if (item.imgSrc) {
-            var img = document.createElement('img');
-            img.src = item.imgSrc;
-            img.alt = (item.lines && item.lines[0]) || '';
-            img.loading = 'lazy';
-            imgWrap.appendChild(img);
-         } else {
-            imgWrap.classList.add('or-picker-option-image-empty');
-            imgWrap.textContent = 'No image';
-         }
-         var meta = document.createElement('div');
-         meta.className = 'or-picker-option-meta';
-         appendPickerOptionMeta(meta, item.lines);
-         btn.appendChild(imgWrap);
-         btn.appendChild(meta);
-         btn.addEventListener('click', function () {
-            if (config.onPick) {
-               config.onPick(item.value, item);
-            }
-            dialog.close();
-         });
-         grid.appendChild(btn);
-      });
-      if (typeof dialog.showModal === 'function') {
-         dialog.showModal();
-      } else {
-         dialog.setAttribute('open', 'open');
       }
    }
 
@@ -1247,7 +1133,7 @@
       }
       try {
          await fetchAllSnapshots();
-         buildAssignmentPlan();
+         await buildAssignmentPlan();
          state.phase = 'assign';
          state.activeDeckId = ASSIGN_PHASE_ID;
          saveProgress();
@@ -1321,9 +1207,9 @@
          } else if (nr.reason !== 'conflict' && OrderReconcileExport.isCubeDeck(deck) && nr.copy) {
             var queued = nr.candidates && nr.candidates[0];
             var fromCube = queued && queued.destination_category;
-            nr.destination_category = fromCube || cats[0] || '';
+            nr.destination_category = fromCube || '';
             catSelect.value = nr.destination_category;
-         } else {
+         } else if (!OrderReconcileExport.isCubeDeck(deck)) {
             nr.destination_category = cats[0] || '';
             catSelect.value = nr.destination_category;
          }
@@ -1404,7 +1290,7 @@
                      if (destCat && cats.indexOf(destCat) >= 0) {
                         nr.destination_category = destCat;
                      } else {
-                        nr.destination_category = cats[0] || '';
+                        nr.destination_category = '';
                      }
                      saveProgress();
                      renderAssignPhase();
@@ -1474,6 +1360,15 @@
       return html;
    }
 
+   function reconcileSwapImageBtn(openAttr, imgDataAttr, imgSrc) {
+      var empty = !imgSrc;
+      var btnClass = 'or-card-image or-card-image-btn' + (empty ? ' or-card-image-empty' : '');
+      var imgTag = empty
+         ? '<img ' + imgDataAttr + ' alt="">'
+         : '<img ' + imgDataAttr + ' src="' + escapeHtml(imgSrc) + '" alt="">';
+      return '<button type="button" class="' + btnClass + '" ' + openAttr + '>' + imgTag + '</button>';
+   }
+
    function buildReconcileCardHtml(item, deck) {
       var decision = getDecision(item.item_id);
       var decisionClass = decision ? ' or-decision-' + decision.status : '';
@@ -1500,16 +1395,14 @@
          '<div class="or-swap-pair">' +
          '<div class="or-swap-col or-swap-in">' +
          '<div class="or-swap-label or-swap-label-in">In</div>' +
-         '<button type="button" class="or-card-image or-card-image-btn" data-or-open-print>' +
-         '<img data-or-img-in src="' + escapeHtml(inImg) + '" alt=""></button>' +
+         reconcileSwapImageBtn('data-or-open-print', 'data-or-img-in', inImg) +
          '<p class="or-picker-summary" data-or-print-summary>' + escapeHtml(inPrintSummary) + '</p>' +
          '<input type="hidden" data-or-print-value value="' + escapeHtml(inPrintValue) + '">' +
          '</div>' +
          '<div class="or-swap-arrow">→</div>' +
          '<div class="or-swap-col or-swap-out">' +
          '<div class="or-swap-label or-swap-label-out">Out</div>' +
-         '<button type="button" class="or-card-image or-card-image-btn" data-or-open-cut>' +
-         '<img data-or-img-out src="' + escapeHtml(outImg) + '" alt=""></button>' +
+         reconcileSwapImageBtn('data-or-open-cut', 'data-or-img-out', outImg) +
          '<p class="or-picker-summary" data-or-cut-summary>' +
          (defaultOut ? escapeHtml(formatCardLabel(defaultOut)) : 'Choose cut…') + '</p>' +
          '<input type="hidden" data-or-cut-value value="' +
@@ -1652,7 +1545,7 @@
          if (printBtn) {
             printBtn.addEventListener('click', function () {
                fetchPrintings(item.card_name).then(function (prints) {
-                  openPickerDialog({
+                  HubCardPicker.open({
                      title: 'Choose printing — ' + item.card_name,
                      items: prints.map(function (p) {
                         return {
@@ -1668,7 +1561,8 @@
                         cardEl.querySelector('[data-or-print-summary]').textContent =
                            p ? formatCardLabel(p) + (p.finish ? ' · ' + p.finish : '') : '';
                         if (p && p.scryfall_id) {
-                           cardEl.querySelector('[data-or-img-in]').src = scryfallImageFromId(p.scryfall_id);
+                           setReconcileImage(cardEl.querySelector('[data-or-img-in]'),
+                              scryfallImageFromId(p.scryfall_id));
                         }
                      }
                   });
@@ -1684,7 +1578,7 @@
                var opts = item.is_cube && item.destination_category
                   ? deckCutOptions(deck, item.destination_category, false)
                   : deckCutOptions(deck, null, !item.is_cube);
-               openPickerDialog({
+               HubCardPicker.open({
                   title: 'Choose card to cut',
                   sort: true,
                   items: opts.map(function (opt) {
@@ -1700,8 +1594,8 @@
                      cardEl.querySelector('[data-or-cut-value]').value = value;
                      cardEl.querySelector('[data-or-cut-summary]').textContent = cut ? formatCardLabel(cut) : '';
                      if (cut && cut.set_code && cut.collector_number) {
-                        cardEl.querySelector('[data-or-img-out]').src =
-                           scryfallImageFromPrinting(cut.set_code, cut.collector_number);
+                        setReconcileImage(cardEl.querySelector('[data-or-img-out]'),
+                           scryfallImageFromPrinting(cut.set_code, cut.collector_number));
                      }
                   }
                });
