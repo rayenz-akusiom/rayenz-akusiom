@@ -337,7 +337,9 @@
       return { complete: true, reviewed: reviewed, total: list.length };
    }
 
-   function summarizeDeck(deckId, snapshot, acceptedItems) {
+   function summarizeDeck(deckId, snapshot, acceptedItems, options) {
+      options = options || {};
+      var isCube = !!options.isCube;
       if (!snapshot) {
          return { ins: [], outs: [], remainingIn: [], remainingOut: [] };
       }
@@ -370,16 +372,26 @@
       });
       var remainingIn = [];
       var remainingOut = [];
-      pairSwapSlots(queue.new_set_in, queue.new_set_out).forEach(function (pair) {
-         var slotKey = fulfilledSlotKey(deckId, pair.index, pair.in.name);
-         if (fulfilledSlotKeys[slotKey]) {
-            return;
-         }
-         remainingIn.push(pair.in);
-         if (pair.out) {
-            remainingOut.push(pair.out);
-         }
-      });
+      if (isCube) {
+         deriveMaybeboard(snapshot).forEach(function (entry, idx) {
+            var slotKey = maybeboardSlotKey(deckId, idx, entry.name);
+            if (fulfilledSlotKeys[slotKey]) {
+               return;
+            }
+            remainingIn.push(entry);
+         });
+      } else {
+         pairSwapSlots(queue.new_set_in, queue.new_set_out).forEach(function (pair) {
+            var slotKey = fulfilledSlotKey(deckId, pair.index, pair.in.name);
+            if (fulfilledSlotKeys[slotKey]) {
+               return;
+            }
+            remainingIn.push(pair.in);
+            if (pair.out) {
+               remainingOut.push(pair.out);
+            }
+         });
+      }
       return { ins: ins, outs: outs, remainingIn: remainingIn, remainingOut: remainingOut };
    }
 

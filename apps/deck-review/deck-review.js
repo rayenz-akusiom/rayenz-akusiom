@@ -1064,7 +1064,7 @@
 
    function renderDeckChip(deck) {
       var counts = deckProgressCounts(deck);
-      var cls = 'dr-deck-chip';
+      var cls = 'hub-deck-chip';
       if (deck.deck_id === state.activeDeckId) {
          cls += ' active';
       }
@@ -1072,10 +1072,11 @@
          cls += ' done';
       }
       if (!deckSuggestionCount(deck)) {
-         cls += ' dr-deck-chip-empty';
+         cls += ' empty';
       }
       return '<button type="button" class="' + cls + '" data-deck-id="' + escapeHtml(deck.deck_id) + '">' +
-         escapeHtml(deck.deck_name) + ' (' + counts.accepted + '/' + counts.total + ')' +
+         escapeHtml(deck.deck_name) +
+         '<span class="hub-deck-chip-count">' + counts.accepted + '/' + counts.total + '</span>' +
          '</button>';
    }
 
@@ -1113,7 +1114,7 @@
          html +=
             '<details class="dr-deck-empty-collapse"' + (emptyOpen ? ' open' : '') + '>' +
             '<summary>No suggestions (' + withoutSuggestions.length + ')</summary>' +
-            '<div class="dr-deck-list-collapsed">' +
+            '<div class="hub-deck-list">' +
             sortDecksByName(withoutSuggestions).map(renderDeckChip).join('') +
             '</div></details>';
       }
@@ -1829,7 +1830,7 @@
          '</div>' +
          '<div>' +
          '<h3>Decks</h3>' +
-         '<div class="dr-deck-list" id="dr-deck-list"></div>' +
+         '<div class="hub-deck-list" id="dr-deck-list"></div>' +
          '</div>' +
          '</aside></div></div>';
 

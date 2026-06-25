@@ -96,38 +96,6 @@
    color: #718096;
 }
 
-.or-deck-list {
-   display: flex;
-   flex-direction: column;
-   gap: 4px;
-}
-
-.or-deck-btn {
-   display: block;
-   width: 100%;
-   text-align: left;
-   padding: 8px 10px;
-   border: 1px solid transparent;
-   border-radius: 6px;
-   background: transparent;
-   cursor: pointer;
-   font-size: 0.9rem;
-   color: #2d3748;
-}
-
-.or-deck-btn:hover { background: #edf2f7; }
-.or-deck-btn.active {
-   background: #ebf8ff;
-   border-color: #90cdf4;
-   font-weight: 600;
-}
-
-.or-deck-btn .or-deck-count {
-   float: right;
-   font-size: 0.8rem;
-   color: #718096;
-}
-
 .or-btn {
    display: inline-block;
    padding: 8px 14px;
@@ -519,17 +487,81 @@
    font-size: 0.85rem;
 }
 
-.or-summary-cols {
-   display: grid;
-   grid-template-columns: 1fr 1fr;
-   gap: 16px;
-   margin: 8px 0;
+.or-summary-box h4 {
+   margin: 12px 0 8px;
+   font-size: 0.9rem;
 }
 
-.or-summary-box ul { margin: 4px 0; padding-left: 18px; }
+.or-summary-box h4:first-child {
+   margin-top: 0;
+}
 
-.or-deck-btn.or-deck-done { opacity: 0.65; }
-.or-deck-btn.or-deck-done::after { content: ' ✓'; color: #38a169; }
+.or-summary-section {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   margin: 8px 0 4px;
+}
+
+.or-summary-section-col {
+   flex: 1;
+   min-width: 0;
+}
+
+.or-summary-section-label {
+   font-size: 0.75rem;
+   font-weight: 700;
+   color: #4a5568;
+   margin-bottom: 6px;
+   text-transform: uppercase;
+   letter-spacing: 0.03em;
+}
+
+.or-summary-arrow {
+   flex-shrink: 0;
+   font-size: 1.25rem;
+   font-weight: 700;
+   color: #718096;
+   padding: 0 4px;
+   align-self: center;
+}
+
+.or-summary-group {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+}
+
+.or-summary-group-empty {
+   min-height: 48px;
+   align-items: center;
+}
+
+.or-summary-group-empty-label {
+   font-size: 0.8rem;
+   color: #a0aec0;
+   font-style: italic;
+}
+
+.or-summary-card {
+   width: 150px;
+   aspect-ratio: 488 / 680;
+   border-radius: 6px;
+   object-fit: cover;
+   display: block;
+   background: #1a202c;
+}
+
+.or-summary-card-empty {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: #a0aec0;
+   font-size: 0.75rem;
+   font-weight: 600;
+   background: #edf2f7;
+   border: 1px solid #e2e8f0;
+}
 
 .or-apply-row { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
 

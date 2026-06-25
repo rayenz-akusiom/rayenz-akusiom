@@ -693,20 +693,42 @@
       });
    }
 
-   function defaultCubeInPrinting(item) {
-      if (!item.is_cube || !item.maybeboard_entry) {
-         return null;
+   function defaultInPrinting(item) {
+      if (item.is_cube && item.maybeboard_entry) {
+         var mb = item.maybeboard_entry;
+         if (mb.set_code && mb.collector_number) {
+            return {
+               name: mb.name || item.card_name,
+               set_code: mb.set_code,
+               collector_number: mb.collector_number,
+               finish: 'nonfoil'
+            };
+         }
       }
-      var mb = item.maybeboard_entry;
-      if (!mb.set_code || !mb.collector_number) {
-         return null;
+      if (item.queued_in && item.queued_in.set_code && item.queued_in.collector_number) {
+         return {
+            name: item.queued_in.name || item.card_name,
+            set_code: item.queued_in.set_code,
+            collector_number: item.queued_in.collector_number,
+            finish: 'nonfoil'
+         };
       }
-      return {
-         name: mb.name || item.card_name,
-         set_code: mb.set_code,
-         collector_number: mb.collector_number,
-         finish: 'nonfoil'
-      };
+      if (item.acquired_set && item.acquired_collector) {
+         return {
+            name: item.card_name,
+            set_code: item.acquired_set,
+            collector_number: item.acquired_collector,
+            finish: 'nonfoil'
+         };
+      }
+      return null;
+   }
+
+   function showReconcileStatus(msg) {
+      setStatus(msg);
+      if (state.ui.statusEl) {
+         state.ui.statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
    }
 
    function cubeMainCardSameName(deck, name) {
@@ -1338,26 +1360,66 @@
       return card.name;
    }
 
+   function summaryCardImageSrc(card) {
+      if (!card) {
+         return '';
+      }
+      if (card.set_code && card.collector_number) {
+         return scryfallImageFromPrinting(card.set_code, card.collector_number);
+      }
+      return scryfallImageFromName(card.name);
+   }
+
+   function summaryCardImgHtml(card) {
+      if (!card) {
+         return '<div class="or-summary-card or-summary-card-empty">No card</div>';
+      }
+      var src = summaryCardImageSrc(card);
+      var title = escapeHtml(card.name || '');
+      if (!src) {
+         return '<div class="or-summary-card or-summary-card-empty" title="' + title + '">No card</div>';
+      }
+      return '<img class="or-summary-card" src="' + escapeHtml(src) + '" alt="' + title + '" title="' + title + '">';
+   }
+
+   function summaryGroupHtml(cards, emptyLabel) {
+      if (!cards || !cards.length) {
+         return '<div class="or-summary-group or-summary-group-empty"><span class="or-summary-group-empty-label">' +
+            escapeHtml(emptyLabel || 'None') + '</span></div>';
+      }
+      return '<div class="or-summary-group">' +
+         cards.map(function (c) { return summaryCardImgHtml(c); }).join('') +
+         '</div>';
+   }
+
+   function summarySectionHtml(inCards, outCards) {
+      return '<div class="or-summary-section">' +
+         '<div class="or-summary-section-col">' +
+         '<div class="or-summary-section-label">In</div>' +
+         summaryGroupHtml(inCards, 'None') +
+         '</div>' +
+         '<div class="or-summary-arrow" aria-hidden="true">→</div>' +
+         '<div class="or-summary-section-col">' +
+         '<div class="or-summary-section-label">Out</div>' +
+         summaryGroupHtml(outCards, 'None') +
+         '</div></div>';
+   }
+
    function renderSummaryHtml(deck) {
       var items = itemsForDeck(deck.deck_id);
       var accepted = items.map(function (item) {
          var d = getDecision(item.item_id);
          return d && d.status === 'accepted' ? { status: 'accepted', accepted: d.accepted, slot_key: item.slot_key } : null;
       }).filter(Boolean);
-      var summary = OrderReconcileExport.summarizeDeck(deck.deck_id, deck.deck_snapshot, accepted);
-      var html = '<div class="or-summary-box"><h4>Changes summary</h4><div class="or-summary-cols">' +
-         '<div><strong>In</strong><ul>' +
-         summary.ins.map(function (c) {
-            return '<li>' + escapeHtml(formatCardLabel(c)) + ' → ' + escapeHtml(c.category || '') + '</li>';
-         }).join('') + '</ul></div>' +
-         '<div><strong>Out</strong><ul>' +
-         summary.outs.map(function (c) {
-            return '<li>' + escapeHtml(formatCardLabel(c)) + '</li>';
-         }).join('') + '</ul></div></div>' +
-         '<p><strong>Remaining queue</strong></p>' +
-         '<p>In: ' + summary.remainingIn.map(function (c) { return escapeHtml(c.name); }).join(', ') + '</p>' +
-         '<p>Out: ' + summary.remainingOut.map(function (c) { return escapeHtml(c.name); }).join(', ') + '</p></div>';
-      return html;
+      var isCube = OrderReconcileExport.isCubeDeck(deck);
+      var summary = OrderReconcileExport.summarizeDeck(
+         deck.deck_id, deck.deck_snapshot, accepted, { isCube: isCube });
+      return '<div class="or-summary-box">' +
+         '<h4>Changes summary</h4>' +
+         summarySectionHtml(summary.ins, summary.outs) +
+         '<h4>Remaining queue</h4>' +
+         summarySectionHtml(summary.remainingIn, summary.remainingOut) +
+         '</div>';
    }
 
    function reconcileSwapImageBtn(openAttr, imgDataAttr, imgSrc) {
@@ -1378,7 +1440,7 @@
       var defaultOut = defaultCutForItem(item, deck);
       var outImg = defaultOut ? cutOptionImageSrc(defaultOut) : '';
       var inImg = defaultInImageSrc(item);
-      var defaultInPrint = defaultCubeInPrinting(item);
+      var defaultInPrint = defaultInPrinting(item);
       var inPrintValue = defaultInPrint ? printingValueFromParts(defaultInPrint) : '';
       var inPrintSummary = defaultInPrint
          ? formatCardLabel(defaultInPrint) + (defaultInPrint.finish ? ' · ' + defaultInPrint.finish : '')
@@ -1609,15 +1671,15 @@
                   var printing = readPrintingValue(cardEl.querySelector('[data-or-print-value]').value);
                   var cut = readCutValue(cardEl.querySelector('[data-or-cut-value]').value);
                   if (!printing) {
-                     setStatus('Choose a printing before accepting.');
+                     showReconcileStatus('Choose a printing before accepting.');
                      return;
                   }
                   if (!item.destination_category) {
-                     setStatus('Choose a destination category.');
+                     showReconcileStatus('Choose a destination category.');
                      return;
                   }
                   if (item.is_cube && (!cut || !cut.name)) {
-                     setStatus('Choose a card to cut from the ' + item.destination_category + ' section.');
+                     showReconcileStatus('Choose a card to cut from the ' + item.destination_category + ' section.');
                      return;
                   }
                   setDecision(item.item_id, {
@@ -1705,9 +1767,9 @@
    function deckNavHtml() {
       var html = '';
       if (state.phase === 'assign') {
-         html += '<button type="button" class="or-deck-btn' +
+         html += '<button type="button" class="hub-deck-chip' +
             (state.activeDeckId === ASSIGN_PHASE_ID ? ' active' : '') +
-            '" data-deck-id="' + ASSIGN_PHASE_ID + '">Disambiguate<span class="or-deck-count">' +
+            '" data-deck-id="' + ASSIGN_PHASE_ID + '">Disambiguate<span class="hub-deck-chip-count">' +
             state.needsReview.length + '</span></button>';
          return html;
       }
@@ -1717,13 +1779,13 @@
             if (!count) {
                return;
             }
-            var done = state.completedDecks[deck.deck_id] ? ' or-deck-done' : '';
-            html += '<button type="button" class="or-deck-btn' +
+            var done = state.completedDecks[deck.deck_id] ? ' done' : '';
+            html += '<button type="button" class="hub-deck-chip' +
                (state.activeDeckId === deck.deck_id ? ' active' : '') + done +
                '" data-deck-id="' + escapeHtml(deck.deck_id) + '">' + escapeHtml(deck.deck_name) +
-               '<span class="or-deck-count">' + count + '</span></button>';
+               '<span class="hub-deck-chip-count">' + count + '</span></button>';
          });
-         html += '<button type="button" class="or-deck-btn' +
+         html += '<button type="button" class="hub-deck-chip' +
             (state.activeDeckId === STAGING_DECK_ID ? ' active' : '') +
             '" data-deck-id="' + STAGING_DECK_ID + '">Buy/trade list</button>';
       }
@@ -1731,12 +1793,12 @@
    }
 
    function wireDeckNav() {
-      document.querySelectorAll('.or-deck-btn').forEach(function (btn) {
+      document.querySelectorAll('.hub-deck-chip').forEach(function (btn) {
          btn.addEventListener('click', function () {
             state.activeDeckId = btn.getAttribute('data-deck-id');
             saveProgress();
             render();
-            document.querySelectorAll('.or-deck-btn').forEach(function (b) {
+            document.querySelectorAll('.hub-deck-chip').forEach(function (b) {
                b.classList.toggle('active', b.getAttribute('data-deck-id') === state.activeDeckId);
             });
          });
@@ -1810,7 +1872,7 @@
          '<div class="or-nav-actions"><h3>Session</h3>' +
          '<button type="button" class="or-btn or-btn-ghost" id="or-new-session">New session</button>' +
          '<button type="button" class="or-btn or-btn-ghost" id="or-back-input">Edit acquired cards</button>' +
-         '</div><div><h3>Decks</h3><div class="or-deck-list" id="or-deck-list"></div></div>' +
+         '</div><div><h3>Decks</h3><div class="hub-deck-list" id="or-deck-list"></div></div>' +
          '</aside></div></div>';
 
       state.ui = {

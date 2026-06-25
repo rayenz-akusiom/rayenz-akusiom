@@ -7,6 +7,7 @@
    <link rel="shortcut icon" href="https://www.google.com/s2/favicons?sz=64&amp;domain=neopets.com">
    <link rel="stylesheet" href="shared/shell.css">
    <link rel="stylesheet" href="shared/card-picker.css">
+   <link rel="stylesheet" href="shared/deck-chip.css">
 </head>
 <body>
    <button type="button" id="hub-nav-toggle" class="hub-nav-toggle" aria-label="Open menu">&#9776;</button>
@@ -17,11 +18,53 @@
             <h1>Rayenz Hub</h1>
             <p>Personal apps</p>
          </div>
-         <ul class="hub-nav-list">
-            <li><a class="hub-nav-link" href="#/dailies">Dailies</a></li>
-            <li><a class="hub-nav-link" href="#/deck-review">Deck Review</a></li>
-            <li><a class="hub-nav-link" href="#/order-reconcile">Order Reconcile</a></li>
-         </ul>
+         <div class="hub-nav-group">
+            <p class="hub-nav-group-title">Neopets</p>
+            <ul class="hub-nav-list">
+               <li>
+                  <a class="hub-nav-link" href="#/dailies">
+                     <span class="hub-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                           <line x1="16" y1="2" x2="16" y2="6"></line>
+                           <line x1="8" y1="2" x2="8" y2="6"></line>
+                           <line x1="3" y1="10" x2="21" y2="10"></line>
+                           <path d="M9 16l2 2 4-4"></path>
+                        </svg>
+                     </span>
+                     <span class="hub-nav-label">Dailies</span>
+                  </a>
+               </li>
+            </ul>
+         </div>
+         <div class="hub-nav-group">
+            <p class="hub-nav-group-title">MTG</p>
+            <ul class="hub-nav-list">
+               <li>
+                  <a class="hub-nav-link" href="#/deck-review">
+                     <span class="hub-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <rect x="4" y="3" width="12" height="16" rx="1.5"></rect>
+                           <rect x="8" y="5" width="12" height="16" rx="1.5"></rect>
+                        </svg>
+                     </span>
+                     <span class="hub-nav-label">Deck Review</span>
+                  </a>
+               </li>
+               <li>
+                  <a class="hub-nav-link" href="#/order-reconcile">
+                     <span class="hub-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"></path>
+                           <rect x="9" y="3" width="6" height="4" rx="1"></rect>
+                           <path d="M9 14l2 2 4-4"></path>
+                        </svg>
+                     </span>
+                     <span class="hub-nav-label">Order Reconcile</span>
+                  </a>
+               </li>
+            </ul>
+         </div>
       </nav>
       <main class="hub-main">
          <div id="app-root"></div>
