@@ -3,6 +3,8 @@
 
    var ROUTE_KEY = 'rayenz-hub-route';
    var REVIEW_PREFIX = 'rayenz-deck-review-';
+   var ORDER_RECONCILE_SETTINGS_KEY = 'rayenz-order-reconcile-settings';
+   var ORDER_RECONCILE_PROGRESS_PREFIX = 'rayenz-order-reconcile-';
 
    function getItem(key) {
       try {
@@ -52,11 +54,58 @@
       return (meta.set_code || 'unknown') + '-' + (meta.generated_at || 'undated');
    }
 
+   var DEFAULT_ORDER_RECONCILE_SETTINGS = {
+      stagingDeckUrl: 'https://archidekt.com/decks/8667017',
+      registrySource: 'folder',
+      folderUrl: 'https://archidekt.com/folders/81998',
+      customDeckUrls: ''
+   };
+
+   function loadOrderReconcileSettings() {
+      var raw = getItem(ORDER_RECONCILE_SETTINGS_KEY);
+      if (!raw) {
+         return Object.assign({}, DEFAULT_ORDER_RECONCILE_SETTINGS);
+      }
+      try {
+         return Object.assign({}, DEFAULT_ORDER_RECONCILE_SETTINGS, JSON.parse(raw));
+      } catch (e) {
+         return Object.assign({}, DEFAULT_ORDER_RECONCILE_SETTINGS);
+      }
+   }
+
+   function saveOrderReconcileSettings(settings) {
+      setItem(ORDER_RECONCILE_SETTINGS_KEY, JSON.stringify(settings || {}));
+   }
+
+   function orderReconcileSessionKey(sessionId) {
+      return ORDER_RECONCILE_PROGRESS_PREFIX + (sessionId || 'default');
+   }
+
+   function loadOrderReconcileProgress(sessionId) {
+      var raw = getItem(orderReconcileSessionKey(sessionId));
+      if (!raw) {
+         return { decisions: {}, assignments: [], needsReview: [], copies: [], acquiredCards: [], activeDeckId: null, phase: 'input', completedDecks: {} };
+      }
+      try {
+         return JSON.parse(raw);
+      } catch (e) {
+         return { decisions: {}, assignments: [], needsReview: [], copies: [], acquiredCards: [], activeDeckId: null, phase: 'input', completedDecks: {} };
+      }
+   }
+
+   function saveOrderReconcileProgress(sessionId, progress) {
+      setItem(orderReconcileSessionKey(sessionId), JSON.stringify(progress || {}));
+   }
+
    global.HubStorage = {
       getLastRoute: getLastRoute,
       setLastRoute: setLastRoute,
       loadReviewProgress: loadReviewProgress,
       saveReviewProgress: saveReviewProgress,
-      fileIdFromMeta: fileIdFromMeta
+      fileIdFromMeta: fileIdFromMeta,
+      loadOrderReconcileSettings: loadOrderReconcileSettings,
+      saveOrderReconcileSettings: saveOrderReconcileSettings,
+      loadOrderReconcileProgress: loadOrderReconcileProgress,
+      saveOrderReconcileProgress: saveOrderReconcileProgress
    };
 })(window);

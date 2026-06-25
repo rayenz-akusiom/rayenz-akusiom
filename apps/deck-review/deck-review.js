@@ -812,6 +812,74 @@
       updateCutSummary(cardEl);
    }
 
+   function loadPickerCardSize() {
+      try {
+         var raw = localStorage.getItem('rayenzHubPickerCardSize');
+         if (raw === 'M' || raw === 'L' || raw === 'XL') {
+            return raw;
+         }
+         return 'S';
+      } catch (e) {
+         return 'S';
+      }
+   }
+
+   function savePickerCardSize(size) {
+      try {
+         localStorage.setItem('rayenzHubPickerCardSize', size);
+      } catch (e) {
+         /* ignore */
+      }
+   }
+
+   var PICKER_CARD_SIZE_PX = { S: 140, M: 180, L: 230, XL: 300 };
+
+   function applyPickerGridSize(grid, sizeKey) {
+      var px = PICKER_CARD_SIZE_PX[sizeKey] || PICKER_CARD_SIZE_PX.S;
+      grid.style.setProperty('--dr-picker-card-min', px + 'px');
+   }
+
+   function updatePickerSizeButtons(dialog, sizeKey) {
+      dialog.querySelectorAll('[data-picker-size]').forEach(function (btn) {
+         btn.classList.toggle('active', btn.getAttribute('data-picker-size') === sizeKey);
+      });
+   }
+
+   function sortPickerItems(items) {
+      return items.slice().sort(function (a, b) {
+         var aLines = a.lines || [];
+         var bLines = b.lines || [];
+         var cmp = String(aLines[0] || '').toLowerCase().localeCompare(String(bLines[0] || '').toLowerCase());
+         if (cmp !== 0) {
+            return cmp;
+         }
+         return String(aLines[1] || '').toLowerCase().localeCompare(String(bLines[1] || '').toLowerCase());
+      });
+   }
+
+   function appendPickerOptionMeta(meta, lines) {
+      var nonEmpty = (lines || []).filter(function (line) { return line; });
+      if (!nonEmpty.length) {
+         return;
+      }
+      var nameEl = document.createElement('div');
+      nameEl.className = 'dr-picker-option-name';
+      nameEl.textContent = nonEmpty[0];
+      nameEl.title = nonEmpty[0];
+      meta.appendChild(nameEl);
+      if (nonEmpty.length > 1) {
+         var badges = document.createElement('div');
+         badges.className = 'dr-picker-option-badges';
+         for (var i = 1; i < nonEmpty.length; i++) {
+            var badge = document.createElement('span');
+            badge.className = 'dr-picker-option-badge';
+            badge.textContent = nonEmpty[i];
+            badges.appendChild(badge);
+         }
+         meta.appendChild(badges);
+      }
+   }
+
    function ensurePickerDialog() {
       if (state.ui.pickerDialog) {
          return state.ui.pickerDialog;
@@ -823,11 +891,30 @@
          '<div class="dr-picker-dialog-inner">' +
          '<header class="dr-picker-dialog-header">' +
          '<h3 id="dr-picker-title" class="dr-picker-title"></h3>' +
+         '<div class="dr-picker-header-controls">' +
+         '<div class="dr-picker-size-group" role="group" aria-label="Card size">' +
+         '<button type="button" class="dr-picker-size-btn" data-picker-size="S">S</button>' +
+         '<button type="button" class="dr-picker-size-btn" data-picker-size="M">M</button>' +
+         '<button type="button" class="dr-picker-size-btn" data-picker-size="L">L</button>' +
+         '<button type="button" class="dr-picker-size-btn" data-picker-size="XL">XL</button>' +
+         '</div>' +
          '<button type="button" class="dr-btn dr-btn-ghost" data-dr-picker-close aria-label="Close">Close</button>' +
-         '</header>' +
+         '</div></header>' +
          '<div class="dr-picker-grid" id="dr-picker-grid"></div>' +
          '</div>';
       document.body.appendChild(dialog);
+      var grid = dialog.querySelector('#dr-picker-grid');
+      var initialSize = loadPickerCardSize();
+      applyPickerGridSize(grid, initialSize);
+      updatePickerSizeButtons(dialog, initialSize);
+      dialog.querySelectorAll('[data-picker-size]').forEach(function (btn) {
+         btn.addEventListener('click', function () {
+            var sizeKey = btn.getAttribute('data-picker-size');
+            savePickerCardSize(sizeKey);
+            applyPickerGridSize(grid, sizeKey);
+            updatePickerSizeButtons(dialog, sizeKey);
+         });
+      });
       dialog.querySelector('[data-dr-picker-close]').addEventListener('click', function () {
          dialog.close();
       });
@@ -845,9 +932,16 @@
       var titleEl = dialog.querySelector('#dr-picker-title');
       var grid = dialog.querySelector('#dr-picker-grid');
       titleEl.textContent = config.title || 'Choose an option';
+      var sizeKey = loadPickerCardSize();
+      applyPickerGridSize(grid, sizeKey);
+      updatePickerSizeButtons(dialog, sizeKey);
       grid.innerHTML = '';
 
-      (config.items || []).forEach(function (item) {
+      var items = config.items || [];
+      if (config.sort) {
+         items = sortPickerItems(items);
+      }
+      items.forEach(function (item) {
          var btn = document.createElement('button');
          btn.type = 'button';
          btn.className = 'dr-picker-option';
@@ -868,12 +962,7 @@
          }
          var meta = document.createElement('div');
          meta.className = 'dr-picker-option-meta';
-         (item.lines || []).forEach(function (line) {
-            var p = document.createElement('div');
-            p.className = 'dr-picker-option-line';
-            p.textContent = line;
-            meta.appendChild(p);
-         });
+         appendPickerOptionMeta(meta, item.lines);
          btn.appendChild(imgWrap);
          btn.appendChild(meta);
          btn.addEventListener('click', function () {
@@ -945,6 +1034,7 @@
       }
       openPickerDialog({
          title: 'Choose card to cut',
+         sort: true,
          items: items,
          selectedValue: getCutValue(cardEl),
          onPick: function (value) {

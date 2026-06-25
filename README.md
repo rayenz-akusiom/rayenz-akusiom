@@ -6,6 +6,7 @@ Personal multi-app hub hosted on GitHub Pages at [rayenz-akusiom.github.io/rayen
 
 - **Dailies** — Neopets dailies launcher (requires [rayenz-dailies.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/rayenz-dailies.user.js) for automation)
 - **Deck Review** — Review MTG set-update suggestions; export full-deck Archidekt import or apply via bridge
+- **Order Reconcile** — Match acquired cards to swap queues; update decks and buy/trade list after an order arrives
 
 ## Publishing
 
@@ -45,11 +46,25 @@ Clone the monorepo with submodules: `git clone --recurse-submodules https://gith
 
 **Update is blocked** until every visible suggestion for the deck has a decision. The exported import is a **full deck replace**: main-deck cards keep their categories; `New Set In` / `New Set Out` are rebuilt from **accepted** swaps only (rejected/skipped queue slots are cleared).
 
+## Order Reconcile workflow
+
+Use after cards from a buy order physically arrive.
+
+1. Open **Order Reconcile** (`#/order-reconcile`).
+2. Configure **Archidekt folder URL** (default: [folder 81998](https://archidekt.com/folders/81998) — IRL Decks) and **buy/trade staging deck** (default: [deck 8667017](https://archidekt.com/decks/8667017)).
+3. Enter acquired cards via **Card list** (one per line; qty expands to singleton copies). **Order email** tab is experimental.
+4. Click **Continue** — requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js) **2026-06-25-2+** for folder + deck fetch. A pinned progress bar shows deck refresh status.
+5. **Disambiguate** — matching copies auto-assign to swap-queue slots (or cube Maybeboard). Surplus copies can optionally go to another deck or be left out (buy/trade only). Card images appear on each row; fix a bad name to update all copies of that card.
+6. **Reconcile deck-by-deck** — pick In printing/treatment (Scryfall), Out cut (deck snapshot; cube cuts are limited to the card's color section), destination category; review running summary; **Confirm & apply** per deck.
+7. **Buy/trade list** — remove acquired cards from the staging deck.
+
+Swap queues are always read live from Archidekt (`New Set In` / `New Set Out` for Commander decks; **Maybeboard** for cube decks named with "cube"). Cube destination categories are inferred from color identity (mono colors, Ravnica guilds for two colors; three or more colors require manual category pick). Partial orders are safe: unfilled queue slots stay.
+
 ### Apply via bridge troubleshooting
 
 Apply via bridge uses **Tampermonkey shared storage** (`GM_setValue`), not browser `localStorage`, so the Hub (GitHub Pages) and Archidekt can exchange the staged import.
 
-- Requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js) **version 2026-06-21.4 or newer** in the same browser profile as the Hub tab.
+- Requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js) **version 2026-06-25-2 or newer** in the same browser profile as the Hub tab.
 - Tampermonkey must be enabled on both `rayenz-akusiom.github.io` and `archidekt.com`.
 - After **Apply via bridge**, the Archidekt deck tab should show a **Pending update from Rayenz Hub** banner — click **Apply import** there.
 - If only a blank deck page opens: reload the Archidekt tab, or re-click Apply via bridge (adds a cache-buster to force a fresh load).

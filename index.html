@@ -19,6 +19,7 @@
          <ul class="hub-nav-list">
             <li><a class="hub-nav-link" href="#/dailies">Dailies</a></li>
             <li><a class="hub-nav-link" href="#/deck-review">Deck Review</a></li>
+            <li><a class="hub-nav-link" href="#/order-reconcile">Order Reconcile</a></li>
          </ul>
       </nav>
       <main class="hub-main">
@@ -32,9 +33,13 @@
    <script src="apps/deck-review/archidekt-export.js"></script>
    <script src="apps/deck-review/profile-sync.js"></script>
    <script src="apps/deck-review/deck-review.js"></script>
+   <script src="apps/order-reconcile/email-parse.js"></script>
+   <script src="apps/order-reconcile/order-reconcile-export.js"></script>
+   <script src="apps/order-reconcile/order-reconcile.js"></script>
    <script>
       HubRouter.registerRoute('/dailies', loadDailiesApp);
       HubRouter.registerRoute('/deck-review', loadDeckReviewApp);
+      HubRouter.registerRoute('/order-reconcile', loadOrderReconcileApp);
       HubRouter.init();
    </script>
 </body>
