@@ -345,12 +345,7 @@
    }
 
    function makeAssignment(copy, candidate, reason) {
-      var deck = getDeckById(candidate.deck_id);
       var destCat = candidate.destination_category;
-      if (!destCat && deck && deck.deck_snapshot && !candidate.is_cube) {
-         var cats = OrderReconcileExport.deckCategories(deck.deck_snapshot);
-         destCat = cats[0] || '';
-      }
       return {
          copy_id: copy.copy_id,
          card_name: copy.card_name,
@@ -721,14 +716,15 @@
             finish: 'nonfoil'
          };
       }
-      return null;
-   }
-
-   function showReconcileStatus(msg) {
-      setStatus(msg);
-      if (state.ui.statusEl) {
-         state.ui.statusEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      // Fall back to a name-only printing so Accept is never blocked just because we
+      // could not resolve a specific set/collector number. Archidekt picks a default
+      // printing for name-only import lines.
+      return {
+         name: item.card_name,
+         set_code: null,
+         collector_number: null,
+         finish: 'nonfoil'
+      };
    }
 
    function cubeMainCardSameName(deck, name) {
@@ -834,9 +830,6 @@
       if (p.set_name || p.set) {
          lines.push((p.set_name || p.set).toUpperCase() + (p.collector_number ? ' #' + p.collector_number : ''));
       }
-      if (p.finishes && p.finishes.length) {
-         lines.push(p.finishes.join(', '));
-      }
       return lines.length ? lines : [p.name];
    }
 
@@ -863,7 +856,14 @@
    }
 
    function excludeCategories() {
-      return { 'New Set In': true, 'New Set Out': true, Commander: true, Lieutenant: true, Lieutenants: true };
+      return {
+         'New Set In': true,
+         'New Set Out': true,
+         Commander: true,
+         Lieutenant: true,
+         Lieutenants: true,
+         Maybeboard: true
+      };
    }
 
    function deckCutOptions(deck, categoryFilter, includeOutQueue) {
@@ -961,17 +961,47 @@
          return item.paired_out;
       }
       if (item.is_cube) {
+         // Only auto-suggest a cut when we acquired a duplicate of a card already
+         // in the cube. Otherwise leave the cut empty so the user picks deliberately
+         // instead of getting an arbitrary first-in-section match.
          var sameNameCut = cubeMainCardSameName(deck, item.card_name);
          if (sameNameCut) {
             return sameNameCut;
          }
-         if (item.destination_category) {
-            var cubeCuts = deckCutOptions(deck, item.destination_category, false);
-            return cubeCuts.length ? cubeCuts[0] : null;
-         }
          return null;
       }
       return null;
+   }
+
+   function showCardError(cardEl, msg) {
+      if (!cardEl) {
+         return;
+      }
+      var err = cardEl.querySelector('[data-or-card-error]');
+      if (!err) {
+         err = document.createElement('p');
+         err.className = 'or-card-error';
+         err.setAttribute('data-or-card-error', '1');
+         var actions = cardEl.querySelector('.or-actions');
+         if (actions) {
+            cardEl.insertBefore(err, actions);
+         } else {
+            cardEl.appendChild(err);
+         }
+      }
+      err.textContent = msg || '';
+      err.hidden = !msg;
+      if (msg) {
+         cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+   }
+
+   function clearCardError(cardEl) {
+      var err = cardEl && cardEl.querySelector('[data-or-card-error]');
+      if (err) {
+         err.textContent = '';
+         err.hidden = true;
+      }
    }
 
    function setReconcileImage(img, src) {
@@ -1155,6 +1185,8 @@
       }
       try {
          await fetchAllSnapshots();
+         state.progress.decisions = {};
+         state.completedDecks = {};
          await buildAssignmentPlan();
          state.phase = 'assign';
          state.activeDeckId = ASSIGN_PHASE_ID;
@@ -1221,9 +1253,10 @@
             return;
          }
          var cats = OrderReconcileExport.deckCategories(deck.deck_snapshot);
-         catSelect.innerHTML = cats.map(function (c) {
-            return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
-         }).join('');
+         catSelect.innerHTML = '<option value="">— choose category —</option>' +
+            cats.map(function (c) {
+               return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>';
+            }).join('');
          if (nr.destination_category && cats.indexOf(nr.destination_category) >= 0) {
             catSelect.value = nr.destination_category;
          } else if (nr.reason !== 'conflict' && OrderReconcileExport.isCubeDeck(deck) && nr.copy) {
@@ -1231,9 +1264,9 @@
             var fromCube = queued && queued.destination_category;
             nr.destination_category = fromCube || '';
             catSelect.value = nr.destination_category;
-         } else if (!OrderReconcileExport.isCubeDeck(deck)) {
-            nr.destination_category = cats[0] || '';
-            catSelect.value = nr.destination_category;
+         } else {
+            nr.destination_category = '';
+            catSelect.value = '';
          }
       }
 
@@ -1319,11 +1352,8 @@
                   });
                   return;
                }
-               if (deck) {
-                  var cats = OrderReconcileExport.deckCategories(deck.deck_snapshot);
-                  if (!nr.destination_category || cats.indexOf(nr.destination_category) < 0) {
-                     nr.destination_category = cats[0] || '';
-                  }
+               if (deck && !OrderReconcileExport.isCubeDeck(deck)) {
+                  nr.destination_category = '';
                }
             }
             saveProgress();
@@ -1392,17 +1422,31 @@
          '</div>';
    }
 
+   function summaryColHtml(label, cards) {
+      return '<div class="or-summary-section-col">' +
+         '<div class="or-summary-section-label">' + label + '</div>' +
+         summaryGroupHtml(cards, 'None') +
+         '</div>';
+   }
+
    function summarySectionHtml(inCards, outCards) {
+      var hasIn = !!(inCards && inCards.length);
+      var hasOut = !!(outCards && outCards.length);
+      // When only one side has cards, drop the empty column and the arrow so the
+      // populated side fills the available width.
+      if (hasIn && !hasOut) {
+         return '<div class="or-summary-section or-summary-section-single">' +
+            summaryColHtml('In', inCards) + '</div>';
+      }
+      if (!hasIn && hasOut) {
+         return '<div class="or-summary-section or-summary-section-single">' +
+            summaryColHtml('Out', outCards) + '</div>';
+      }
       return '<div class="or-summary-section">' +
-         '<div class="or-summary-section-col">' +
-         '<div class="or-summary-section-label">In</div>' +
-         summaryGroupHtml(inCards, 'None') +
-         '</div>' +
+         summaryColHtml('In', inCards) +
          '<div class="or-summary-arrow" aria-hidden="true">→</div>' +
-         '<div class="or-summary-section-col">' +
-         '<div class="or-summary-section-label">Out</div>' +
-         summaryGroupHtml(outCards, 'None') +
-         '</div></div>';
+         summaryColHtml('Out', outCards) +
+         '</div>';
    }
 
    function renderSummaryHtml(deck) {
@@ -1420,6 +1464,14 @@
          '<h4>Remaining queue</h4>' +
          summarySectionHtml(summary.remainingIn, summary.remainingOut) +
          '</div>';
+   }
+
+   function archidektDeckLinkHtml(deck) {
+      if (!deck || !deck.archidekt_url) {
+         return '';
+      }
+      return '<a class="or-deck-link" href="' + escapeHtml(deck.archidekt_url) +
+         '" target="_blank" rel="noopener">Open on Archidekt ↗</a>';
    }
 
    function reconcileSwapImageBtn(openAttr, imgDataAttr, imgSrc) {
@@ -1443,9 +1495,11 @@
       var defaultInPrint = defaultInPrinting(item);
       var inPrintValue = defaultInPrint ? printingValueFromParts(defaultInPrint) : '';
       var inPrintSummary = defaultInPrint
-         ? formatCardLabel(defaultInPrint) + (defaultInPrint.finish ? ' · ' + defaultInPrint.finish : '')
+         ? formatCardLabel(defaultInPrint)
          : 'Choose printing…';
+      var noCat = !item.destination_category;
       var categoryHtml = '<label>Destination category</label><select class="or-category-select" data-or-dest-category>' +
+         '<option value=""' + (noCat ? ' selected' : '') + '>— choose category —</option>' +
          cats.map(function (c) {
             var sel = c === item.destination_category ? ' selected' : '';
             return '<option value="' + escapeHtml(c) + '"' + sel + '>' + escapeHtml(c) + '</option>';
@@ -1499,7 +1553,8 @@
 
       state.ui.mainContent.innerHTML =
          '<div class="or-status-card">' +
-         '<div class="or-status-header"><h3>' + escapeHtml(deck.deck_name) + '</h3></div>' +
+         '<div class="or-status-header"><h3>' + escapeHtml(deck.deck_name) + '</h3>' +
+         archidektDeckLinkHtml(deck) + '</div>' +
          '<div class="or-status-pane">' + cardsHtml + renderSummaryHtml(deck) +
          '<div class="or-apply-row">' +
          '<button type="button" class="or-btn or-btn-primary" id="or-copy-deck-import"' +
@@ -1561,6 +1616,12 @@
       }
    }
 
+   function scrollToTop() {
+      if (typeof window !== 'undefined' && window.scrollTo) {
+         window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
+   }
+
    function advanceToNextDeck() {
       var pending = state.decks.filter(function (d) {
          return itemsForDeck(d.deck_id).length > 0 && !state.completedDecks[d.deck_id];
@@ -1568,11 +1629,13 @@
       if (pending.length) {
          state.activeDeckId = pending[0].deck_id;
          render();
+         scrollToTop();
          return;
       }
       state.phase = 'staging';
       state.activeDeckId = STAGING_DECK_ID;
       render();
+      scrollToTop();
    }
 
    function wireReconcileCards(deck, items) {
@@ -1621,7 +1684,7 @@
                         var p = readPrintingValue(value);
                         cardEl.querySelector('[data-or-print-value]').value = value;
                         cardEl.querySelector('[data-or-print-summary]').textContent =
-                           p ? formatCardLabel(p) + (p.finish ? ' · ' + p.finish : '') : '';
+                           p ? formatCardLabel(p) : '';
                         if (p && p.scryfall_id) {
                            setReconcileImage(cardEl.querySelector('[data-or-img-in]'),
                               scryfallImageFromId(p.scryfall_id));
@@ -1642,11 +1705,12 @@
                   : deckCutOptions(deck, null, !item.is_cube);
                HubCardPicker.open({
                   title: 'Choose card to cut',
-                  sort: true,
+                  groupByCategory: true,
                   items: opts.map(function (opt) {
                      return {
                         value: cutValueFromOpt(opt),
                         imgSrc: cutOptionImageSrc(opt),
+                        category: opt.primary_category || null,
                         lines: [opt.name, opt.set_code ? opt.set_code.toUpperCase() + ' #' + opt.collector_number : '']
                      };
                   }),
@@ -1671,17 +1735,19 @@
                   var printing = readPrintingValue(cardEl.querySelector('[data-or-print-value]').value);
                   var cut = readCutValue(cardEl.querySelector('[data-or-cut-value]').value);
                   if (!printing) {
-                     showReconcileStatus('Choose a printing before accepting.');
+                     showCardError(cardEl, 'Choose a printing before accepting.');
                      return;
                   }
                   if (!item.destination_category) {
-                     showReconcileStatus('Choose a destination category.');
+                     showCardError(cardEl, 'Choose a destination category.');
                      return;
                   }
                   if (item.is_cube && (!cut || !cut.name)) {
-                     showReconcileStatus('Choose a card to cut from the ' + item.destination_category + ' section.');
+                     showCardError(cardEl, 'Choose a card to cut from the ' + item.destination_category + ' section.');
                      return;
                   }
+                  clearCardError(cardEl);
+                  cardEl.classList.remove('or-decision-accepted', 'or-decision-skipped', 'or-decision-rejected');
                   setDecision(item.item_id, {
                      status: 'accepted',
                      accepted: {
@@ -1693,6 +1759,7 @@
                   });
                   cardEl.classList.add('or-decision-accepted');
                } else {
+                  cardEl.classList.remove('or-decision-accepted', 'or-decision-skipped', 'or-decision-rejected');
                   setDecision(item.item_id, { status: 'skipped' });
                   cardEl.classList.add('or-decision-skipped');
                }
@@ -1734,7 +1801,8 @@
       var importText = state.stagingDeck && state.stagingDeck.deck_snapshot
          ? OrderReconcileExport.buildStagingCleanupImport(state.stagingDeck.deck_snapshot, removals)
          : '';
-      return '<div class="or-status-card"><div class="or-status-header"><h3>Buy/trade list cleanup</h3></div>' +
+      return '<div class="or-status-card"><div class="or-status-header"><h3>Buy/trade list cleanup</h3>' +
+         archidektDeckLinkHtml(state.stagingDeck) + '</div>' +
          '<div class="or-status-pane"><p>Remove ' + removals.length + ' accepted card(s) from staging deck.</p>' +
          '<button type="button" class="or-btn or-btn-primary" id="or-copy-staging">Copy staging import</button> ' +
          (bridgeApplyAvailable()
@@ -1798,6 +1866,7 @@
             state.activeDeckId = btn.getAttribute('data-deck-id');
             saveProgress();
             render();
+            scrollToTop();
             document.querySelectorAll('.hub-deck-chip').forEach(function (b) {
                b.classList.toggle('active', b.getAttribute('data-deck-id') === state.activeDeckId);
             });

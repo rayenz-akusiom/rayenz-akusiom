@@ -5,6 +5,8 @@
    var CARD_SIZE_PX = { S: 150, M: 225, L: 310 };
    var SIZE_LABELS = { S: 'Small', M: 'Medium', L: 'Large' };
    var SIZE_GLYPHS = { S: 12, M: 16, L: 20 };
+   var PINNED_CATEGORIES = ['New Set In', 'New Set Out'];
+   var UNCategorized_KEY = '__uncategorized__';
 
    var dialogEl = null;
 
@@ -67,6 +69,76 @@
          }
          return String(aLines[1] || '').toLowerCase().localeCompare(String(bLines[1] || '').toLowerCase());
       });
+   }
+
+   function groupItems(items) {
+      var buckets = {};
+      (items || []).forEach(function (item) {
+         var cat = item.category ? String(item.category).trim() : '';
+         var key = cat || UNCategorized_KEY;
+         if (!buckets[key]) {
+            buckets[key] = [];
+         }
+         buckets[key].push(item);
+      });
+
+      Object.keys(buckets).forEach(function (key) {
+         buckets[key] = sortItems(buckets[key]);
+      });
+
+      var groups = [];
+      if (buckets[UNCategorized_KEY] && buckets[UNCategorized_KEY].length) {
+         groups.push({ name: null, items: buckets[UNCategorized_KEY] });
+         delete buckets[UNCategorized_KEY];
+      }
+
+      PINNED_CATEGORIES.forEach(function (cat) {
+         if (buckets[cat] && buckets[cat].length) {
+            groups.push({ name: cat, items: buckets[cat] });
+            delete buckets[cat];
+         }
+      });
+
+      Object.keys(buckets).sort(function (a, b) {
+         return a.localeCompare(b, undefined, { sensitivity: 'base' });
+      }).forEach(function (cat) {
+         groups.push({ name: cat, items: buckets[cat] });
+      });
+
+      return groups;
+   }
+
+   function createOptionButton(item, config, dialog) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hub-picker-option';
+      if (item.value === config.selectedValue) {
+         btn.classList.add('selected');
+      }
+      var imgWrap = document.createElement('div');
+      imgWrap.className = 'hub-picker-option-image';
+      if (item.imgSrc) {
+         var img = document.createElement('img');
+         img.src = item.imgSrc;
+         img.alt = (item.lines && item.lines[0]) || '';
+         img.loading = 'lazy';
+         imgWrap.appendChild(img);
+      } else {
+         imgWrap.classList.add('hub-picker-option-image-empty');
+         imgWrap.textContent = 'No image';
+      }
+      var meta = document.createElement('div');
+      meta.className = 'hub-picker-option-meta';
+      appendOptionMeta(meta, item.lines);
+      btn.appendChild(imgWrap);
+      btn.appendChild(meta);
+      btn.addEventListener('click', function () {
+         if (config && config.onPick) {
+            config.onPick(item.value, item);
+         }
+         dialog.close();
+      });
+      return btn;
    }
 
    function appendOptionMeta(meta, lines) {
@@ -150,42 +222,26 @@
       grid.innerHTML = '';
 
       var items = (config && config.items) || [];
-      if (config && config.sort) {
-         items = sortItems(items);
-      }
-
-      items.forEach(function (item) {
-         var btn = document.createElement('button');
-         btn.type = 'button';
-         btn.className = 'hub-picker-option';
-         if (item.value === config.selectedValue) {
-            btn.classList.add('selected');
-         }
-         var imgWrap = document.createElement('div');
-         imgWrap.className = 'hub-picker-option-image';
-         if (item.imgSrc) {
-            var img = document.createElement('img');
-            img.src = item.imgSrc;
-            img.alt = (item.lines && item.lines[0]) || '';
-            img.loading = 'lazy';
-            imgWrap.appendChild(img);
-         } else {
-            imgWrap.classList.add('hub-picker-option-image-empty');
-            imgWrap.textContent = 'No image';
-         }
-         var meta = document.createElement('div');
-         meta.className = 'hub-picker-option-meta';
-         appendOptionMeta(meta, item.lines);
-         btn.appendChild(imgWrap);
-         btn.appendChild(meta);
-         btn.addEventListener('click', function () {
-            if (config && config.onPick) {
-               config.onPick(item.value, item);
+      if (config && config.groupByCategory) {
+         groupItems(items).forEach(function (group) {
+            if (group.name) {
+               var header = document.createElement('div');
+               header.className = 'hub-picker-group-header';
+               header.textContent = group.name;
+               grid.appendChild(header);
             }
-            dialog.close();
+            group.items.forEach(function (item) {
+               grid.appendChild(createOptionButton(item, config, dialog));
+            });
          });
-         grid.appendChild(btn);
-      });
+      } else {
+         if (config && config.sort) {
+            items = sortItems(items);
+         }
+         items.forEach(function (item) {
+            grid.appendChild(createOptionButton(item, config, dialog));
+         });
+      }
 
       if (typeof dialog.showModal === 'function') {
          dialog.showModal();

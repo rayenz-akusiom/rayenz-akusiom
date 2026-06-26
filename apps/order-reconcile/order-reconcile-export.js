@@ -197,11 +197,14 @@
       map[key].quantity += qty;
    }
 
-   function deductFromLineMap(map, cut, qty) {
+   function deductFromLineMap(map, cut, qty, excludeCategory) {
       var remaining = qty || cut.quantity || 1;
       var keys = Object.keys(map);
       for (var i = 0; i < keys.length && remaining > 0; i++) {
          var row = map[keys[i]];
+         if (excludeCategory && row.category === excludeCategory) {
+            continue;
+         }
          if (row.name !== cut.name) {
             continue;
          }
@@ -209,6 +212,27 @@
             continue;
          }
          if (cut.collector_number && row.collector_number && row.collector_number !== cut.collector_number) {
+            continue;
+         }
+         var take = Math.min(row.quantity, remaining);
+         row.quantity -= take;
+         remaining -= take;
+         if (row.quantity <= 0) {
+            delete map[keys[i]];
+         }
+      }
+      return remaining;
+   }
+
+   function deductFromMaybeboard(map, card, qty) {
+      var remaining = qty || 1;
+      var keys = Object.keys(map);
+      for (var i = 0; i < keys.length && remaining > 0; i++) {
+         var row = map[keys[i]];
+         if (row.category !== MAYBEBOARD_CATEGORY) {
+            continue;
+         }
+         if (!namesMatch(row.name, card.name)) {
             continue;
          }
          var take = Math.min(row.quantity, remaining);
@@ -277,11 +301,17 @@
          }, a.destination_category, a.quantity || 1);
 
          if (a.card_out && a.card_out.name) {
-            deductFromLineMap(mainMap, a.card_out, a.quantity || 1);
+            // Never cut from the maybeboard — it is preserved unless the added card
+            // itself is removed from it below.
+            deductFromLineMap(mainMap, a.card_out, a.quantity || 1, MAYBEBOARD_CATEGORY);
          }
 
-         if (item.is_cube && item.maybeboard_entry) {
-            deductFromLineMap(mainMap, item.maybeboard_entry, a.quantity || 1);
+         // Remove only the added card from the maybeboard (covers acquiring a card
+         // that was sitting in the maybeboard without a pre-planned swap). All other
+         // maybeboard cards are preserved.
+         var mbRef = (item.is_cube && item.maybeboard_entry) ? item.maybeboard_entry : a.card_in;
+         if (mbRef && mbRef.name) {
+            deductFromMaybeboard(mainMap, mbRef, a.quantity || 1);
          }
       });
 

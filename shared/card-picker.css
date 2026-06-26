@@ -93,6 +93,17 @@
    background: #f7fafc;
 }
 
+.hub-picker-group-header {
+   grid-column: 1 / -1;
+   font-size: 0.8rem;
+   font-weight: 700;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   color: #4a5568;
+   padding: 4px 2px;
+   border-bottom: 1px solid #e2e8f0;
+}
+
 .hub-picker-grid {
    display: grid;
    grid-template-columns: repeat(auto-fill, minmax(var(--hub-picker-card-min, 150px), 1fr));

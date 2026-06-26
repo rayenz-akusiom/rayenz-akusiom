@@ -234,6 +234,11 @@
    background: #f7fafc;
 }
 
+.or-deck-link {
+   font-size: 0.85rem;
+   white-space: nowrap;
+}
+
 .or-status-tabs { display: flex; gap: 6px; }
 
 .or-status-tab {
@@ -374,6 +379,16 @@
    margin: 6px 0;
 }
 
+.or-card-error {
+   background: #fed7d7;
+   color: #742a2a;
+   padding: 8px 12px;
+   border-radius: 6px;
+   margin: 12px 0 0;
+   font-size: 0.85rem;
+   font-weight: 600;
+}
+
 .or-actions {
    display: flex;
    gap: 8px;
@@ -501,6 +516,10 @@
    align-items: center;
    gap: 10px;
    margin: 8px 0 4px;
+}
+
+.or-summary-section-single .or-summary-section-col {
+   flex: 1 1 100%;
 }
 
 .or-summary-section-col {

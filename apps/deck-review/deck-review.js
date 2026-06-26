@@ -564,7 +564,8 @@
                name: card.name,
                quantity: 1,
                set_code: card.set_code,
-               collector_number: card.collector_number
+               collector_number: card.collector_number,
+               primary_category: primary
             });
          });
       }
@@ -580,7 +581,8 @@
                      name: card.name,
                      quantity: 1,
                      set_code: card.set_code,
-                     collector_number: card.collector_number
+                     collector_number: card.collector_number,
+                     primary_category: 'New Set Out'
                   });
                }
             });
@@ -597,7 +599,8 @@
                name: r.name,
                quantity: 1,
                set_code: snap ? snap.set_code : null,
-               collector_number: snap ? snap.collector_number : null
+               collector_number: snap ? snap.collector_number : null,
+               primary_category: snap ? snap.primary_category : null
             };
             var key = optionKey(opt);
             if (!seen[key]) {
@@ -844,6 +847,7 @@
          return {
             value: optionKey(opt),
             imgSrc: cutOptionImageSrc(opt, deck),
+            category: opt.primary_category || null,
             lines: cutOptionLines(opt)
          };
       });
@@ -865,7 +869,7 @@
       }
       HubCardPicker.open({
          title: 'Choose card to cut',
-         sort: true,
+         groupByCategory: true,
          items: items,
          selectedValue: getCutValue(cardEl),
          onPick: function (value) {
