@@ -151,53 +151,10 @@
       return Object.keys(cats).sort();
    }
 
-   function cardKey(name, setCode, collectorNumber) {
-      return [name, (setCode || '').toLowerCase(), collectorNumber || ''].join('|');
-   }
-
-   function cloneEntry(card) {
-      return {
-         name: card.name,
-         set_code: card.set_code || null,
-         collector_number: card.collector_number || null,
-         quantity: card.quantity || 1,
-         primary_category: card.primary_category || null
-      };
-   }
-
-   function buildMainDeckPool(snapshot) {
-      var pool = [];
-      (snapshot.cards || []).forEach(function (card) {
-         var primary = card.primary_category || (card.categories && card.categories[0]);
-         if (primary === IN_CATEGORY || primary === OUT_CATEGORY) {
-            return;
-         }
-         if (!card.name) {
-            return;
-         }
-         pool.push(cloneEntry(card));
-      });
-      return pool;
-   }
-
-   function addToLineMap(map, entry, category, qty) {
-      if (qty <= 0) {
-         return;
-      }
-      var finishKey = entry.finish || '';
-      var key = cardKey(entry.name, entry.set_code, entry.collector_number) + '|' + (category || '') + '|' + finishKey;
-      if (!map[key]) {
-         map[key] = {
-            name: entry.name,
-            set_code: entry.set_code,
-            collector_number: entry.collector_number,
-            category: category,
-            finish: entry.finish || null,
-            quantity: 0
-         };
-      }
-      map[key].quantity += qty;
-   }
+   // Shared line-map primitives live in ArchidektExport (loaded first).
+   var buildMainDeckPool = Export.buildMainDeckPool;
+   var addToLineMap = Export.addToLineMap;
+   var lineMapToImportLines = Export.lineMapToImportLines;
 
    function deductFromLineMap(map, cut, qty, excludeCategory) {
       var remaining = qty || cut.quantity || 1;
@@ -245,25 +202,6 @@
          }
       }
       return remaining;
-   }
-
-   function lineMapToImportLines(map, categorySettings) {
-      var lines = [];
-      Object.keys(map).forEach(function (key) {
-         var row = map[key];
-         if (row.quantity > 0) {
-            lines.push(Export.formatImportLine(
-               row.quantity,
-               row.name,
-               row.set_code,
-               row.collector_number,
-               row.category,
-               categorySettings,
-               row.finish
-            ));
-         }
-      });
-      return lines;
    }
 
    function fulfilledSlotKey(deckId, slotIndex, inName) {
@@ -356,19 +294,7 @@
    }
 
    function deckReconcileComplete(items, getDecisionFn) {
-      var list = items || [];
-      if (!list.length) {
-         return { complete: true, reviewed: 0, total: 0 };
-      }
-      var reviewed = 0;
-      for (var i = 0; i < list.length; i++) {
-         var d = getDecisionFn(list[i].item_id);
-         if (!d || !d.status) {
-            return { complete: false, reviewed: reviewed, total: list.length };
-         }
-         reviewed++;
-      }
-      return { complete: true, reviewed: reviewed, total: list.length };
+      return Export.isReviewComplete(items, 'item_id', getDecisionFn);
    }
 
    function summarizeDeck(deckId, snapshot, acceptedItems, options) {

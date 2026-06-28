@@ -291,20 +291,24 @@
       });
    }
 
-   function deckReviewComplete(suggestions, getDecisionFn) {
-      var list = suggestions || [];
-      if (!list.length) {
+   function isReviewComplete(list, idField, getDecisionFn) {
+      var items = list || [];
+      if (!items.length) {
          return { complete: true, reviewed: 0, total: 0 };
       }
       var reviewed = 0;
-      for (var i = 0; i < list.length; i++) {
-         var d = getDecisionFn(list[i].suggestion_id);
+      for (var i = 0; i < items.length; i++) {
+         var d = getDecisionFn(items[i][idField]);
          if (!d || !d.status) {
-            return { complete: false, reviewed: reviewed, total: list.length };
+            return { complete: false, reviewed: reviewed, total: items.length };
          }
          reviewed++;
       }
-      return { complete: true, reviewed: reviewed, total: list.length };
+      return { complete: true, reviewed: reviewed, total: items.length };
+   }
+
+   function deckReviewComplete(suggestions, getDecisionFn) {
+      return isReviewComplete(suggestions, 'suggestion_id', getDecisionFn);
    }
 
    function buildFullDeckImport(deck, accepted) {
@@ -432,6 +436,11 @@
       formatFinishToken: formatFinishToken,
       formatCategoryBracket: formatCategoryBracket,
       buildCategorySettings: buildCategorySettings,
+      cardKey: cardKey,
+      buildMainDeckPool: buildMainDeckPool,
+      addToLineMap: addToLineMap,
+      lineMapToImportLines: lineMapToImportLines,
+      isReviewComplete: isReviewComplete,
       buildImportTextForDeck: buildImportTextForDeck,
       buildTargetAcceptedSwaps: buildTargetAcceptedSwaps,
       deckReviewComplete: deckReviewComplete,
