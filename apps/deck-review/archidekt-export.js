@@ -66,13 +66,24 @@
       return ' [' + bracket + ']';
    }
 
-   function formatImportLine(quantity, name, setCode, collectorNumber, category, categorySettings) {
+   function formatFinishToken(finish) {
+      if (finish === 'foil') {
+         return ' *F*';
+      }
+      if (finish === 'etched') {
+         return ' *E*';
+      }
+      return '';
+   }
+
+   function formatImportLine(quantity, name, setCode, collectorNumber, category, categorySettings, finish) {
       var line = quantity + 'x ' + name;
       if (setCode && collectorNumber) {
          line += ' (' + String(setCode).toLowerCase() + ') ' + collectorNumber;
       } else if (setCode) {
          line += ' (' + String(setCode).toLowerCase() + ')';
       }
+      line += formatFinishToken(finish);
       line += formatCategoryBracket(category, name, categorySettings);
       return line;
    }
@@ -140,13 +151,15 @@
       if (qty <= 0) {
          return;
       }
-      var key = cardKey(entry.name, entry.set_code, entry.collector_number) + '|' + (category || '');
+      var finishKey = entry.finish || '';
+      var key = cardKey(entry.name, entry.set_code, entry.collector_number) + '|' + (category || '') + '|' + finishKey;
       if (!map[key]) {
          map[key] = {
             name: entry.name,
             set_code: entry.set_code,
             collector_number: entry.collector_number,
             category: category,
+            finish: entry.finish || null,
             quantity: 0
          };
       }
@@ -200,6 +213,7 @@
                name: cardIn.name,
                set_code: cardIn.set_code || null,
                collector_number: cardIn.collector_number || null,
+               finish: cardIn.finish || null,
                quantity: qty
             });
          }
@@ -226,7 +240,8 @@
                row.set_code,
                row.collector_number,
                row.category,
-               categorySettings
+               categorySettings,
+               row.finish
             ));
          }
       });
@@ -247,7 +262,8 @@
                cardIn.set_code,
                cardIn.collector_number,
                IN_CATEGORY,
-               categorySettings
+               categorySettings,
+               cardIn.finish
             ));
          }
          if (decision.card_out && decision.card_out.name) {
@@ -413,6 +429,7 @@
       APPLY_STORAGE_PREFIX: APPLY_STORAGE_PREFIX,
       parseDeckId: parseDeckId,
       formatImportLine: formatImportLine,
+      formatFinishToken: formatFinishToken,
       formatCategoryBracket: formatCategoryBracket,
       buildCategorySettings: buildCategorySettings,
       buildImportTextForDeck: buildImportTextForDeck,

@@ -67,17 +67,6 @@
                   return Promise.reject(new Error('Userscript bridge not available. Install rayenz-dailies.user.js in Tampermonkey.'));
                }
 
-               async function resolvePrizeName(prizeId) {
-                  if (!prizeId) return null;
-                  try {
-                     var html = await neopetsFetch('https://www.neopets.com/search.phtml?selected_type=object&id=' + prizeId);
-                     var match = html.match(/Name:\s*([^<\n]+)/i);
-                     return match ? match[1].trim() : null;
-                  } catch (err) {
-                     return null;
-                  }
-               }
-
                function setStatus(statusEl, message, className) {
                   statusEl.textContent = message;
                   statusEl.className = 'automated-status' + (className ? ' ' + className : '');
@@ -110,14 +99,7 @@
                         processed++;
 
                         if (result.prizeId || result.success === '4' || result.success === '5') {
-                           wonItem = await resolvePrizeName(result.prizeId);
-                           if (!wonItem && result.prizeId) {
-                              wonItem = 'item #' + result.prizeId;
-                           } else if (!wonItem && result.error) {
-                              wonItem = result.error;
-                           } else if (!wonItem) {
-                              wonItem = 'an item';
-                           }
+                           wonItem = true;
                         }
                      } catch (err) {
                         setStatus(statusEl, err.message, 'error');
@@ -132,10 +114,10 @@
                   if (statusEl.className.indexOf('error') === -1) {
                      var summary = processed + ' throw' + (processed === 1 ? '' : 's') + ' processed.';
                      if (wonItem) {
-                        summary += ' Item won: ' + wonItem + '.';
+                        summary += ' Item won!';
                         setStatus(statusEl, summary, 'win');
                      } else {
-                        summary += ' Item won: No.';
+                        summary += ' No item won.';
                         setStatus(statusEl, summary);
                      }
                   }

@@ -9,6 +9,8 @@
    var UNCategorized_KEY = '__uncategorized__';
 
    var dialogEl = null;
+   var foilCheckboxEl = null;
+   var foilChecked = false;
 
    function loadCardSize() {
       try {
@@ -134,7 +136,7 @@
       btn.appendChild(meta);
       btn.addEventListener('click', function () {
          if (config && config.onPick) {
-            config.onPick(item.value, item);
+            config.onPick(item.value, item, { foil: isFoilToggleOn() });
          }
          dialog.close();
       });
@@ -176,6 +178,8 @@
          '<header class="hub-picker-dialog-header">' +
          '<h3 id="hub-picker-title" class="hub-picker-title"></h3>' +
          '<div class="hub-picker-header-controls">' +
+         '<label class="hub-picker-foil-toggle" data-hub-picker-foil-wrap hidden>' +
+         '<input type="checkbox" data-hub-picker-foil> Foil</label>' +
          '<div class="hub-picker-size-group" role="group" aria-label="Card size">' +
          buildSizeButtonsHtml() +
          '</div>' +
@@ -199,6 +203,11 @@
          });
       });
 
+      foilCheckboxEl = dialogEl.querySelector('[data-hub-picker-foil]');
+      foilCheckboxEl.addEventListener('change', function () {
+         foilChecked = foilCheckboxEl.checked;
+      });
+
       dialogEl.querySelector('[data-hub-picker-close]').addEventListener('click', function () {
          dialogEl.close();
       });
@@ -211,11 +220,37 @@
       return dialogEl;
    }
 
+   function isFoilToggleOn() {
+      return !!foilChecked;
+   }
+
+   function resolveFinish(item, foilOn) {
+      if (foilOn && item && item.finishes && item.finishes.indexOf('foil') >= 0) {
+         return 'foil';
+      }
+      return 'nonfoil';
+   }
+
    function open(config) {
       var dialog = ensureDialog();
       var titleEl = dialog.querySelector('#hub-picker-title');
       var grid = dialog.querySelector('#hub-picker-grid');
+      var foilWrap = dialog.querySelector('[data-hub-picker-foil-wrap]');
       titleEl.textContent = (config && config.title) || 'Choose';
+
+      if (config && config.showFoilToggle) {
+         foilWrap.hidden = false;
+         foilChecked = !!config.foilDefault;
+         if (foilCheckboxEl) {
+            foilCheckboxEl.checked = foilChecked;
+         }
+      } else {
+         foilWrap.hidden = true;
+         foilChecked = false;
+         if (foilCheckboxEl) {
+            foilCheckboxEl.checked = false;
+         }
+      }
       var sizeKey = loadCardSize();
       applyGridSize(grid, sizeKey);
       updateSizeButtons(dialog, sizeKey);
@@ -227,7 +262,14 @@
             if (group.name) {
                var header = document.createElement('div');
                header.className = 'hub-picker-group-header';
-               header.textContent = group.name;
+               var label = document.createElement('span');
+               label.className = 'hub-picker-group-name';
+               label.textContent = group.name;
+               header.appendChild(label);
+               var count = document.createElement('span');
+               count.className = 'hub-picker-group-count';
+               count.textContent = group.items.length;
+               header.appendChild(count);
                grid.appendChild(header);
             }
             group.items.forEach(function (item) {
@@ -250,5 +292,5 @@
       }
    }
 
-   global.HubCardPicker = { open: open };
+   global.HubCardPicker = { open: open, resolveFinish: resolveFinish };
 })(window);

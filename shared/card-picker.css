@@ -93,8 +93,27 @@
    background: #f7fafc;
 }
 
+.hub-picker-foil-toggle {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   font-size: 0.85rem;
+   color: #4a5568;
+   cursor: pointer;
+   user-select: none;
+   white-space: nowrap;
+}
+
+.hub-picker-foil-toggle input {
+   margin: 0;
+   cursor: pointer;
+}
+
 .hub-picker-group-header {
    grid-column: 1 / -1;
+   display: flex;
+   align-items: center;
+   gap: 8px;
    font-size: 0.8rem;
    font-weight: 700;
    text-transform: uppercase;
@@ -102,6 +121,19 @@
    color: #4a5568;
    padding: 4px 2px;
    border-bottom: 1px solid #e2e8f0;
+}
+
+.hub-picker-group-count {
+   display: inline-block;
+   min-width: 18px;
+   padding: 0 6px;
+   border-radius: 999px;
+   background: #e2e8f0;
+   color: #4a5568;
+   font-size: 0.7rem;
+   font-weight: 700;
+   line-height: 1.5;
+   text-align: center;
 }
 
 .hub-picker-grid {

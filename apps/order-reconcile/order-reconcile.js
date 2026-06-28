@@ -327,6 +327,37 @@
       return candidates;
    }
 
+   function findMaybeboardCandidatesForName(cardName) {
+      var candidates = [];
+      state.decks.forEach(function (deck) {
+         if (OrderReconcileExport.isCubeDeck(deck)) {
+            return;
+         }
+         OrderReconcileExport.deriveMaybeboard(deck.deck_snapshot).forEach(function (entry, idx) {
+            if (!OrderReconcileExport.namesMatch(cardName, entry.name)) {
+               return;
+            }
+            candidates.push({
+               deck_id: deck.deck_id,
+               deck_name: deck.deck_name,
+               slot_key: OrderReconcileExport.maybeboardSlotKey(deck.deck_id, idx, entry.name),
+               queued_in: entry,
+               paired_out: null,
+               destination_category: '',
+               is_cube: false,
+               is_maybeboard: true,
+               maybeboard_entry: {
+                  name: entry.name,
+                  set_code: entry.set_code,
+                  collector_number: entry.collector_number,
+                  quantity: 1
+               }
+            });
+         });
+      });
+      return candidates;
+   }
+
    async function resolveCubeCandidateCategories(candidates) {
       for (var i = 0; i < candidates.length; i++) {
          var c = candidates[i];
@@ -390,14 +421,27 @@
          var s = candidates.length;
 
          if (!s) {
+            var mbCandidates = findMaybeboardCandidatesForName(copies[0].card_name);
             copies.forEach(function (copy) {
-               state.needsReview.push({
-                  copy: copy,
-                  reason: 'unmatched',
-                  candidates: [],
-                  assigned_deck_id: '',
-                  destination_category: ''
-               });
+               if (mbCandidates.length) {
+                  state.needsReview.push({
+                     copy: copy,
+                     reason: 'maybeboard',
+                     candidates: mbCandidates,
+                     assigned_deck_id: '',
+                     destination_category: '',
+                     conflict_note: 'Not in any swap queue. Found in maybeboard of: ' +
+                        mbCandidates.map(function (c) { return c.deck_name; }).join(', ')
+                  });
+               } else {
+                  state.needsReview.push({
+                     copy: copy,
+                     reason: 'unmatched',
+                     candidates: [],
+                     assigned_deck_id: '',
+                     destination_category: ''
+                  });
+               }
             });
             continue;
          }
@@ -562,6 +606,28 @@
          html += '<optgroup label="Commander">' +
             deckOptionTags(commanderDecks, selectedId, disabledSet) + '</optgroup>';
       }
+      return html;
+   }
+
+   function maybeboardDeckOptionsHtml(nr, disabledSet) {
+      disabledSet = disabledSet || {};
+      var html = '<option value=""' + (!nr.assigned_deck_id ? ' selected' : '') +
+         '>— leave out (buy/trade only) —</option>';
+      var seen = {};
+      var suggested = (nr.candidates || []).filter(function (c) {
+         if (seen[c.deck_id]) {
+            return false;
+         }
+         seen[c.deck_id] = true;
+         return true;
+      });
+      if (suggested.length) {
+         html += '<optgroup label="Found in maybeboard">' +
+            deckOptionTags(suggested.map(function (c) {
+               return { deck_id: c.deck_id, deck_name: c.deck_name };
+            }), nr.assigned_deck_id, disabledSet) + '</optgroup>';
+      }
+      html += deckOptionsHtml(nr.assigned_deck_id, false, disabledSet);
       return html;
    }
 
@@ -831,16 +897,6 @@
          lines.push((p.set_name || p.set).toUpperCase() + (p.collector_number ? ' #' + p.collector_number : ''));
       }
       return lines.length ? lines : [p.name];
-   }
-
-   function printingValueFromScryfall(p) {
-      return JSON.stringify({
-         scryfall_id: p.id,
-         name: p.name,
-         set_code: p.set,
-         collector_number: p.collector_number,
-         finish: (p.finishes && p.finishes[0]) || 'nonfoil'
-      });
    }
 
    function readPrintingValue(raw) {
@@ -1229,7 +1285,9 @@
                   candidateOptionsHtml(nr.candidates, nr.assigned_deck_id, disabled) + '</select>';
             } else {
                html += '<label>Assign to deck (optional)</label><select class="or-category-select" data-assign-deck>' +
-                  deckOptionsHtml(nr.assigned_deck_id, true, disabled) + '</select>';
+                  (nr.reason === 'maybeboard'
+                     ? maybeboardDeckOptionsHtml(nr, disabled)
+                     : deckOptionsHtml(nr.assigned_deck_id, true, disabled)) + '</select>';
                html += '<label class="or-assign-category-label"' +
                   (nr.assigned_deck_id ? '' : ' hidden') + '>Destination category</label>' +
                   '<select class="or-category-select" data-assign-category' +
@@ -1283,6 +1341,8 @@
          if (nr.reason === 'conflict' && nr.candidates && nr.candidates.length) {
             var rowDisabled = disabledDecksForReviewRow(nr, idx);
             deckSelect.innerHTML = candidateOptionsHtml(nr.candidates, nr.assigned_deck_id, rowDisabled);
+         } else if (nr.reason === 'maybeboard') {
+            deckSelect.innerHTML = maybeboardDeckOptionsHtml(nr, disabledDecksForReviewRow(nr, idx));
          }
 
          if (nr.assigned_deck_id && catSelect) {
@@ -1384,10 +1444,16 @@
       if (!card) {
          return '—';
       }
+      var label;
       if (card.set_code && card.collector_number) {
-         return card.name + ' (' + String(card.set_code).toUpperCase() + ' #' + card.collector_number + ')';
+         label = card.name + ' (' + String(card.set_code).toUpperCase() + ' #' + card.collector_number + ')';
+      } else {
+         label = card.name;
       }
-      return card.name;
+      if (card.finish === 'foil') {
+         label += ' · Foil';
+      }
+      return label;
    }
 
    function summaryCardImageSrc(card) {
@@ -1670,24 +1736,37 @@
          if (printBtn) {
             printBtn.addEventListener('click', function () {
                fetchPrintings(item.card_name).then(function (prints) {
+                  var currentPrint = readPrintingValue(cardEl.querySelector('[data-or-print-value]').value);
                   HubCardPicker.open({
                      title: 'Choose printing — ' + item.card_name,
+                     showFoilToggle: true,
+                     foilDefault: !!(currentPrint && currentPrint.finish === 'foil'),
                      items: prints.map(function (p) {
                         return {
-                           value: printingValueFromScryfall(p),
+                           value: p.id,
                            imgSrc: scryfallImageFromId(p.id),
-                           lines: printOptionLines(p)
+                           lines: printOptionLines(p),
+                           finishes: p.finishes,
+                           name: p.name,
+                           set_code: p.set,
+                           collector_number: p.collector_number
                         };
                      }),
-                     selectedValue: cardEl.querySelector('[data-or-print-value]').value,
-                     onPick: function (value) {
-                        var p = readPrintingValue(value);
-                        cardEl.querySelector('[data-or-print-value]').value = value;
-                        cardEl.querySelector('[data-or-print-summary]').textContent =
-                           p ? formatCardLabel(p) : '';
-                        if (p && p.scryfall_id) {
+                     selectedValue: currentPrint && currentPrint.scryfall_id ? currentPrint.scryfall_id : '',
+                     onPick: function (value, pickItem, ctx) {
+                        var finish = HubCardPicker.resolveFinish(pickItem, ctx && ctx.foil);
+                        var printing = {
+                           scryfall_id: value,
+                           name: pickItem.name,
+                           set_code: pickItem.set_code,
+                           collector_number: pickItem.collector_number,
+                           finish: finish
+                        };
+                        cardEl.querySelector('[data-or-print-value]').value = printingValueFromParts(printing);
+                        cardEl.querySelector('[data-or-print-summary]').textContent = formatCardLabel(printing);
+                        if (printing.scryfall_id) {
                            setReconcileImage(cardEl.querySelector('[data-or-img-in]'),
-                              scryfallImageFromId(p.scryfall_id));
+                              scryfallImageFromId(printing.scryfall_id));
                         }
                      }
                   });

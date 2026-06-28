@@ -184,13 +184,15 @@
       if (qty <= 0) {
          return;
       }
-      var key = cardKey(entry.name, entry.set_code, entry.collector_number) + '|' + (category || '');
+      var finishKey = entry.finish || '';
+      var key = cardKey(entry.name, entry.set_code, entry.collector_number) + '|' + (category || '') + '|' + finishKey;
       if (!map[key]) {
          map[key] = {
             name: entry.name,
             set_code: entry.set_code,
             collector_number: entry.collector_number,
             category: category,
+            finish: entry.finish || null,
             quantity: 0
          };
       }
@@ -256,7 +258,8 @@
                row.set_code,
                row.collector_number,
                row.category,
-               categorySettings
+               categorySettings,
+               row.finish
             ));
          }
       });
@@ -297,7 +300,8 @@
          addToLineMap(mainMap, {
             name: a.card_in.name,
             set_code: a.card_in.set_code,
-            collector_number: a.card_in.collector_number
+            collector_number: a.card_in.collector_number,
+            finish: a.card_in.finish || null
          }, a.destination_category, a.quantity || 1);
 
          if (a.card_out && a.card_out.name) {

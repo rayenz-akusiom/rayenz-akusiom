@@ -740,17 +740,20 @@
          summary.textContent = 'No printing selected';
          return;
       }
+      var label = '';
       var prints = cardEl._drPrints || [];
       var print = prints.find(function (p) { return p.id === printId; });
       if (print) {
-         summary.textContent = printOptionLines(print).join(' · ');
-         return;
+         label = printOptionLines(print).join(' · ');
+      } else if (suggestion && suggestion.card && suggestion.card.scryfall_id === printId) {
+         label = suggestion.card.set_code + ' #' + suggestion.card.collector_number;
+      } else {
+         label = 'Printing selected';
       }
-      if (suggestion && suggestion.card && suggestion.card.scryfall_id === printId) {
-         summary.textContent = suggestion.card.set_code + ' #' + suggestion.card.collector_number;
-         return;
+      if (cardEl.dataset.finish === 'foil') {
+         label += ' · Foil';
       }
-      summary.textContent = 'Printing selected';
+      summary.textContent = label;
    }
 
    function updateCutSummary(cardEl) {
@@ -821,21 +824,33 @@
          return {
             value: p.id,
             imgSrc: scryfallImageFromId(p.id),
-            lines: printOptionLines(p)
+            lines: printOptionLines(p),
+            finishes: p.finishes,
+            name: p.name,
+            set_code: p.set,
+            collector_number: p.collector_number
          };
       });
       if (!items.length && suggestion.card.scryfall_id) {
          items.push({
             value: suggestion.card.scryfall_id,
             imgSrc: scryfallImageFromId(suggestion.card.scryfall_id),
-            lines: [suggestion.card.set_code + ' #' + suggestion.card.collector_number]
+            lines: [suggestion.card.set_code + ' #' + suggestion.card.collector_number],
+            finishes: [],
+            name: suggestion.card.name,
+            set_code: suggestion.card.set_code,
+            collector_number: suggestion.card.collector_number
          });
       }
       HubCardPicker.open({
          title: 'Choose printing — ' + suggestion.card.name,
+         showFoilToggle: true,
+         foilDefault: cardEl.dataset.finish === 'foil',
          items: items,
          selectedValue: getPrintValue(cardEl),
-         onPick: function (value) {
+         onPick: function (value, item, ctx) {
+            var finish = HubCardPicker.resolveFinish(item, ctx && ctx.foil);
+            cardEl.dataset.finish = finish;
             setPrintSelection(cardEl, value, suggestion);
          }
       });
@@ -909,13 +924,14 @@
       return set + ' #' + num + price;
    }
 
-   function printingToCardIn(print, fallback) {
+   function printingToCardIn(print, fallback, cardEl) {
       return {
          name: print.name || fallback.name,
          set_code: (print.set || fallback.set_code || '').toUpperCase(),
          collector_number: String(print.collector_number || fallback.collector_number || ''),
          scryfall_id: print.id || fallback.scryfall_id,
-         scryfall_uri: print.scryfall_uri || fallback.scryfall_uri
+         scryfall_uri: print.scryfall_uri || fallback.scryfall_uri,
+         finish: (cardEl && cardEl.dataset.finish) || 'nonfoil'
       };
    }
 
@@ -1395,6 +1411,9 @@
 
    function restoreAcceptedSelections(cardEl, deck, suggestion, accepted) {
       if (accepted.card_in && accepted.card_in.scryfall_id) {
+         if (accepted.card_in.finish) {
+            cardEl.dataset.finish = accepted.card_in.finish;
+         }
          setPrintSelection(cardEl, accepted.card_in.scryfall_id, suggestion);
       }
       if (accepted.card_out && accepted.card_out.name) {
@@ -1721,7 +1740,7 @@
       var prints = cardEl._drPrints ||
          state.printCache[(suggestion.card.name || '').toLowerCase()] || [];
       var print = prints.find(function (p) { return p.id === selectedPrintId; }) || suggestion.card;
-      var cardIn = printingToCardIn(print, suggestion.card);
+      var cardIn = printingToCardIn(print, suggestion.card, cardEl);
 
       var cutMeta = readCutSelection(cardEl);
       if (isMissingSuggestedCut(suggestion) && !cutMeta.name) {
