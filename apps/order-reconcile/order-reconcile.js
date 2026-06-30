@@ -20,6 +20,7 @@
       completedDecks: {},
       activeDeckId: null,
       inputMode: 'list',
+      isProxyOrder: false,
       printCache: {},
       colorIdentityCache: {},
       progress: null,
@@ -114,7 +115,8 @@
          reconcileItems: state.reconcileItems,
          completedDecks: state.completedDecks,
          activeDeckId: state.activeDeckId,
-         phase: state.phase
+         phase: state.phase,
+         isProxyOrder: state.isProxyOrder
       });
    }
 
@@ -146,6 +148,9 @@
       }
       if (state.progress.activeDeckId) {
          state.activeDeckId = state.progress.activeDeckId;
+      }
+      if (state.progress.isProxyOrder !== undefined) {
+         state.isProxyOrder = !!state.progress.isProxyOrder;
       }
    }
 
@@ -319,6 +324,7 @@
          state.reconcileItems = [];
          state.acquiredCards = [];
          state.completedDecks = {};
+         state.isProxyOrder = false;
          state.progress = { decisions: {} };
          saveProgress();
          render();

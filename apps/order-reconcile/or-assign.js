@@ -479,6 +479,9 @@
       var reviewCount = state.needsReview.length;
       var html = '<div class="or-status-card"><div class="or-status-header"><h3>Assign copies to decks</h3></div>' +
          '<div class="or-status-pane">' +
+         (state.isProxyOrder
+            ? '<p class="or-proxy-order-banner">Proxy order active — added cards will include the Proxies category.</p>'
+            : '') +
          '<p>' + autoCount + ' auto-assigned · ' + reviewCount + ' optional assignment(s)</p>';
 
       if (!reviewCount) {

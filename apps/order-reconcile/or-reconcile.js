@@ -397,7 +397,8 @@
          };
       });
       return OrderReconcileExport.buildReconcileDeckImport(
-         deck.deck_id, deck.deck_snapshot, accepted, items
+         deck.deck_id, deck.deck_snapshot, accepted, items,
+         { isProxyOrder: state.isProxyOrder }
       );
    }
 
@@ -466,7 +467,11 @@
          '<div class="or-status-card">' +
          '<div class="or-status-header"><h3>' + escapeHtml(deck.deck_name) + '</h3>' +
          archidektDeckLinkHtml(deck) + '</div>' +
-         '<div class="or-status-pane">' + cardsHtml + renderSummaryHtml(deck) +
+         '<div class="or-status-pane">' +
+         (state.isProxyOrder
+            ? '<p class="or-proxy-order-banner">Proxy order active — added cards will include the Proxies category.</p>'
+            : '') +
+         cardsHtml + renderSummaryHtml(deck) +
          '<div class="or-apply-row">' +
          '<button type="button" class="or-btn or-btn-primary" id="or-copy-deck-import"' +
          (complete.complete ? '' : ' disabled') + '>Copy deck import</button> ' +

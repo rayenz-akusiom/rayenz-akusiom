@@ -96,6 +96,10 @@
          '<textarea class="or-textarea" id="or-email-input" placeholder="Paste order confirmation email body…"></textarea>' +
          '</div>' +
          '<div style="margin:12px 0">' +
+         '<label class="or-proxy-order-label"><input type="checkbox" id="or-proxy-order"' +
+         (state.isProxyOrder ? ' checked' : '') + '> Proxy order (tag added cards with Proxies category)</label>' +
+         '</div>' +
+         '<div style="margin:12px 0">' +
          '<button type="button" class="or-btn or-btn-ghost" id="or-parse-btn">Parse cards</button> ' +
          '<button type="button" class="or-btn or-btn-primary" id="or-continue-btn">Continue</button>' +
          '</div>' +
@@ -123,6 +127,12 @@
          HubStorage.saveOrderReconcileSettings(state.settings);
          setStatus('Settings saved.');
       });
+      var proxyCheckbox = document.getElementById('or-proxy-order');
+      if (proxyCheckbox) {
+         proxyCheckbox.addEventListener('change', function () {
+            state.isProxyOrder = proxyCheckbox.checked;
+         });
+      }
       document.getElementById('or-continue-btn').addEventListener('click', function () {
          continueToAssign();
       });
@@ -132,6 +142,10 @@
    async function continueToAssign() {
       hideError();
       parseInputToAcquired();
+      var proxyCheckbox = document.getElementById('or-proxy-order');
+      if (proxyCheckbox) {
+         state.isProxyOrder = proxyCheckbox.checked;
+      }
       if (!state.acquiredCards.length) {
          showError('Parse at least one acquired card first.');
          return;

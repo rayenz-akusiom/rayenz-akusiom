@@ -156,12 +156,20 @@
    var addToLineMap = Export.addToLineMap;
    var lineMapToImportLines = Export.lineMapToImportLines;
 
+   function lineMapHasCategory(row, categoryName) {
+      if (!row || !categoryName) {
+         return false;
+      }
+      var cats = row.categories || [];
+      return cats.indexOf(categoryName) >= 0;
+   }
+
    function deductFromLineMap(map, cut, qty, excludeCategory) {
       var remaining = qty || cut.quantity || 1;
       var keys = Object.keys(map);
       for (var i = 0; i < keys.length && remaining > 0; i++) {
          var row = map[keys[i]];
-         if (excludeCategory && row.category === excludeCategory) {
+         if (excludeCategory && lineMapHasCategory(row, excludeCategory)) {
             continue;
          }
          if (row.name !== cut.name) {
@@ -188,7 +196,7 @@
       var keys = Object.keys(map);
       for (var i = 0; i < keys.length && remaining > 0; i++) {
          var row = map[keys[i]];
-         if (row.category !== MAYBEBOARD_CATEGORY) {
+         if (!lineMapHasCategory(row, MAYBEBOARD_CATEGORY)) {
             continue;
          }
          if (!namesMatch(row.name, card.name)) {
@@ -208,7 +216,9 @@
       return deckId + ':' + slotIndex + ':' + inName;
    }
 
-   function buildReconcileDeckImport(deckId, snapshot, acceptedItems, allDeckItems) {
+   function buildReconcileDeckImport(deckId, snapshot, acceptedItems, allDeckItems, options) {
+      options = options || {};
+      var isProxyOrder = !!options.isProxyOrder;
       if (!snapshot) {
          return '';
       }
@@ -226,7 +236,7 @@
 
       pool.forEach(function (entry) {
          if (entry.quantity > 0) {
-            addToLineMap(mainMap, entry, entry.primary_category, entry.quantity);
+            addToLineMap(mainMap, entry, entry.categories, entry.quantity);
          }
       });
 
@@ -235,12 +245,16 @@
             return;
          }
          var a = item.accepted;
+         var cardInCategories = Export.normalizeCategories([a.destination_category].filter(Boolean), null);
+         if (isProxyOrder) {
+            cardInCategories = Export.appendCategory(cardInCategories, 'Proxies');
+         }
          addToLineMap(mainMap, {
             name: a.card_in.name,
             set_code: a.card_in.set_code,
             collector_number: a.card_in.collector_number,
             finish: a.card_in.finish || null
-         }, a.destination_category, a.quantity || 1);
+         }, cardInCategories, a.quantity || 1);
 
          if (a.card_out && a.card_out.name) {
             // Never cut from the maybeboard — it is preserved unless the added card
@@ -264,9 +278,9 @@
          if (fulfilledSlotKeys[slotKey]) {
             return;
          }
-         addToLineMap(inMap, pair.in, IN_CATEGORY, pair.in.quantity || 1);
+         addToLineMap(inMap, pair.in, [IN_CATEGORY], pair.in.quantity || 1);
          if (pair.out) {
-            addToLineMap(outMap, pair.out, OUT_CATEGORY, pair.out.quantity || 1);
+            addToLineMap(outMap, pair.out, [OUT_CATEGORY], pair.out.quantity || 1);
          }
       });
 
@@ -283,7 +297,10 @@
       var categorySettings = snapshot.category_settings || null;
       var map = {};
       (snapshot.cards || []).forEach(function (card) {
-         addToLineMap(map, card, card.primary_category, card.quantity || 1);
+         var cats = card.categories && card.categories.length
+            ? card.categories.slice()
+            : Export.normalizeCategories([], card.primary_category);
+         addToLineMap(map, card, cats, card.quantity || 1);
       });
 
       (removals || []).forEach(function (rem) {

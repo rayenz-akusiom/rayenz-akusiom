@@ -42,11 +42,8 @@
       return null;
    }
 
-   function formatCategoryBracket(category, name, categorySettings) {
+   function formatSingleCategoryWithFlags(category, categorySettings) {
       if (!category) {
-         return '';
-      }
-      if (category === 'Land' && isBasicLandName(name)) {
          return '';
       }
       var bracket = category;
@@ -63,7 +60,49 @@
       } else if (category === IN_CATEGORY || /^maybeboard$/i.test(category)) {
          bracket += '{noDeck}{noPrice}';
       }
-      return ' [' + bracket + ']';
+      return bracket;
+   }
+
+   function normalizeCategories(categories, primaryFallback) {
+      var list = Array.isArray(categories) ? categories.slice() : [];
+      if (!list.length && primaryFallback) {
+         list = [primaryFallback];
+      }
+      var seen = {};
+      var out = [];
+      list.forEach(function (cat) {
+         if (!cat || seen[cat]) {
+            return;
+         }
+         seen[cat] = true;
+         out.push(cat);
+      });
+      return out;
+   }
+
+   function formatCategoriesBracket(categories, name, categorySettings) {
+      var cats = normalizeCategories(categories, null);
+      if (!cats.length) {
+         return '';
+      }
+      var parts = cats.map(function (cat) {
+         return formatSingleCategoryWithFlags(cat, categorySettings);
+      }).filter(Boolean);
+      if (!parts.length) {
+         return '';
+      }
+      return ' [' + parts.join(',') + ']';
+   }
+
+   function formatCategoryBracket(category, name, categorySettings) {
+      if (!category) {
+         return '';
+      }
+      return formatCategoriesBracket([category], name, categorySettings);
+   }
+
+   function appendCategory(categories, name) {
+      return normalizeCategories((categories || []).concat([name]), null);
    }
 
    function formatFinishToken(finish) {
@@ -76,7 +115,7 @@
       return '';
    }
 
-   function formatImportLine(quantity, name, setCode, collectorNumber, category, categorySettings, finish) {
+   function formatImportLine(quantity, name, setCode, collectorNumber, categories, categorySettings, finish) {
       var line = quantity + 'x ' + name;
       if (setCode && collectorNumber) {
          line += ' (' + String(setCode).toLowerCase() + ') ' + collectorNumber;
@@ -84,7 +123,10 @@
          line += ' (' + String(setCode).toLowerCase() + ')';
       }
       line += formatFinishToken(finish);
-      line += formatCategoryBracket(category, name, categorySettings);
+      var cats = Array.isArray(categories)
+         ? categories
+         : (categories ? [categories] : []);
+      line += formatCategoriesBracket(cats, name, categorySettings);
       return line;
    }
 
@@ -97,12 +139,16 @@
    }
 
    function clonePoolEntry(card) {
+      var primary = card.primary_category || (card.categories && card.categories[0]);
       return {
          name: card.name,
          set_code: card.set_code || null,
          collector_number: card.collector_number || null,
          quantity: card.quantity || 1,
-         primary_category: card.primary_category || (card.categories && card.categories[0])
+         primary_category: primary,
+         categories: card.categories && card.categories.length
+            ? card.categories.slice()
+            : normalizeCategories([], primary)
       };
    }
 
@@ -147,18 +193,22 @@
       return true;
    }
 
-   function addToLineMap(map, entry, category, qty) {
+   function addToLineMap(map, entry, categories, qty) {
       if (qty <= 0) {
          return;
       }
+      var cats = normalizeCategories(
+         categories,
+         entry.primary_category || (entry.categories && entry.categories[0])
+      );
       var finishKey = entry.finish || '';
-      var key = cardKey(entry.name, entry.set_code, entry.collector_number) + '|' + (category || '') + '|' + finishKey;
+      var key = cardKey(entry.name, entry.set_code, entry.collector_number) + '|' + cats.join(',') + '|' + finishKey;
       if (!map[key]) {
          map[key] = {
             name: entry.name,
             set_code: entry.set_code,
             collector_number: entry.collector_number,
-            category: category,
+            categories: cats,
             finish: entry.finish || null,
             quantity: 0
          };
@@ -180,7 +230,7 @@
             }
             var take = Math.min(pool[i].quantity, remaining);
             pool[i].quantity -= take;
-            addToLineMap(outMap, pool[i], OUT_CATEGORY, take);
+            addToLineMap(outMap, pool[i], [OUT_CATEGORY], take);
             remaining -= take;
          }
       }
@@ -195,7 +245,7 @@
             name: cut.name,
             set_code: cut.set_code,
             collector_number: cut.collector_number
-         }, OUT_CATEGORY, remaining);
+         }, [OUT_CATEGORY], remaining);
       }
    }
 
@@ -239,7 +289,7 @@
                row.name,
                row.set_code,
                row.collector_number,
-               row.category,
+               row.categories,
                categorySettings,
                row.finish
             ));
@@ -261,7 +311,7 @@
                cardIn.name,
                cardIn.set_code,
                cardIn.collector_number,
-               IN_CATEGORY,
+               [IN_CATEGORY],
                categorySettings,
                cardIn.finish
             ));
@@ -272,7 +322,7 @@
                decision.card_out.name,
                decision.card_out.set_code,
                decision.card_out.collector_number,
-               OUT_CATEGORY,
+               [OUT_CATEGORY],
                categorySettings
             ));
          }
@@ -327,13 +377,13 @@
       });
 
       ops.ins.forEach(function (add) {
-         addToLineMap(inMap, add, IN_CATEGORY, add.quantity);
+         addToLineMap(inMap, add, [IN_CATEGORY], add.quantity);
       });
 
       var mainMap = {};
       pool.forEach(function (entry) {
          if (entry.quantity > 0) {
-            addToLineMap(mainMap, entry, entry.primary_category, entry.quantity);
+            addToLineMap(mainMap, entry, entry.categories, entry.quantity);
          }
       });
 
@@ -435,6 +485,9 @@
       formatImportLine: formatImportLine,
       formatFinishToken: formatFinishToken,
       formatCategoryBracket: formatCategoryBracket,
+      formatCategoriesBracket: formatCategoriesBracket,
+      normalizeCategories: normalizeCategories,
+      appendCategory: appendCategory,
       buildCategorySettings: buildCategorySettings,
       cardKey: cardKey,
       buildMainDeckPool: buildMainDeckPool,
