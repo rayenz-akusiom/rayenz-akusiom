@@ -130,6 +130,70 @@
       return line;
    }
 
+   function stripCategoryFlags(category) {
+      return String(category || '').replace(/\{noDeck\}/gi, '').replace(/\{noPrice\}/gi, '').trim();
+   }
+
+   function parseCategoryList(bracketContent) {
+      return String(bracketContent || '').split(',').map(stripCategoryFlags).filter(Boolean);
+   }
+
+   function parseImportLine(line) {
+      var trimmed = String(line || '').trim();
+      if (!trimmed || trimmed.charAt(0) === '#') {
+         return null;
+      }
+      var categories = [];
+      var primary_category = null;
+      var bracketMatch = trimmed.match(/\s+\[([^\]]+)\]\s*$/);
+      if (bracketMatch) {
+         categories = parseCategoryList(bracketMatch[1]);
+         primary_category = categories[0] || null;
+         trimmed = trimmed.slice(0, bracketMatch.index).trim();
+      }
+      var finish = null;
+      var finishMatch = trimmed.match(/\s+\*([FE])\*\s*$/i);
+      if (finishMatch) {
+         finish = finishMatch[1].toUpperCase() === 'F' ? 'foil' : 'etched';
+         trimmed = trimmed.slice(0, finishMatch.index).trim();
+      }
+      var set_code = null;
+      var collector_number = null;
+      var printMatch = trimmed.match(/\s+\(([a-zA-Z0-9]+)\)(?:\s+(\S+))?\s*$/);
+      if (printMatch) {
+         set_code = printMatch[1].toLowerCase();
+         collector_number = printMatch[2] || '';
+         trimmed = trimmed.slice(0, printMatch.index).trim();
+      }
+      var qtyMatch = trimmed.match(/^(\d+)\s*x?\s+(.+)$/i);
+      if (!qtyMatch) {
+         throw new Error('Invalid import line: ' + line);
+      }
+      return {
+         name: qtyMatch[2].trim(),
+         quantity: parseInt(qtyMatch[1], 10) || 1,
+         set_code: set_code,
+         collector_number: collector_number,
+         finish: finish,
+         primary_category: primary_category,
+         categories: categories.length ? categories : (primary_category ? [primary_category] : [])
+      };
+   }
+
+   function parseImportText(text) {
+      var cards = [];
+      String(text || '').split(/\r?\n/).forEach(function (line) {
+         var card = parseImportLine(line);
+         if (card) {
+            cards.push(card);
+         }
+      });
+      if (!cards.length) {
+         throw new Error('Paste at least one card import line.');
+      }
+      return cards;
+   }
+
    function cardKey(name, setCode, collectorNumber) {
       return [name, (setCode || '').toLowerCase(), collectorNumber || ''].join('|');
    }
@@ -483,6 +547,8 @@
       APPLY_STORAGE_PREFIX: APPLY_STORAGE_PREFIX,
       parseDeckId: parseDeckId,
       formatImportLine: formatImportLine,
+      parseImportLine: parseImportLine,
+      parseImportText: parseImportText,
       formatFinishToken: formatFinishToken,
       formatCategoryBracket: formatCategoryBracket,
       formatCategoriesBracket: formatCategoriesBracket,

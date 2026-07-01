@@ -96,72 +96,126 @@
       return { eligible: true, format: 'commander', inferred: true };
    }
 
-   async function fetchSetPool(codes) {
-      var key = (codes || []).join(',').toUpperCase();
-      if (setPoolCache[key]) {
-         return setPoolCache[key];
-      }
-      var cards = [];
-      var seen = {};
-      for (var i = 0; i < codes.length; i += 1) {
-         var code = String(codes[i]).toUpperCase();
-         var page = 1;
-         var hasMore = true;
-         while (hasMore) {
-            var url = 'https://api.scryfall.com/cards/search?q=set:' + encodeURIComponent(code.toLowerCase()) +
-               '&unique=prints&order=name&page=' + page;
-            var resp = await fetch(url);
-            if (!resp.ok) {
-               throw new Error('Scryfall set fetch failed for ' + code + ' (' + resp.status + ')');
-            }
-            var json = await resp.json();
-            (json.data || []).forEach(function (card) {
-               var oracleKey = card.name.toLowerCase();
-               if (seen[oracleKey]) {
-                  return;
-               }
-               seen[oracleKey] = true;
-               cards.push({
-                  name: card.name,
-                  set_code: (card.set || code).toUpperCase(),
-                  collector_number: String(card.collector_number || ''),
-                  scryfall_id: card.id,
-                  scryfall_uri: card.scryfall_uri,
-                  mana_cost: card.mana_cost || '',
-                  cmc: card.cmc != null ? card.cmc : 0,
-                  type_line: card.type_line || '',
-                  oracle_text: card.oracle_text || '',
-                  keywords: card.keywords || []
-               });
-            });
-            hasMore = json.has_more === true;
-            page += 1;
-            if (hasMore) {
-               await sleep(100);
-            }
-         }
-      }
-      var scope = {
-         primaryCode: codes[0].toUpperCase(),
-         codes: codes.map(function (c) { return String(c).toUpperCase(); }),
-         setName: codes.join('/'),
+   function buildScopeFromCodes(codes, cards, source) {
+      var upper = codes.map(function (c) { return String(c).toUpperCase(); });
+      var codesKey = HubStorage.normalizeSetCodesKey(upper);
+      return {
+         primaryCode: upper[0],
+         codes: upper,
+         codesKey: codesKey,
+         setName: upper.join('/'),
          cards: cards,
          fetchedAt: new Date().toISOString().slice(0, 10),
-         source: 'scryfall'
+         source: source || 'scryfall',
+         complete: true
       };
-      setPoolCache[key] = scope;
+   }
+
+   function tryRestoreSetPool(codesKey) {
+      if (!codesKey) {
+         return null;
+      }
+      if (setPoolCache[codesKey]) {
+         return setPoolCache[codesKey];
+      }
+      var stored = HubStorage.loadSetPoolCache(codesKey);
+      if (stored) {
+         setPoolCache[codesKey] = stored;
+         return stored;
+      }
+      return null;
+   }
+
+   async function fetchSetPool(codes, options) {
+      options = options || {};
+      var normalized = (codes || []).map(function (c) {
+         return String(c).trim().toUpperCase();
+      }).filter(Boolean);
+      if (!normalized.length) {
+         throw new Error('Enter at least one set code.');
+      }
+      var codesKey = HubStorage.normalizeSetCodesKey(normalized);
+      if (!options.forceRefresh) {
+         var cached = tryRestoreSetPool(codesKey);
+         if (cached) {
+            return cached;
+         }
+      } else {
+         HubStorage.clearSetPoolCache(codesKey);
+         delete setPoolCache[codesKey];
+      }
+
+      var cards = [];
+      var seen = {};
+      try {
+         for (var i = 0; i < normalized.length; i += 1) {
+            var code = normalized[i];
+            var page = 1;
+            var hasMore = true;
+            while (hasMore) {
+               var url = 'https://api.scryfall.com/cards/search?q=set:' + encodeURIComponent(code.toLowerCase()) +
+                  '&unique=prints&order=name&page=' + page;
+               var resp = await fetch(url);
+               if (!resp.ok) {
+                  throw new Error('Scryfall set fetch failed for ' + code + ' (' + resp.status + ')');
+               }
+               var json = await resp.json();
+               (json.data || []).forEach(function (card) {
+                  var oracleKey = card.name.toLowerCase();
+                  if (seen[oracleKey]) {
+                     return;
+                  }
+                  seen[oracleKey] = true;
+                  cards.push({
+                     name: card.name,
+                     set_code: (card.set || code).toUpperCase(),
+                     collector_number: String(card.collector_number || ''),
+                     scryfall_id: card.id,
+                     scryfall_uri: card.scryfall_uri,
+                     mana_cost: card.mana_cost || '',
+                     cmc: card.cmc != null ? card.cmc : 0,
+                     type_line: card.type_line || '',
+                     oracle_text: card.oracle_text || '',
+                     keywords: card.keywords || []
+                  });
+               });
+               hasMore = json.has_more === true;
+               page += 1;
+               if (hasMore) {
+                  await sleep(100);
+               }
+            }
+         }
+      } catch (err) {
+         throw err;
+      }
+
+      var scope = buildScopeFromCodes(normalized, cards, 'scryfall');
+      setPoolCache[codesKey] = scope;
+      HubStorage.saveSetPoolCache(codesKey, scope);
       return scope;
    }
 
    function loadSetScopeFromUpload(json) {
-      return {
-         primaryCode: (json.primaryCode || json.codes[0] || '').toUpperCase(),
-         codes: (json.codes || []).map(function (c) { return String(c).toUpperCase(); }),
+      var codes = (json.codes || []).map(function (c) { return String(c).toUpperCase(); });
+      if (!codes.length && json.primaryCode) {
+         codes = [String(json.primaryCode).toUpperCase()];
+      }
+      var scope = {
+         primaryCode: (json.primaryCode || codes[0] || '').toUpperCase(),
+         codes: codes,
+         codesKey: HubStorage.normalizeSetCodesKey(codes),
          setName: json.setName || 'Uploaded set',
          cards: json.cards || [],
          fetchedAt: json.fetchedAt || new Date().toISOString().slice(0, 10),
-         source: 'upload'
+         source: 'upload',
+         complete: true
       };
+      if (scope.codesKey) {
+         setPoolCache[scope.codesKey] = scope;
+         HubStorage.saveSetPoolCache(scope.codesKey, scope);
+      }
+      return scope;
    }
 
    async function loadDeckRegistry(folderUrl) {
@@ -221,12 +275,87 @@
       return deck;
    }
 
+   function humanizeSlug(slug) {
+      return String(slug || '').replace(/-/g, ' ').replace(/\b\w/g, function (c) {
+         return c.toUpperCase();
+      });
+   }
+
+   function deckNameFromUrl(url) {
+      var slugMatch = String(url || '').match(/archidekt\.com\/decks\/\d+\/([^/?#]+)/i);
+      if (slugMatch) {
+         return humanizeSlug(slugMatch[1]);
+      }
+      var deckId = ArchidektExport.parseDeckId(url);
+      return deckId ? 'Deck ' + deckId : 'Deck';
+   }
+
+   function parseDeckListFromText(text) {
+      var lines = String(text || '').split(/\r?\n/);
+      var decks = [];
+      var seen = {};
+      lines.forEach(function (line) {
+         var trimmed = line.trim();
+         if (!trimmed || trimmed.charAt(0) === '#') {
+            return;
+         }
+         var url = trimmed;
+         if (url.indexOf('http') !== 0) {
+            url = 'https://archidekt.com/decks/' + url.replace(/^\/+/, '');
+         }
+         var deckId = ArchidektExport.parseDeckId(url);
+         if (!deckId) {
+            throw new Error('Invalid Archidekt deck URL: ' + trimmed);
+         }
+         if (seen[deckId]) {
+            return;
+         }
+         seen[deckId] = true;
+         decks.push({
+            deck_id: 'deck-' + deckId,
+            deck_name: deckNameFromUrl(url),
+            archidekt_url: url
+         });
+      });
+      if (!decks.length) {
+         throw new Error('Paste at least one Archidekt deck URL (one per line).');
+      }
+      return decks;
+   }
+
+   function buildDeckFromImportText(text, options) {
+      options = options || {};
+      var cards = ArchidektExport.parseImportText(text);
+      var deckId = options.deck_id;
+      if (!deckId && options.archidekt_url) {
+         var parsedId = ArchidektExport.parseDeckId(options.archidekt_url);
+         deckId = parsedId ? 'deck-' + parsedId : null;
+      }
+      if (!deckId) {
+         deckId = 'paste-import-' + Date.now();
+      }
+      return {
+         deck_id: deckId,
+         deck_name: options.deck_name || 'Pasted deck',
+         archidekt_url: options.archidekt_url || '',
+         format: 'commander',
+         deck_snapshot: {
+            fetched_at: new Date().toISOString().slice(0, 10),
+            source: 'paste-import',
+            cards: cards
+         }
+      };
+   }
+
    DS.Data = {
       parseYamlProfile: parseYamlProfile,
       resolveDeckEligibility: resolveDeckEligibility,
       fetchSetPool: fetchSetPool,
+      tryRestoreSetPool: tryRestoreSetPool,
       loadSetScopeFromUpload: loadSetScopeFromUpload,
       loadDeckRegistry: loadDeckRegistry,
+      parseDeckListFromText: parseDeckListFromText,
+      buildDeckFromImportText: buildDeckFromImportText,
       fetchDeckSnapshot: fetchDeckSnapshot,
       readProfileForDeck: readProfileForDeck,
       enrichDeckWithProfile: enrichDeckWithProfile,

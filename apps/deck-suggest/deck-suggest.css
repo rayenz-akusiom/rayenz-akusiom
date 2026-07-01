@@ -1,16 +1,93 @@
 /* Deck Suggest — hub app layout */
 .deck-suggest-app {
+   display: flex;
+   flex-direction: column;
+   height: 100vh;
+   max-height: 100vh;
+   overflow: hidden;
    background: #f0f2f5;
-   min-height: 100vh;
    color: #1a202c;
    font-size: 15px;
    line-height: 1.45;
 }
 
 .ds-header {
+   flex-shrink: 0;
    background: #fff;
-   border-bottom: 1px solid #e2e8f0;
+   border-bottom: none;
    padding: 16px 20px;
+}
+
+.ds-header-top {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: flex-start;
+   justify-content: space-between;
+   gap: 16px;
+}
+
+.ds-action-bar {
+   flex-shrink: 0;
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 8px;
+}
+
+.ds-requirements-label {
+   margin: 12px 0 4px;
+   font-size: 0.8rem;
+   font-weight: 600;
+   color: #4a5568;
+   text-transform: uppercase;
+   letter-spacing: 0.03em;
+}
+
+.ds-requirements {
+   list-style: none;
+   margin: 12px 0 0;
+   padding: 0;
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px 16px;
+   font-size: 0.85rem;
+}
+
+.ds-requirements li {
+   margin: 0;
+}
+
+.ds-req-ok {
+   color: #276749;
+}
+
+.ds-req-missing {
+   color: #c05621;
+}
+
+.ds-results-placeholder {
+   margin: 0;
+   padding: 8px 0;
+}
+
+.ds-summary {
+   background: #f7fafc;
+   border: 1px solid #e2e8f0;
+   border-radius: 6px;
+   padding: 12px 16px;
+   margin: 12px 0;
+}
+
+.ds-summary h4 {
+   margin: 0 0 8px;
+}
+
+.ds-summary-total {
+   margin: 0 0 8px;
+}
+
+.ds-results-actions {
+   margin-bottom: 16px;
 }
 
 .ds-header h2 {
@@ -31,9 +108,22 @@
 }
 
 .ds-body {
+   flex: 1;
+   min-height: 0;
+   overflow-y: auto;
    max-width: 960px;
+   width: 100%;
    margin: 0 auto;
    padding: 24px 28px 48px;
+   box-sizing: border-box;
+}
+
+.deck-suggest-app > .ds-error {
+   flex-shrink: 0;
+   margin: 0;
+   border-radius: 0;
+   border-left: none;
+   border-right: none;
 }
 
 .ds-panel {
@@ -92,6 +182,23 @@
    background: transparent;
 }
 
+.ds-btn:disabled {
+   opacity: 0.55;
+   cursor: not-allowed;
+   filter: grayscale(0.35);
+   pointer-events: none;
+}
+
+.ds-btn-primary:disabled {
+   background: #a0aec0;
+   border-color: #a0aec0;
+   color: #fff;
+}
+
+.ds-btn:disabled:hover {
+   filter: grayscale(0.35);
+}
+
 .ds-deck-list {
    border: 1px solid #e2e8f0;
    border-radius: 6px;
@@ -134,17 +241,170 @@
    color: #2c5282;
 }
 
-.ds-audit {
+.ds-deck-result h4 {
+   margin: 16px 0 8px;
+}
+
+.ds-deck-result-compact h4 {
+   margin: 8px 0 4px;
+   font-size: 0.95rem;
+}
+
+.ds-no-suggestions {
+   margin-top: 16px;
+   border-top: 1px solid #e2e8f0;
+   padding-top: 8px;
+}
+
+.ds-no-suggestions summary {
+   cursor: pointer;
+   font-weight: 600;
+   color: #4a5568;
+   padding: 8px 0;
+   list-style: none;
+}
+
+.ds-no-suggestions summary::-webkit-details-marker {
+   display: none;
+}
+
+.ds-no-suggestions summary::before {
+   content: '▸ ';
+   display: inline-block;
+   transition: transform 0.15s ease;
+}
+
+.ds-no-suggestions[open] summary::before {
+   transform: rotate(90deg);
+}
+
+.ds-no-suggestions .ds-deck-result {
+   margin-left: 12px;
+   padding-bottom: 4px;
+}
+
+.ds-deck-load-tabs {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
    margin: 12px 0;
+}
+
+.ds-deck-load-tab {
+   padding: 6px 12px;
+   border: 1px solid #cbd5e0;
+   border-radius: 6px;
+   background: #edf2f7;
+   cursor: pointer;
+   font: inherit;
    font-size: 0.9rem;
 }
 
-.ds-filters {
-   display: flex;
-   gap: 16px;
-   margin: 12px 0;
+.ds-deck-load-tab.active {
+   background: #2b6cb0;
+   border-color: #2b6cb0;
+   color: #fff;
 }
 
-.ds-deck-result h4 {
-   margin: 16px 0 8px;
+.ds-deck-load-tab:disabled {
+   opacity: 0.5;
+   cursor: not-allowed;
+}
+
+.ds-deck-load-pane textarea {
+   display: block;
+   width: 100%;
+   min-height: 120px;
+   margin-top: 4px;
+   padding: 8px 10px;
+   border: 1px solid #cbd5e0;
+   border-radius: 6px;
+   box-sizing: border-box;
+   font: inherit;
+   font-family: inherit;
+}
+
+.ds-deck-select-actions {
+   margin-bottom: 8px;
+   font-size: 0.9rem;
+}
+
+.ds-deck-select-actions button {
+   background: none;
+   border: none;
+   color: #2b6cb0;
+   cursor: pointer;
+   font: inherit;
+   padding: 0;
+   margin-right: 12px;
+   text-decoration: underline;
+}
+
+.ds-rules-debug-setup {
+   margin-top: 16px;
+   padding: 12px;
+   border: 1px dashed #cbd5e0;
+   border-radius: 8px;
+}
+
+.ds-rules-debug {
+   margin-top: 20px;
+   padding: 12px;
+   border: 1px solid #e2e8f0;
+   border-radius: 8px;
+   background: #f7fafc;
+}
+
+.ds-rules-debug summary {
+   cursor: pointer;
+   font-weight: 600;
+}
+
+.ds-rules-debug-body {
+   margin-top: 12px;
+}
+
+.ds-rules-debug-explain {
+   margin: 12px 0;
+   padding: 10px;
+   border: 1px solid #e2e8f0;
+   border-radius: 6px;
+   background: #fff;
+}
+
+.ds-rules-debug-explain .ds-field {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   align-items: center;
+}
+
+.ds-rules-debug-explain-out {
+   margin-top: 8px;
+}
+
+.ds-rules-debug-list {
+   list-style: none;
+   margin: 12px 0 0;
+   padding: 0;
+   max-height: 320px;
+   overflow-y: auto;
+}
+
+.ds-rules-debug-item {
+   padding: 6px 8px;
+   margin-bottom: 4px;
+   border-radius: 4px;
+   font-size: 0.9rem;
+   background: #fff;
+   border-left: 3px solid #a0aec0;
+}
+
+.ds-rules-debug-skipped,
+.ds-rules-debug-rejected {
+   border-left-color: #e53e3e;
+}
+
+.ds-rules-debug-info {
+   border-left-color: #3182ce;
 }

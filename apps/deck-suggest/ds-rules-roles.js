@@ -196,11 +196,27 @@
       };
    }
 
-   function emitIfValid(suggestion, profile, existing) {
-      if (!passesBlocklist(suggestion, profile)) {
-         return null;
+   function emitIfValid(suggestion, profile, existing, debug) {
+      var reason = null;
+      if (DS.Debug && DS.Debug.rejectReason) {
+         reason = DS.Debug.rejectReason(suggestion, profile, existing);
+      } else if (!passesBlocklist(suggestion, profile)) {
+         reason = isBlockedAdd(suggestion.card.name, profile) ? 'blocked_add' : 'protected_cut';
+      } else if (hasDuplicate(existing, suggestion)) {
+         reason = 'duplicate_pair';
       }
-      if (hasDuplicate(existing, suggestion)) {
+      if (reason) {
+         if (debug && debug.collector) {
+            var rep = suggestion.replaces && suggestion.replaces[0];
+            debug.collector.push({
+               ruleId: debug.ruleId || 'emit',
+               outcome: 'rejected',
+               subject: suggestion.card && suggestion.card.name,
+               cardIn: suggestion.card && suggestion.card.name,
+               cardOut: rep && rep.name,
+               reason: reason
+            });
+         }
          return null;
       }
       return suggestion;

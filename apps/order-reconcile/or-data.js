@@ -7,7 +7,7 @@
    var bridgeAvailable = HubUtils.bridgeAvailable;
    var sortDecksByName = OR.sortDecksByName;
    var showProgress = OR.showProgress;
-   var hideProgress = OR.hideProgress;
+   var finishProgress = OR.finishProgress;
    var setStatus = OR.setStatus;
 
    function parseFolderId(url) {
@@ -72,8 +72,10 @@
             }
          }
          setStatus('Fetched ' + state.decks.length + ' decks + staging list.');
-      } finally {
-         hideProgress();
+         finishProgress('Fetched ' + state.decks.length + ' decks + staging list.');
+      } catch (err) {
+         finishProgress(err.message || String(err), 'error');
+         throw err;
       }
    }
 

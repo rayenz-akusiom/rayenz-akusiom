@@ -1,0 +1,26 @@
+/* Sticky app chrome: header + progress host stay visible while body scrolls */
+.hub-sticky-chrome {
+   position: sticky;
+   top: 0;
+   z-index: 40;
+   flex-shrink: 0;
+   background: #fff;
+   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.hub-sticky-chrome .ds-header,
+.hub-sticky-chrome .dr-header,
+.hub-sticky-chrome .or-header,
+.hub-sticky-chrome .site-header {
+   box-shadow: none;
+   border-bottom: 1px solid #e2e8f0;
+}
+
+.hub-sticky-chrome .hub-progress-host .hub-progress-bar {
+   border-bottom: none;
+}
+
+.hub-sticky-chrome .hub-progress-host:empty,
+.hub-sticky-chrome .hub-progress-host .hub-progress-bar[hidden] {
+   display: none;
+}

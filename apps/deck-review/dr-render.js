@@ -91,15 +91,30 @@
       }
       var decks = state.data.decks;
       var btn = state.ui.refreshAllDecksBtn;
+      var progress = state.ui.progress;
       if (btn) {
          btn.disabled = true;
       }
+      if (progress) {
+         progress.start({ label: 'Refreshing decks from Archidekt…' });
+      }
       for (var i = 0; i < decks.length; i++) {
-         setProfileStatus('Refreshing Archidekt (' + (i + 1) + '/' + decks.length + '): ' + decks[i].deck_name + '…');
+         if (progress) {
+            progress.update({
+               current: i + 1,
+               total: decks.length,
+               label: 'Refreshing Archidekt (' + (i + 1) + '/' + decks.length + '): ' + decks[i].deck_name + '…'
+            });
+         }
          try {
             await refreshDeckSnapshot(decks[i]);
          } catch (err) {
-            setProfileStatus('Refresh failed for ' + decks[i].deck_name + ': ' + (err.message || String(err)));
+            if (progress) {
+               progress.finish({
+                  label: 'Refresh failed for ' + decks[i].deck_name + ': ' + (err.message || String(err)),
+                  variant: 'error'
+               });
+            }
             if (btn) {
                btn.disabled = false;
             }
@@ -110,7 +125,9 @@
             await sleep(150);
          }
       }
-      setProfileStatus('Refreshed ' + decks.length + ' decks from Archidekt.');
+      if (progress) {
+         progress.finish({ label: 'Refreshed ' + decks.length + ' decks from Archidekt.' });
+      }
       if (btn) {
          btn.disabled = false;
       }
@@ -123,16 +140,24 @@
          return;
       }
       var btn = state.ui.refreshDeckBtn;
+      var progress = state.ui.progress;
       if (btn) {
          btn.disabled = true;
       }
+      if (progress) {
+         progress.start({ label: 'Refreshing ' + deck.deck_name + '…', indeterminate: true });
+      }
       try {
          await refreshDeckSnapshot(deck);
-         setProfileStatus('Refreshed ' + deck.deck_name + ' from Archidekt.');
+         if (progress) {
+            progress.finish({ label: 'Refreshed ' + deck.deck_name + ' from Archidekt.' });
+         }
          renderSuggestionPanel();
          renderDeckStatusCard(deck);
       } catch (err) {
-         setProfileStatus(err.message || String(err));
+         if (progress) {
+            progress.finish({ label: err.message || String(err), variant: 'error' });
+         }
       }
       if (btn) {
          btn.disabled = false;
@@ -454,6 +479,10 @@
       var bridge = bridgeAvailable();
 
       if (!queue && !deck.deck_snapshot) {
+         if (state.transferSource === 'deck-suggest') {
+            return archidektDeckLinkHtml(deck, 'View deck on Archidekt') +
+               '<p class="dr-bridge-hint">Snapshot missing from Deck Suggest handoff — use Refresh or return to Deck Suggest.</p>';
+         }
          var hints = '<p class="dr-bridge-hint">No Archidekt snapshot. Re-run <code>enrich_suggestions.ps1</code>';
          if (!bridge) {
             hints += ' or install the <a href="' + escapeHtml(BRIDGE_SCRIPT_URL) + '" target="_blank" rel="noopener">Archidekt Deck Review Bridge</a> userscript for live refresh';
@@ -477,6 +506,9 @@
          return '<div>' + escapeHtml(f) + '</div>';
       }).join('');
       var fetchedAt = queue.fetched_at ? escapeHtml(queue.fetched_at) : 'unknown';
+      var sourceLabel = (state.transferSource === 'deck-suggest' && deck.deck_snapshot)
+         ? 'From Deck Suggest · as of ' + fetchedAt
+         : 'From Archidekt · as of ' + fetchedAt;
       var refreshBtn = bridge
          ? '<button type="button" class="dr-btn dr-btn-ghost dr-swap-refresh" id="dr-refresh-deck-snapshot">Refresh</button>'
          : '';
@@ -486,7 +518,7 @@
 
       return '<div class="dr-swap-panel-meta">' +
          archidektDeckLinkHtml(deck, 'View deck') +
-         '<span class="dr-swap-source">From Archidekt · as of ' + fetchedAt + '</span>' +
+         '<span class="dr-swap-source">' + sourceLabel + '</span>' +
          refreshBtn +
          '</div>' +
          '<div class="dr-swap-cols">' +

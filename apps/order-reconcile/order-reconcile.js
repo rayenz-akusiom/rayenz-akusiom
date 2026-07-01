@@ -46,40 +46,30 @@
       }
    }
 
-   function ensureProgressBar() {
-      var bar = document.getElementById('or-progress-bar');
-      if (bar) {
-         return bar;
-      }
-      bar = document.createElement('div');
-      bar.id = 'or-progress-bar';
-      bar.className = 'or-progress-bar';
-      bar.hidden = true;
-      bar.innerHTML =
-         '<div class="or-progress-bar-track"><div class="or-progress-bar-fill" id="or-progress-fill"></div></div>' +
-         '<div class="or-progress-bar-label" id="or-progress-label"></div>';
-      document.body.appendChild(bar);
-      return bar;
-   }
-
    function showProgress(current, total, msg) {
-      var bar = ensureProgressBar();
-      var pct = total > 0 ? Math.round((current / total) * 100) : 0;
-      bar.hidden = false;
-      var fill = document.getElementById('or-progress-fill');
-      var label = document.getElementById('or-progress-label');
-      if (fill) {
-         fill.style.width = pct + '%';
+      var progress = state.ui.progress;
+      if (!progress) {
+         return;
       }
-      if (label) {
-         label.textContent = msg || ('Fetching ' + current + '/' + total + '…');
+      if (!progress.isActive() && !progress.isFinished()) {
+         progress.start({ label: msg || 'Working…' });
       }
+      progress.update({
+         current: current,
+         total: total,
+         label: msg || ('Step ' + current + '/' + total + '…')
+      });
    }
 
    function hideProgress() {
-      var bar = document.getElementById('or-progress-bar');
-      if (bar) {
-         bar.hidden = true;
+      if (state.ui.progress) {
+         state.ui.progress.dismiss();
+      }
+   }
+
+   function finishProgress(label, variant) {
+      if (state.ui.progress) {
+         state.ui.progress.finish({ label: label, variant: variant || 'success' });
       }
    }
 
@@ -281,9 +271,12 @@
          '<div id="or-right-nav-backdrop" class="or-right-nav-backdrop"></div>' +
          '<div class="or-layout">' +
          '<div class="or-main-area">' +
+         '<div class="hub-sticky-chrome">' +
          '<header class="or-header"><h2>Order Reconcile</h2>' +
          '<div class="or-meta">Match acquired cards to swap queues and update Archidekt decks.</div>' +
          '<div class="or-meta" id="or-status" hidden></div></header>' +
+         '<div class="hub-progress-host" id="or-progress-host"></div>' +
+         '</div>' +
          '<div class="or-error" id="or-error" hidden></div>' +
          '<div class="or-body">' +
          '<div class="or-empty" id="or-empty-state" hidden></div>' +
@@ -311,8 +304,14 @@
          emptyState: document.getElementById('or-empty-state'),
          content: document.getElementById('or-content'),
          mainContent: document.getElementById('or-main-content'),
-         deckList: document.getElementById('or-deck-list')
+         deckList: document.getElementById('or-deck-list'),
+         progressHostEl: document.getElementById('or-progress-host'),
+         progress: null
       };
+
+      if (state.ui.progressHostEl) {
+         state.ui.progress = HubUtils.mountAppProgress(state.ui.progressHostEl, 'order-reconcile');
+      }
 
       initRightNav();
 
@@ -365,6 +364,7 @@
    OR.setStatus = setStatus;
    OR.showProgress = showProgress;
    OR.hideProgress = hideProgress;
+   OR.finishProgress = finishProgress;
    OR.sortDecksByName = sortDecksByName;
    OR.showError = showError;
    OR.hideError = hideError;

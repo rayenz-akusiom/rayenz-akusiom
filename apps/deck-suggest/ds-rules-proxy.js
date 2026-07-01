@@ -23,7 +23,7 @@
       return matches[0];
    }
 
-   function runProxyUpgrade(deck, setScope, profile, existing, taggerCtx) {
+   function runProxyUpgrade(deck, setScope, profile, existing, taggerCtx, debug) {
       var added = [];
       (deck.deck_snapshot && deck.deck_snapshot.cards || []).forEach(function (card) {
          if (!isProxyCard(card)) {
@@ -31,6 +31,14 @@
          }
          var official = findOfficialInScope(card, setScope);
          if (!official) {
+            if (debug && debug.collector) {
+               debug.collector.push({
+                  ruleId: debug.ruleId || 'proxy_upgrade',
+                  outcome: 'skipped',
+                  subject: card.name,
+                  reason: 'proxy_no_official_in_scope'
+               });
+            }
             return;
          }
          var setCode = (official.set_code || setScope.primaryCode || '').toUpperCase();
@@ -47,7 +55,7 @@
             priority_tier: 'normal',
             swap_source: 'analysis'
          };
-         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added));
+         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added), debug);
          if (emitted) {
             added.push(emitted);
          }

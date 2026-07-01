@@ -185,8 +185,20 @@
 }
 
 .dr-btn:disabled {
-   opacity: 0.5;
+   opacity: 0.55;
    cursor: not-allowed;
+   filter: grayscale(0.35);
+   pointer-events: none;
+}
+
+.dr-btn-primary:disabled {
+   background: #a0aec0;
+   border-color: #a0aec0;
+   color: #fff;
+}
+
+.dr-btn:disabled:hover {
+   filter: grayscale(0.35);
 }
 
 .dr-btn-primary {

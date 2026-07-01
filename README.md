@@ -67,9 +67,9 @@ Rule-based alternative to the `mtg-deck-set-updates` Cursor skill for Commander 
 2. Enter set codes (e.g. `MSH,MSC,MAR`) and **Load set pool** (Scryfall), or upload cached set JSON.
 3. Load decks from your Archidekt folder (bridge required) or upload a deck JSON snapshot.
 4. Connect profiles in Deck Review (optional) for role rules and blocklists.
-5. Select one or more Commander decks and **Generate suggestions**.
-6. Review results and rule audit; filter by tier or rule id.
-7. **Download JSON** (`{SET}-{date}-rules.json`) and upload on the Deck Review page (or deploy via `npm run deploy:hub`).
+5. Select one or more Commander decks and **Generate suggestions** (requirements checklist in the header shows what is still needed).
+6. Review the results summary and rule audit; filter by tier or rule id.
+7. Click **Review in Deck Review** to open Deck Review with your suggestions loaded (no download step), or **Download JSON** (`{SET}-{date}-rules.json`) to save a file. After transfer, Deck Review shows **Download JSON** in the Data panel if you want a copy.
 
 Cube decks and Maybeboard-only swap queues are skipped with a per-deck message. No `enrich_suggestions.ps1` step is required — export attaches `deck_snapshot` and `profile_preferences` inline.
 

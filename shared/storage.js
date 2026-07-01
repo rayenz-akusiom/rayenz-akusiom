@@ -100,7 +100,13 @@
    var DECK_SUGGEST_SETTINGS_KEY = 'rayenz-deck-suggest-settings';
    var DEFAULT_DECK_SUGGEST_SETTINGS = {
       folderUrl: 'https://archidekt.com/folders/81998',
-      setCodes: 'MSH,MSC,MAR'
+      setCodes: 'MSH,MSC,MAR',
+      deckLoadTab: null,
+      customDeckUrls: '',
+      pasteDeckImport: '',
+      pasteDeckName: '',
+      pasteDeckUrl: '',
+      rulesDebug: false
    };
 
    function loadDeckSuggestSettings() {
@@ -119,6 +125,108 @@
       setItem(DECK_SUGGEST_SETTINGS_KEY, JSON.stringify(settings || {}));
    }
 
+   var SET_POOL_CACHE_PREFIX = 'rayenz-deck-suggest-set-pool-';
+   var REVIEW_HANDOFF_KEY = 'rayenz-deck-suggest-review-handoff';
+
+   function normalizeSetCodesKey(codes) {
+      return (codes || []).map(function (c) {
+         return String(c).trim().toUpperCase();
+      }).filter(Boolean).sort().join(',');
+   }
+
+   function setPoolCacheKey(codesKey) {
+      return SET_POOL_CACHE_PREFIX + codesKey;
+   }
+
+   function saveSetPoolCache(codesKey, scope) {
+      if (!codesKey || !scope || scope.complete !== true) {
+         return false;
+      }
+      try {
+         setItem(setPoolCacheKey(codesKey), JSON.stringify(scope));
+         return true;
+      } catch (e) {
+         return false;
+      }
+   }
+
+   function loadSetPoolCache(codesKey) {
+      if (!codesKey) {
+         return null;
+      }
+      var raw = getItem(setPoolCacheKey(codesKey));
+      if (!raw) {
+         return null;
+      }
+      try {
+         var scope = JSON.parse(raw);
+         if (!scope || scope.complete !== true) {
+            return null;
+         }
+         return scope;
+      } catch (e) {
+         return null;
+      }
+   }
+
+   function clearSetPoolCache(codesKey) {
+      if (!codesKey) {
+         return;
+      }
+      try {
+         localStorage.removeItem(setPoolCacheKey(codesKey));
+      } catch (e) {
+         /* ignore */
+      }
+   }
+
+   function saveMemoryReviewHandoff(payload) {
+      try {
+         global.__hubReviewHandoff = payload;
+         return true;
+      } catch (e) {
+         return false;
+      }
+   }
+
+   function consumeMemoryReviewHandoff() {
+      var payload = global.__hubReviewHandoff;
+      delete global.__hubReviewHandoff;
+      return payload || null;
+   }
+
+   function saveReviewHandoff(payload) {
+      var memoryOk = saveMemoryReviewHandoff(payload);
+      try {
+         sessionStorage.setItem(REVIEW_HANDOFF_KEY, JSON.stringify(payload || {}));
+         return true;
+      } catch (e) {
+         return memoryOk;
+      }
+   }
+
+   function consumeReviewHandoff() {
+      var memory = consumeMemoryReviewHandoff();
+      if (memory) {
+         try {
+            sessionStorage.removeItem(REVIEW_HANDOFF_KEY);
+         } catch (e) {
+            /* ignore */
+         }
+         return memory;
+      }
+      try {
+         var raw = sessionStorage.getItem(REVIEW_HANDOFF_KEY);
+         if (!raw) {
+            return null;
+         }
+         sessionStorage.removeItem(REVIEW_HANDOFF_KEY);
+         return JSON.parse(raw);
+      } catch (e) {
+         return null;
+      }
+   }
+
    global.HubStorage = {
       getLastRoute: getLastRoute,
       setLastRoute: setLastRoute,
@@ -130,6 +238,13 @@
       loadOrderReconcileProgress: loadOrderReconcileProgress,
       saveOrderReconcileProgress: saveOrderReconcileProgress,
       loadDeckSuggestSettings: loadDeckSuggestSettings,
-      saveDeckSuggestSettings: saveDeckSuggestSettings
+      saveDeckSuggestSettings: saveDeckSuggestSettings,
+      normalizeSetCodesKey: normalizeSetCodesKey,
+      saveSetPoolCache: saveSetPoolCache,
+      loadSetPoolCache: loadSetPoolCache,
+      clearSetPoolCache: clearSetPoolCache,
+      saveReviewHandoff: saveReviewHandoff,
+      consumeReviewHandoff: consumeReviewHandoff,
+      consumeMemoryReviewHandoff: consumeMemoryReviewHandoff
    };
 })(window);

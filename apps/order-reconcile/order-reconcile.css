@@ -462,37 +462,6 @@
    font-size: 0.9rem;
 }
 
-.or-progress-bar {
-   position: fixed;
-   top: 0;
-   left: 0;
-   right: 0;
-   z-index: 500;
-   background: #1a202c;
-   color: #e2e8f0;
-   padding: 8px 16px;
-   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.or-progress-bar-track {
-   height: 6px;
-   background: #4a5568;
-   border-radius: 3px;
-   overflow: hidden;
-   margin-bottom: 6px;
-}
-
-.or-progress-bar-fill {
-   height: 100%;
-   background: #2b6cb0;
-   width: 0;
-   transition: width 0.2s ease;
-}
-
-.or-progress-bar-label {
-   font-size: 0.8rem;
-}
-
 .or-summary-box {
    background: #f7fafc;
    border: 1px solid #e2e8f0;

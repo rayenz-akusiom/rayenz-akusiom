@@ -5,6 +5,7 @@
    var currentRoute = null;
    var appRoot = null;
    var navLinks = [];
+   var suppressNextHashChange = false;
 
    function registerRoute(path, loader) {
       routes[path] = loader;
@@ -51,6 +52,7 @@
 
       if (!opts.replace) {
          if (window.location.hash !== normalized) {
+            suppressNextHashChange = true;
             window.location.hash = normalized;
          }
       }
@@ -123,6 +125,10 @@
       }
 
       window.addEventListener('hashchange', function () {
+         if (suppressNextHashChange) {
+            suppressNextHashChange = false;
+            return;
+         }
          navigate(window.location.hash, { force: true });
       });
 

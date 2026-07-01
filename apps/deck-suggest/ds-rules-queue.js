@@ -28,11 +28,19 @@
       return ranked[0] || null;
    }
 
-   function runQueueInPair(deck, setScope, profile, existing, taggerCtx) {
+   function runQueueInPair(deck, setScope, profile, existing, taggerCtx, debug) {
       var added = [];
       var skipped = [];
       var queue = deriveSwapQueue(deck);
       if (!queue) {
+         if (debug && debug.collector) {
+            debug.collector.push({
+               ruleId: debug.ruleId || 'queue_in_pair',
+               outcome: 'info',
+               subject: deck.deck_name || deck.deck_id,
+               reason: 'no_swap_queue'
+            });
+         }
          return { added: added, skipped: skipped };
       }
       var inCards = queue.new_set_in || [];
@@ -62,7 +70,7 @@
             priority_tier: 'swap',
             swap_source: 'queue_in'
          };
-         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added));
+         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added), debug);
          if (emitted) {
             added.push(emitted);
          }
@@ -77,6 +85,14 @@
          }
          var cut = pickCutForUnpairedIn(deck, profile, taggerCtx, unpairedIn);
          if (!cut) {
+            if (debug && debug.collector) {
+               debug.collector.push({
+                  ruleId: debug.ruleId || 'queue_in_pair',
+                  outcome: 'skipped',
+                  subject: unpairedIn.name,
+                  reason: 'no_cut_candidate'
+               });
+            }
             continue;
          }
          var unpairedSuggestion = {
@@ -120,7 +136,7 @@
       return best;
    }
 
-   function runQueueOutFill(deck, setScope, profile, existing, taggerCtx) {
+   function runQueueOutFill(deck, setScope, profile, existing, taggerCtx, debug) {
       var added = [];
       var queue = deriveSwapQueue(deck);
       if (!queue) {
@@ -129,6 +145,15 @@
       var inCards = queue.new_set_in || [];
       var outCards = queue.new_set_out || [];
       if (outCards.length <= inCards.length) {
+         if (debug && debug.collector && outCards.length) {
+            debug.collector.push({
+               ruleId: debug.ruleId || 'queue_out_fill',
+               outcome: 'info',
+               subject: deck.deck_name || deck.deck_id,
+               reason: 'queue_out_not_applicable',
+               detail: 'In: ' + inCards.length + ', Out: ' + outCards.length
+            });
+         }
          return added;
       }
 
@@ -136,6 +161,14 @@
          var outCard = outCards[i];
          var replacement = findSetReplacement(outCard, setScope, profile, taggerCtx);
          if (!replacement) {
+            if (debug && debug.collector) {
+               debug.collector.push({
+                  ruleId: debug.ruleId || 'queue_out_fill',
+                  outcome: 'skipped',
+                  subject: outCard.name,
+                  reason: 'queue_out_no_replacement'
+               });
+            }
             continue;
          }
          var setCode = (setScope.primaryCode || setScope.codes[0] || '').toUpperCase();
@@ -152,7 +185,7 @@
             priority_tier: 'swap',
             swap_source: 'queue_out_fill'
          };
-         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added));
+         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added), debug);
          if (emitted) {
             added.push(emitted);
          }
@@ -163,6 +196,8 @@
 
    DS.QueueRules = {
       runQueueInPair: runQueueInPair,
-      runQueueOutFill: runQueueOutFill
+      runQueueOutFill: runQueueOutFill,
+      pickCutForUnpairedIn: pickCutForUnpairedIn,
+      findSetReplacement: findSetReplacement
    };
 })(window);

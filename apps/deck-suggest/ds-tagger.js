@@ -135,7 +135,7 @@
       return 1;
    }
 
-   function runRoleSynergy(deck, setScope, profile, existing, taggerCtx) {
+   function runRoleSynergy(deck, setScope, profile, existing, taggerCtx, debug) {
       var added = [];
       var deckNames = G.deckNamesInSnapshot(deck);
       var codes = {};
@@ -173,7 +173,7 @@
             priority_tier: 'normal',
             swap_source: 'analysis'
          };
-         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added));
+         var emitted = G.emitIfValid(suggestion, profile, existing.concat(added), debug);
          if (emitted) {
             added.push(emitted);
          }

@@ -43,12 +43,20 @@
          throw new Error('Failed to load dailies content');
       }
       var html = await resp.text();
+      html = html.replace(
+         /(<header class="page_title site-header">[\s\S]*?<\/header>)/,
+         '<div class="hub-sticky-chrome">$1<div class="hub-progress-host" id="dailies-progress-host"></div></div>'
+      );
       root.innerHTML =
          '<div class="dailies-app" data-neopets-dailies="rayenz">' +
          '<div class="center_column"><div id="mainshell" valign="top">' +
          html +
          '</div></div></div>';
       await loadScript();
+      var progressHost = document.getElementById('dailies-progress-host');
+      if (progressHost && global.HubUtils) {
+         global.__dailiesProgress = HubUtils.mountAppProgress(progressHost, 'dailies');
+      }
       if (typeof window.__initDailiesApp === 'function') {
          window.__initDailiesApp();
       }

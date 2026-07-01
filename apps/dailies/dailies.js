@@ -72,21 +72,41 @@
                   statusEl.className = 'automated-status' + (className ? ' ' + className : '');
                }
 
+               function dailiesProgress() {
+                  return window.__dailiesProgress || null;
+               }
+
                async function runCoconutShy() {
                   var runBtn = document.getElementById('cocoshy-run');
                   var statusEl = document.getElementById('cocoshy-status');
+                  var progress = dailiesProgress();
                   var processed = 0;
                   var wonItem = null;
+                  var hadError = false;
 
                   runBtn.disabled = true;
                   setStatus(statusEl, 'Running throws...');
+                  if (progress) {
+                     progress.start({ label: 'Running Coco Shy throws…' });
+                  }
 
                   for (var throwNum = 1; throwNum <= MAX_THROWS; throwNum++) {
+                     if (progress) {
+                        progress.update({
+                           current: throwNum,
+                           total: MAX_THROWS,
+                           label: 'Coco Shy throw ' + throwNum + '/' + MAX_THROWS + '…'
+                        });
+                     }
                      try {
                         var responseText = await neopetsFetch(COCOSHY_URL);
 
                         if (isLoginPage(responseText)) {
                            setStatus(statusEl, 'Not logged in to Neopets. Log in at neopets.com and try again.', 'error');
+                           hadError = true;
+                           if (progress) {
+                              progress.finish({ label: 'Not logged in to Neopets.', variant: 'error' });
+                           }
                            break;
                         }
 
@@ -103,6 +123,10 @@
                         }
                      } catch (err) {
                         setStatus(statusEl, err.message, 'error');
+                        hadError = true;
+                        if (progress) {
+                           progress.finish({ label: err.message, variant: 'error' });
+                        }
                         break;
                      }
 
@@ -111,7 +135,7 @@
                      }
                   }
 
-                  if (statusEl.className.indexOf('error') === -1) {
+                  if (!hadError) {
                      var summary = processed + ' throw' + (processed === 1 ? '' : 's') + ' processed.';
                      if (wonItem) {
                         summary += ' Item won!';
@@ -119,6 +143,9 @@
                      } else {
                         summary += ' No item won.';
                         setStatus(statusEl, summary);
+                     }
+                     if (progress) {
+                        progress.finish({ label: summary, variant: wonItem ? 'success' : 'success' });
                      }
                   }
 
@@ -335,6 +362,7 @@
                   var statusEl = document.getElementById('wishingwell-status');
                   var wishInput = document.getElementById('wishingwell-wish');
                   var donationInput = document.getElementById('wishingwell-donation');
+                  var progress = dailiesProgress();
                   var wishText = wishInput.value.trim();
                   var donation = parseInt(donationInput.value, 10) || 21;
 
@@ -351,19 +379,31 @@
                   saveWishingPreferences();
                   runBtn.disabled = true;
                   setStatus(statusEl, 'Submitting wishes...');
+                  if (progress) {
+                     progress.start({ label: 'Submitting Wishing Well wishes…' });
+                  }
 
                   var processed = 0;
+                  var hadError = false;
 
                   try {
                      var pageHtml = await neopetsFetch(WISHING_PAGE_URL);
                      if (isLoginPage(pageHtml)) {
                         setStatus(statusEl, 'Not logged in to Neopets. Log in at neopets.com and try again.', 'error');
+                        hadError = true;
+                        if (progress) {
+                           progress.finish({ label: 'Not logged in to Neopets.', variant: 'error' });
+                        }
                         return;
                      }
 
                      var formData = parseWishingForm(pageHtml);
                      if (!formData) {
                         setStatus(statusEl, 'Could not read the Wishing Well form.', 'error');
+                        hadError = true;
+                        if (progress) {
+                           progress.finish({ label: 'Could not read the Wishing Well form.', variant: 'error' });
+                        }
                         return;
                      }
 
@@ -377,16 +417,30 @@
                      if (remaining === 0) {
                         markWishingPeriodComplete();
                         setStatus(statusEl, 'Already submitted ' + WISHING_MAX + ' wishes this period.');
+                        if (progress) {
+                           progress.finish({ label: 'Already submitted ' + WISHING_MAX + ' wishes this period.' });
+                        }
                         return;
                      }
 
                      for (var i = 0; i < remaining; i++) {
+                        if (progress) {
+                           progress.update({
+                              current: i + 1,
+                              total: remaining,
+                              label: 'Submitting wish ' + (i + 1) + '/' + remaining + '…'
+                           });
+                        }
                         var payload = buildWishingPayload(formData, wishText, donation);
                         var response = await neopetsPost(WISHING_PROCESS_URL, encodeForm(payload));
                         var responseHtml = response.text || '';
 
                         if (isLoginPage(responseHtml)) {
                            setStatus(statusEl, 'Not logged in to Neopets. Log in at neopets.com and try again.', 'error');
+                           hadError = true;
+                           if (progress) {
+                              progress.finish({ label: 'Not logged in to Neopets.', variant: 'error' });
+                           }
                            break;
                         }
 
@@ -397,6 +451,10 @@
                               console.warn('Wishing Well response URL:', response.url);
                            }
                            setStatus(statusEl, errMsg, 'error');
+                           hadError = true;
+                           if (progress) {
+                              progress.finish({ label: errMsg, variant: 'error' });
+                           }
                            break;
                         }
 
@@ -416,14 +474,21 @@
                         }
                      }
 
-                     if (statusEl.className.indexOf('error') === -1) {
+                     if (!hadError) {
+                        var summary = processed + ' wish' + (processed === 1 ? '' : 'es') + ' processed.';
                         if (processed >= remaining) {
                            markWishingPeriodComplete();
                         }
-                        setStatus(statusEl, processed + ' wish' + (processed === 1 ? '' : 'es') + ' processed.');
+                        setStatus(statusEl, summary);
+                        if (progress) {
+                           progress.finish({ label: summary });
+                        }
                      }
                   } catch (err) {
                      setStatus(statusEl, err.message, 'error');
+                     if (progress) {
+                        progress.finish({ label: err.message, variant: 'error' });
+                     }
                   }
 
                   runBtn.disabled = false;

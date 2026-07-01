@@ -8,6 +8,8 @@
    <link rel="stylesheet" href="shared/shell.css">
    <link rel="stylesheet" href="shared/card-picker.css">
    <link rel="stylesheet" href="shared/deck-chip.css">
+   <link rel="stylesheet" href="shared/hub-progress.css">
+   <link rel="stylesheet" href="shared/hub-app-chrome.css">
 </head>
 <body>
    <button type="button" id="hub-nav-toggle" class="hub-nav-toggle" aria-label="Open menu">&#9776;</button>
@@ -41,17 +43,6 @@
             <p class="hub-nav-group-title">MTG</p>
             <ul class="hub-nav-list">
                <li>
-                  <a class="hub-nav-link" href="#/deck-review">
-                     <span class="hub-nav-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                           <rect x="4" y="3" width="12" height="16" rx="1.5"></rect>
-                           <rect x="8" y="5" width="12" height="16" rx="1.5"></rect>
-                        </svg>
-                     </span>
-                     <span class="hub-nav-label">Deck Review</span>
-                  </a>
-               </li>
-               <li>
                   <a class="hub-nav-link" href="#/deck-suggest">
                      <span class="hub-nav-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -61,6 +52,17 @@
                         </svg>
                      </span>
                      <span class="hub-nav-label">Deck Suggest</span>
+                  </a>
+               </li>
+               <li>
+                  <a class="hub-nav-link" href="#/deck-review">
+                     <span class="hub-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <rect x="4" y="3" width="12" height="16" rx="1.5"></rect>
+                           <rect x="8" y="5" width="12" height="16" rx="1.5"></rect>
+                        </svg>
+                     </span>
+                     <span class="hub-nav-label">Deck Review</span>
                   </a>
                </li>
                <li>
@@ -87,6 +89,7 @@
    <script src="shared/router.js"></script>
    <script src="shared/card-picker.js"></script>
    <script src="shared/hub-utils.js"></script>
+   <script src="shared/hub-progress.js"></script>
    <script src="apps/dailies/load.js"></script>
    <script src="shared/swap-queue.js"></script>
    <script src="apps/deck-review/archidekt-export.js"></script>

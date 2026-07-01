@@ -19,6 +19,7 @@
       profilesConnected: false,
       showAllMode: false,
       statusCardTab: 'decisions',
+      transferSource: null,
       ui: {}
    };
 
@@ -105,8 +106,24 @@
       }
       state.activeDeckId = state.progress.currentDeckId || (state.data.decks[0] && state.data.decks[0].deck_id);
       state.suggestionIndex = state.progress.currentSuggestionIndex[state.activeDeckId] || 0;
+      applyHandoffStatus(state.data);
       showLoadedUi();
       render();
+   }
+
+   function applyHandoffStatus(data) {
+      if (state.transferSource !== 'deck-suggest') {
+         return;
+      }
+      var summary = HubUtils.handoffSnapshotSummary(data);
+      if (summary.missingSnapshots > 0) {
+         showError(summary.missingSnapshots + ' deck(s) missing snapshots — use Refresh from Archidekt (optional) or return to Deck Suggest.');
+      } else if (summary.allReady) {
+         hideError();
+         if (global.DeckReview && DeckReview.setProfileStatus) {
+            DeckReview.setProfileStatus('Ready to review — deck snapshots included from Deck Suggest.');
+         }
+      }
    }
 
    async function fetchLatest() {
@@ -115,6 +132,7 @@
          throw new Error('Could not fetch ' + LATEST_URL + ' (' + resp.status + ')');
       }
       var data = await resp.json();
+      state.transferSource = 'latest';
       loadSuggestionsData(data);
    }
 
@@ -123,6 +141,7 @@
       reader.onload = function () {
          try {
             var data = JSON.parse(reader.result);
+            state.transferSource = 'upload';
             loadSuggestionsData(data);
          } catch (err) {
             showError(err.message || String(err));
@@ -180,25 +199,58 @@
       }
    }
 
+   function handoffSnapshotDate(data) {
+      var dates = (data.decks || []).map(function (d) {
+         return d.deck_snapshot && d.deck_snapshot.fetched_at;
+      }).filter(Boolean);
+      if (!dates.length) {
+         return null;
+      }
+      dates.sort();
+      return dates[dates.length - 1];
+   }
+
    function render() {
       if (!state.data) {
          return;
       }
       hideError();
       var meta = state.data.meta;
-      state.ui.metaEl.innerHTML =
-         '<strong>' + escapeHtml(meta.set_name) + '</strong> · ' + escapeHtml(meta.set_code) +
-         ' · ' + escapeHtml(meta.generated_at) + ' · ' + state.data.decks.length + ' decks' +
-         (meta.notes ? '<div class="dr-meta-notes">' + escapeHtml(meta.notes) + '</div>' : '');
+      var metaHtml = '<strong>' + escapeHtml(meta.set_name) + '</strong> · ' + escapeHtml(meta.set_code) +
+         ' · ' + escapeHtml(meta.generated_at) + ' · ' + state.data.decks.length + ' decks';
+      if (state.transferSource === 'deck-suggest') {
+         var snapDate = handoffSnapshotDate(state.data);
+         var snapSummary = HubUtils.handoffSnapshotSummary(state.data);
+         metaHtml += '<div class="dr-meta-notes">Transferred from Deck Suggest — review swaps deck by deck.';
+         if (snapSummary.allReady) {
+            metaHtml += ' Ready to review — snapshots included.';
+         }
+         if (snapDate) {
+            metaHtml += ' Snapshots as of ' + escapeHtml(snapDate) + '.';
+         }
+         metaHtml += '</div>';
+      } else if (meta.notes) {
+         metaHtml += '<div class="dr-meta-notes">' + escapeHtml(meta.notes) + '</div>';
+      }
+      state.ui.metaEl.innerHTML = metaHtml;
 
       DR.renderDeckList();
       DR.renderSuggestionPanel();
       DR.renderProfilesNav();
+      updateTransferNav();
       if (state.ui.refreshAllDecksBtn) {
          state.ui.refreshAllDecksBtn.disabled = !bridgeAvailable();
-         state.ui.refreshAllDecksBtn.title = bridgeAvailable()
-            ? 'Fetch latest deck lists from Archidekt'
-            : 'Requires Archidekt Deck Review Bridge userscript';
+         if (state.transferSource === 'deck-suggest') {
+            state.ui.refreshAllDecksBtn.textContent = 'Refresh from Archidekt (optional)';
+            state.ui.refreshAllDecksBtn.title = bridgeAvailable()
+               ? 'Snapshots loaded from Deck Suggest; refresh only if Archidekt changed since.'
+               : 'Requires Archidekt Deck Review Bridge userscript';
+         } else {
+            state.ui.refreshAllDecksBtn.textContent = 'Refresh all decks';
+            state.ui.refreshAllDecksBtn.title = bridgeAvailable()
+               ? 'Fetch latest deck lists from Archidekt'
+               : 'Requires Archidekt Deck Review Bridge userscript';
+         }
       }
    }
 
@@ -208,13 +260,16 @@
          '<div id="dr-right-nav-backdrop" class="dr-right-nav-backdrop"></div>' +
          '<div class="dr-layout">' +
          '<div class="dr-main-area">' +
+         '<div class="hub-sticky-chrome">' +
          '<header class="dr-header">' +
          '<h2>Deck Review</h2>' +
          '<div class="dr-meta" id="dr-meta">Load set-update suggestions to review swaps deck by deck.</div>' +
          '</header>' +
+         '<div class="hub-progress-host" id="dr-progress-host"></div>' +
+         '</div>' +
          '<div class="dr-error" id="dr-error" hidden></div>' +
          '<div class="dr-body" id="dr-body">' +
-         '<div class="dr-empty" id="dr-empty-state">Upload a suggestions file or refresh latest from the repo.</div>' +
+         '<div class="dr-empty" id="dr-empty-state">Upload a suggestions JSON file, transfer from Deck Suggest, or click Refresh latest.</div>' +
          '<div id="dr-content" hidden>' +
          '<div class="dr-deck-status-card" id="dr-deck-status-card" hidden></div>' +
          '<div id="dr-suggestion-panel"></div>' +
@@ -224,6 +279,7 @@
          '<h3>Data</h3>' +
          '<button type="button" class="dr-btn dr-btn-primary" id="dr-fetch-latest">Refresh latest</button>' +
          '<button type="button" class="dr-btn dr-btn-ghost" id="dr-upload-btn">Upload JSON</button>' +
+         '<button type="button" class="dr-btn dr-btn-ghost" id="dr-download-json" hidden>Download JSON</button>' +
          '<input type="file" id="dr-file-input" class="dr-file-input" accept=".json,application/json">' +
          '</div>' +
          '<div class="dr-profiles-section" id="dr-profiles-section">' +
@@ -262,8 +318,15 @@
          prefCountsEl: document.getElementById('dr-pref-counts'),
          tabletProfilesNote: document.getElementById('dr-tablet-profiles-note'),
          refreshAllDecksBtn: document.getElementById('dr-refresh-all-decks'),
-         refreshDeckBtn: null
+         refreshDeckBtn: null,
+         downloadJsonBtn: document.getElementById('dr-download-json'),
+         progressHostEl: document.getElementById('dr-progress-host'),
+         progress: null
       };
+
+      if (state.ui.progressHostEl) {
+         state.ui.progress = HubUtils.mountAppProgress(state.ui.progressHostEl, 'deck-review');
+      }
 
       initRightNav();
 
@@ -300,10 +363,26 @@
             showError(err.message || String(err));
          });
       });
+      if (state.ui.downloadJsonBtn) {
+         state.ui.downloadJsonBtn.addEventListener('click', function () {
+            if (state.data) {
+               HubUtils.downloadSuggestionsJson(state.data);
+            }
+         });
+      }
       if (state.ui.refreshAllDecksBtn) {
          state.ui.refreshAllDecksBtn.addEventListener('click', function () {
             DR.refreshAllDeckSnapshots();
          });
+      }
+   }
+
+   function updateTransferNav() {
+      if (state.ui.downloadJsonBtn) {
+         state.ui.downloadJsonBtn.hidden = state.transferSource !== 'deck-suggest';
+      }
+      if (state.ui.refreshAllDecksBtn && state.transferSource === 'deck-suggest') {
+         state.ui.refreshAllDecksBtn.textContent = 'Refresh from Archidekt (optional)';
       }
    }
 
@@ -318,10 +397,10 @@
 
    async function loadDeckReviewApp(root) {
       renderEmptyShell(root);
-      try {
-         await fetchLatest();
-      } catch (err) {
-         /* no latest.json yet — user can upload */
+      var handoff = HubStorage.consumeReviewHandoff();
+      if (handoff && handoff.data) {
+         state.transferSource = handoff.source || 'handoff';
+         loadSuggestionsData(handoff.data);
       }
    }
 
@@ -333,6 +412,8 @@
    DR.showError = showError;
    DR.hideError = hideError;
    DR.render = render;
+   DR.loadSuggestionsData = loadSuggestionsData;
+   DR.updateTransferNav = updateTransferNav;
 
    global.loadDeckReviewApp = loadDeckReviewApp;
 })(window);

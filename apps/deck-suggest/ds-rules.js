@@ -63,6 +63,10 @@
       var existing = (options.existingSuggestions || []).slice();
       var suggestions = existing.slice();
       var audit = [];
+      var collector = null;
+      if (options.debug && DS.Debug && DS.Debug.createCollector) {
+         collector = DS.Debug.createCollector(deck.deck_id);
+      }
       var taggerCtx = DS.Tagger.createContext(deck, setScope);
 
       var rules = [
@@ -74,7 +78,8 @@
 
       rules.forEach(function (rule) {
          var before = suggestions.length;
-         var raw = rule.fn(deck, setScope, profile, suggestions, taggerCtx) || [];
+         var ruleDebug = collector ? { ruleId: rule.id, collector: collector } : null;
+         var raw = rule.fn(deck, setScope, profile, suggestions, taggerCtx, ruleDebug) || [];
          var added = raw.added != null ? raw.added : raw;
          var skipped = raw.skipped || [];
          suggestions = suggestions.concat(added);
@@ -90,6 +95,14 @@
                suggestionsAdded: 0,
                skippedReason: slot.name + ' (' + slot.reason + ')'
             });
+            if (collector) {
+               collector.push({
+                  ruleId: rule.id,
+                  outcome: 'skipped',
+                  subject: slot.name,
+                  reason: slot.reason
+               });
+            }
          });
       });
 
@@ -98,6 +111,7 @@
       return {
          suggestions: suggestions,
          audit: audit,
+         debugTrace: collector ? collector.entries() : null,
          taggerCoverage: taggerCtx.coverage,
          analysis: {
             swap_queue: buildSwapQueueAnalysis(deck)
