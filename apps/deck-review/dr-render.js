@@ -4,7 +4,7 @@
    var DR = global.DeckReview;
    var state = DR.state;
 
-   var BRIDGE_SCRIPT_URL = 'https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js';
+   var BRIDGE_SCRIPT_URL = 'https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js';
 
    var escapeHtml = HubUtils.escapeHtml;
    var optionKey = HubUtils.optionKey;

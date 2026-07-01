@@ -4,29 +4,27 @@ Personal multi-app hub hosted on GitHub Pages at [rayenz-akusiom.github.io/rayen
 
 ## Apps
 
-- **Dailies** — Neopets dailies launcher (requires [rayenz-dailies.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/rayenz-dailies.user.js) for automation)
+- **Dailies** — Neopets dailies launcher (requires [rayenz-dailies.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/rayenz-dailies.user.js) for automation)
 - **Deck Review** — Review MTG set-update suggestions; export full-deck Archidekt import or apply via bridge
 - **Order Reconcile** — Match acquired cards to swap queues; update decks and buy/trade list after an order arrives
 
 ## Publishing
 
-This repo (`rayenz-akusiom/rayenz-akusiom`) is the **GitHub Pages** source. Push to `main` to deploy the hub.
+This folder is the **dev/staging** hub source. Production GitHub Pages live in the separate [rayenz-akusiom](https://github.com/rayenz-akusiom/rayenz-akusiom) repo.
+
+From the monorepo root, deploy hub changes with:
 
 ```bash
-cd rayenz-akusiom   # this repo
-git add -A && git commit -m "..." && git push origin main
+npm run deploy:hub
 ```
 
-Userscripts live in the separate [neopets](https://github.com/rayenz-akusiom/neopets) repo under `monkey-scripts/`. Edit and push there for Tampermonkey changes — no Pages deploy.
+That runs `git subtree push --prefix=rayenz-hub hub-prod main`.
 
-If you use the neopets monorepo with this folder as a submodule, bump the submodule pointer after hub pushes:
+Userscripts live in **`monkey-scripts/` at the monorepo root** (same clone as this folder). Edit and push there for Tampermonkey changes — no Pages deploy.
 
 ```bash
-cd ..
-git add rayenz-akusiom && git commit -m "Bump rayenz-akusiom submodule"
+git clone https://github.com/rayenz-akusiom/rayenz-hub.git
 ```
-
-Clone the monorepo with submodules: `git clone --recurse-submodules https://github.com/rayenz-akusiom/neopets.git`
 
 ## Deck Review workflow
 
@@ -37,9 +35,9 @@ Clone the monorepo with submodules: `git clone --recurse-submodules https://gith
    .\scripts\enrich_suggestions.ps1 -InputPath ~\mtg\decks\suggestions\MSH-2026-06-21.json -Output data\suggestions\latest.json
    ```
 
-3. Commit and push `data/suggestions/latest.json` to **this repo** (or upload JSON on the Deck Review page).
+3. Commit and push `data/suggestions/latest.json` to **production** via `npm run deploy:hub` (or upload JSON on the Deck Review page).
 4. Review every suggestion for each deck (Accept / Reject / Skip). The **Deck status** card at the top shows a **Decisions** recap, live **Archidekt queue**, and **Update** actions.
-5. On **desktop** with [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js): when all suggestions are reviewed, open the **Update** tab → **Apply via bridge** (opens Archidekt and shows an apply banner).
+5. On **desktop** with [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js): when all suggestions are reviewed, open the **Update** tab → **Apply via bridge** (opens Archidekt and shows an apply banner).
 6. On **tablet** (no userscript): when all suggestions are reviewed, **Update** tab → **Copy full deck import** → Archidekt deck → **Import** → **Replace deck** → paste → Save Changes.
 7. On **desktop Chrome**, connect your profiles folder in the right nav and use **Never suggest again** to update `~/mtg/decks/profiles/{deck_id}.yaml` directly.
 8. After changing profiles on PC, re-run `enrich_suggestions` so tablet-loaded `latest.json` reflects new blocklists.
@@ -53,7 +51,7 @@ Use after cards from a buy order physically arrive.
 1. Open **Order Reconcile** (`#/order-reconcile`).
 2. Configure **Archidekt folder URL** (default: [folder 81998](https://archidekt.com/folders/81998) — IRL Decks) and **buy/trade staging deck** (default: [deck 8667017](https://archidekt.com/decks/8667017)).
 3. Enter acquired cards via **Card list** (one per line; qty expands to singleton copies). **Order email** tab is experimental.
-4. Click **Continue** — requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js) **2026-06-25-2+** for folder + deck fetch. A pinned progress bar shows deck refresh status.
+4. Click **Continue** — requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js) **2026-06-25-2+** for folder + deck fetch. A pinned progress bar shows deck refresh status.
 5. **Disambiguate** — matching copies auto-assign to swap-queue slots (or cube Maybeboard). Surplus copies can optionally go to another deck or be left out (buy/trade only). Card images appear on each row; fix a bad name to update all copies of that card.
 6. **Reconcile deck-by-deck** — pick In printing/treatment (Scryfall), Out cut (deck snapshot; cube cuts are limited to the card's color section), destination category; review running summary; **Confirm & apply** per deck.
 7. **Buy/trade list** — remove acquired cards from the staging deck.
@@ -64,7 +62,7 @@ Swap queues are always read live from Archidekt (`New Set In` / `New Set Out` fo
 
 Apply via bridge uses **Tampermonkey shared storage** (`GM_setValue`), not browser `localStorage`, so the Hub (GitHub Pages) and Archidekt can exchange the staged import.
 
-- Requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/neopets/blob/main/monkey-scripts/archidekt-deck-review.user.js) **version 2026-06-25-2 or newer** in the same browser profile as the Hub tab.
+- Requires [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js) **version 2026-06-25-2 or newer** in the same browser profile as the Hub tab.
 - Tampermonkey must be enabled on both `rayenz-akusiom.github.io` and `archidekt.com`.
 - After **Apply via bridge**, the Archidekt deck tab should show a **Pending update from Rayenz Hub** banner — click **Apply import** there.
 - If only a blank deck page opens: reload the Archidekt tab, or re-click Apply via bridge (adds a cache-buster to force a fresh load).
