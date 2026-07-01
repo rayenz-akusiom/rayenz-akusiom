@@ -327,6 +327,7 @@
    DR.getDeckById = getDeckById;
    DR.getDecision = getDecision;
    DR.setDecision = setDecision;
+   DR.validateSuggestions = validateSuggestions;
    DR.sortSuggestions = sortSuggestions;
    DR.showError = showError;
    DR.hideError = hideError;

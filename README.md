@@ -35,7 +35,7 @@ git clone https://github.com/rayenz-akusiom/rayenz-hub.git
    .\scripts\enrich_suggestions.ps1 -InputPath ~\mtg\decks\suggestions\MSH-2026-06-21.json -Output data\suggestions\latest.json
    ```
 
-3. Commit and push `data/suggestions/latest.json` to **production** via `npm run deploy:hub` (or upload JSON on the Deck Review page).
+3. Commit enriched output to **production** via `npm run deploy:hub` as `data/suggestions/latest.json` (or upload JSON on the Deck Review page). The hub repo no longer ships a default `latest.json`; regression coverage lives in `tests/fixtures/suggestions/` at the monorepo root.
 4. Review every suggestion for each deck (Accept / Reject / Skip). The **Deck status** card at the top shows a **Decisions** recap, live **Archidekt queue**, and **Update** actions.
 5. On **desktop** with [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js): when all suggestions are reviewed, open the **Update** tab → **Apply via bridge** (opens Archidekt and shows an apply banner).
 6. On **tablet** (no userscript): when all suggestions are reviewed, **Update** tab → **Copy full deck import** → Archidekt deck → **Import** → **Replace deck** → paste → Save Changes.
