@@ -43,6 +43,7 @@
          return suggestion;
       }
       suggestion.replaces = normalizeArrayValue(suggestion.replaces);
+      suggestion.roles_matched = normalizeArrayValue(suggestion.roles_matched);
       return suggestion;
    }
 

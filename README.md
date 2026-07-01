@@ -6,6 +6,7 @@ Personal multi-app hub hosted on GitHub Pages at [rayenz-akusiom.github.io/rayen
 
 - **Dailies** — Neopets dailies launcher (requires [rayenz-dailies.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/rayenz-dailies.user.js) for automation)
 - **Deck Review** — Review MTG set-update suggestions; export full-deck Archidekt import or apply via bridge
+- **Deck Suggest** — Rule-based replacement suggestions (swap queue, proxy upgrades, role matching) without LLM; export schema 1.1 JSON for Deck Review
 - **Order Reconcile** — Match acquired cards to swap queues; update decks and buy/trade list after an order arrives
 
 ## Publishing
@@ -57,6 +58,20 @@ Use after cards from a buy order physically arrive.
 7. **Buy/trade list** — remove acquired cards from the staging deck.
 
 Swap queues are always read live from Archidekt (`New Set In` / `New Set Out` for Commander decks; **Maybeboard** for cube decks named with "cube"). Cube destination categories are inferred from color identity (mono colors, Ravnica guilds for two colors; three or more colors require manual category pick). Partial orders are safe: unfilled queue slots stay.
+
+## Deck Suggest workflow
+
+Rule-based alternative to the `mtg-deck-set-updates` Cursor skill for Commander decks only.
+
+1. Open **Deck Suggest** (`#/deck-suggest`).
+2. Enter set codes (e.g. `MSH,MSC,MAR`) and **Load set pool** (Scryfall), or upload cached set JSON.
+3. Load decks from your Archidekt folder (bridge required) or upload a deck JSON snapshot.
+4. Connect profiles in Deck Review (optional) for role rules and blocklists.
+5. Select one or more Commander decks and **Generate suggestions**.
+6. Review results and rule audit; filter by tier or rule id.
+7. **Download JSON** (`{SET}-{date}-rules.json`) and upload on the Deck Review page (or deploy via `npm run deploy:hub`).
+
+Cube decks and Maybeboard-only swap queues are skipped with a per-deck message. No `enrich_suggestions.ps1` step is required — export attaches `deck_snapshot` and `profile_preferences` inline.
 
 ### Apply via bridge troubleshooting
 

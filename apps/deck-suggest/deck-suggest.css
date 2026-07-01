@@ -1,0 +1,150 @@
+/* Deck Suggest — hub app layout */
+.deck-suggest-app {
+   background: #f0f2f5;
+   min-height: 100vh;
+   color: #1a202c;
+   font-size: 15px;
+   line-height: 1.45;
+}
+
+.ds-header {
+   background: #fff;
+   border-bottom: 1px solid #e2e8f0;
+   padding: 16px 20px;
+}
+
+.ds-header h2 {
+   margin: 0 0 8px;
+   font-size: 1.35rem;
+}
+
+.ds-meta {
+   margin: 0;
+   font-size: 0.9rem;
+   color: #4a5568;
+}
+
+.ds-status {
+   margin: 8px 0 0;
+   font-size: 0.9rem;
+   color: #2b6cb0;
+}
+
+.ds-body {
+   max-width: 960px;
+   margin: 0 auto;
+   padding: 24px 28px 48px;
+}
+
+.ds-panel {
+   background: #fff;
+   border: 1px solid #e2e8f0;
+   border-radius: 8px;
+   padding: 20px;
+   margin-bottom: 20px;
+}
+
+.ds-panel h3 {
+   margin-top: 0;
+}
+
+.ds-field {
+   display: block;
+   margin-bottom: 12px;
+   font-weight: 600;
+}
+
+.ds-field input[type="text"] {
+   display: block;
+   width: 100%;
+   margin-top: 4px;
+   padding: 8px 10px;
+   border: 1px solid #cbd5e0;
+   border-radius: 6px;
+   box-sizing: border-box;
+   font: inherit;
+}
+
+.ds-actions {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px;
+   margin: 12px 0;
+}
+
+.ds-btn {
+   display: inline-block;
+   padding: 8px 14px;
+   border: 1px solid #cbd5e0;
+   border-radius: 6px;
+   background: #edf2f7;
+   cursor: pointer;
+   font: inherit;
+}
+
+.ds-btn-primary {
+   background: #2b6cb0;
+   border-color: #2b6cb0;
+   color: #fff;
+}
+
+.ds-btn-ghost {
+   background: transparent;
+}
+
+.ds-deck-list {
+   border: 1px solid #e2e8f0;
+   border-radius: 6px;
+   padding: 12px;
+   margin: 12px 0;
+}
+
+.ds-deck-option {
+   display: block;
+   margin: 4px 0;
+   font-weight: normal;
+}
+
+.ds-error,
+.ds-error-inline {
+   color: #c53030;
+   background: #fff5f5;
+   border: 1px solid #feb2b2;
+   border-radius: 6px;
+   padding: 10px 12px;
+   margin: 12px 20px;
+}
+
+.ds-suggestion {
+   border-top: 1px solid #e2e8f0;
+   padding: 10px 0;
+}
+
+.ds-tier {
+   display: inline-block;
+   font-size: 0.75rem;
+   text-transform: uppercase;
+   padding: 2px 6px;
+   border-radius: 4px;
+   background: #e2e8f0;
+}
+
+.ds-tier-swap {
+   background: #bee3f8;
+   color: #2c5282;
+}
+
+.ds-audit {
+   margin: 12px 0;
+   font-size: 0.9rem;
+}
+
+.ds-filters {
+   display: flex;
+   gap: 16px;
+   margin: 12px 0;
+}
+
+.ds-deck-result h4 {
+   margin: 16px 0 8px;
+}

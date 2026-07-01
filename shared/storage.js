@@ -97,6 +97,28 @@
       setItem(orderReconcileSessionKey(sessionId), JSON.stringify(progress || {}));
    }
 
+   var DECK_SUGGEST_SETTINGS_KEY = 'rayenz-deck-suggest-settings';
+   var DEFAULT_DECK_SUGGEST_SETTINGS = {
+      folderUrl: 'https://archidekt.com/folders/81998',
+      setCodes: 'MSH,MSC,MAR'
+   };
+
+   function loadDeckSuggestSettings() {
+      var raw = getItem(DECK_SUGGEST_SETTINGS_KEY);
+      if (!raw) {
+         return Object.assign({}, DEFAULT_DECK_SUGGEST_SETTINGS);
+      }
+      try {
+         return Object.assign({}, DEFAULT_DECK_SUGGEST_SETTINGS, JSON.parse(raw));
+      } catch (e) {
+         return Object.assign({}, DEFAULT_DECK_SUGGEST_SETTINGS);
+      }
+   }
+
+   function saveDeckSuggestSettings(settings) {
+      setItem(DECK_SUGGEST_SETTINGS_KEY, JSON.stringify(settings || {}));
+   }
+
    global.HubStorage = {
       getLastRoute: getLastRoute,
       setLastRoute: setLastRoute,
@@ -106,6 +128,8 @@
       loadOrderReconcileSettings: loadOrderReconcileSettings,
       saveOrderReconcileSettings: saveOrderReconcileSettings,
       loadOrderReconcileProgress: loadOrderReconcileProgress,
-      saveOrderReconcileProgress: saveOrderReconcileProgress
+      saveOrderReconcileProgress: saveOrderReconcileProgress,
+      loadDeckSuggestSettings: loadDeckSuggestSettings,
+      saveDeckSuggestSettings: saveDeckSuggestSettings
    };
 })(window);

@@ -52,6 +52,18 @@
                   </a>
                </li>
                <li>
+                  <a class="hub-nav-link" href="#/deck-suggest">
+                     <span class="hub-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <path d="M9 18h6"></path>
+                           <path d="M10 22h4"></path>
+                           <path d="M12 2a7 7 0 0 0-4 12.9V17h8v-2.1A7 7 0 0 0 12 2z"></path>
+                        </svg>
+                     </span>
+                     <span class="hub-nav-label">Deck Suggest</span>
+                  </a>
+               </li>
+               <li>
                   <a class="hub-nav-link" href="#/order-reconcile">
                      <span class="hub-nav-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -76,6 +88,7 @@
    <script src="shared/card-picker.js"></script>
    <script src="shared/hub-utils.js"></script>
    <script src="apps/dailies/load.js"></script>
+   <script src="shared/swap-queue.js"></script>
    <script src="apps/deck-review/archidekt-export.js"></script>
    <script src="apps/deck-review/profile-sync.js"></script>
    <script src="apps/deck-review/deck-review.js"></script>
@@ -92,9 +105,19 @@
    <script src="apps/order-reconcile/or-assign.js"></script>
    <script src="apps/order-reconcile/or-reconcile.js"></script>
    <script src="apps/order-reconcile/or-input.js"></script>
+   <script src="apps/deck-suggest/deck-suggest.js"></script>
+   <script src="apps/deck-suggest/ds-rules-roles.js"></script>
+   <script src="apps/deck-suggest/ds-tagger.js"></script>
+   <script src="apps/deck-suggest/ds-rules-queue.js"></script>
+   <script src="apps/deck-suggest/ds-rules-proxy.js"></script>
+   <script src="apps/deck-suggest/ds-rules.js"></script>
+   <script src="apps/deck-suggest/ds-data.js"></script>
+   <script src="apps/deck-suggest/ds-export.js"></script>
+   <script src="apps/deck-suggest/ds-render.js"></script>
    <script>
       HubRouter.registerRoute('/dailies', loadDailiesApp);
       HubRouter.registerRoute('/deck-review', loadDeckReviewApp);
+      HubRouter.registerRoute('/deck-suggest', loadDeckSuggestApp);
       HubRouter.registerRoute('/order-reconcile', loadOrderReconcileApp);
       HubRouter.init();
    </script>

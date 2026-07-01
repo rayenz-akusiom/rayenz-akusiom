@@ -220,6 +220,15 @@
       });
    }
 
+   function readProfileYaml(deckId) {
+      return getProfilesDir().then(function (handle) {
+         if (!handle) {
+            return null;
+         }
+         return readProfileFile(handle, deckId);
+      });
+   }
+
    function isConnected() {
       return getProfilesDir().then(function (h) { return !!h; });
    }
@@ -230,6 +239,7 @@
       getProfilesDir: getProfilesDir,
       isConnected: isConnected,
       appendToProfileList: appendToProfileList,
+      readProfileYaml: readProfileYaml,
       parseYamlList: parseYamlList,
       LIST_FIELDS: LIST_FIELDS
    };

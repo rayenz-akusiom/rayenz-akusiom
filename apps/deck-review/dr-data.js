@@ -4,8 +4,7 @@
    var DR = global.DeckReview;
    var state = DR.state;
 
-   var SWAP_IN = 'New Set In';
-   var SWAP_OUT = 'New Set Out';
+   var deriveSwapQueue = SwapQueue.deriveSwapQueue;
 
    var escapeHtml = HubUtils.escapeHtml;
    var optionKey = HubUtils.optionKey;
@@ -17,37 +16,6 @@
       }
       var sep = archidektUrl.indexOf('?') >= 0 ? '&' : '?';
       return archidektUrl + sep + 'rayenz_apply=1';
-   }
-
-   function deriveSwapQueue(deck) {
-      if (!deck.deck_snapshot || !Array.isArray(deck.deck_snapshot.cards)) {
-         return null;
-      }
-      var newSetIn = [];
-      var newSetOut = [];
-      var metadataFlags = [];
-      deck.deck_snapshot.cards.forEach(function (card) {
-         var primary = card.primary_category || (card.categories && card.categories[0]);
-         var cats = card.categories || [];
-         if (primary === SWAP_IN) {
-            newSetIn.push(card);
-         }
-         if (primary === SWAP_OUT) {
-            newSetOut.push(card);
-         }
-         if (cats.indexOf(SWAP_IN) >= 0 && primary !== SWAP_IN) {
-            metadataFlags.push(card.name + ' (primary: ' + primary + ')');
-         }
-         if (cats.indexOf(SWAP_OUT) >= 0 && primary !== SWAP_OUT) {
-            metadataFlags.push(card.name + ' (primary: ' + primary + ')');
-         }
-      });
-      return {
-         new_set_in: newSetIn,
-         new_set_out: newSetOut,
-         metadata_flags: metadataFlags,
-         fetched_at: deck.deck_snapshot.fetched_at || null
-      };
    }
 
    function swapQueueHasName(cards, name) {
