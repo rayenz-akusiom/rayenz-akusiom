@@ -1,12 +1,19 @@
-         <header class="page_title site-header">
-            <div class="site-header-start">
-               <a id="pet-headshot-link" class="pet-headshot-link" href="https://www.neopets.com/petlookup.phtml?pet=Blue_Eyes_WhDragon" target="_blank" title="View pet profile">
-                  <img id="pet-headshot" class="pet-headshot" src="https://pets.neopets.com/cp/l88flmjv/4/1.png" alt="Main pet">
-               </a>
-               <h1>Rayenz's Dailies</h1>
+         <div class="hub-sticky-chrome dailies-sticky-chrome">
+            <header class="page_title site-header">
+               <div class="site-header-start">
+                  <a id="pet-headshot-link" class="pet-headshot-link" href="https://www.neopets.com/petlookup.phtml?pet=Blue_Eyes_WhDragon" target="_blank" title="View pet profile">
+                     <img id="pet-headshot" class="pet-headshot" src="https://pets.neopets.com/cp/l88flmjv/4/1.png" alt="Main pet">
+                  </a>
+                  <h1>Rayenz's Dailies</h1>
+               </div>
+               <button type="button" id="settings-open" class="settings-gear" aria-label="Open settings" title="Settings">&#9881;</button>
+            </header>
+            <div class="hub-progress-host" id="dailies-progress-host"></div>
+            <div id="seasonal-alerts" class="seasonal-alerts" hidden>
+               <div class="seasonal-alerts-heading">Seasonal &amp; Limited Time</div>
+               <div class="seasonal-alerts-grid" id="seasonal-alerts-grid"></div>
             </div>
-            <button type="button" id="settings-open" class="settings-gear" aria-label="Open settings" title="Settings">&#9881;</button>
-         </header>
+         </div>
 
          <div id="settings-backdrop" class="settings-backdrop" hidden></div>
          <aside id="settings-tray" class="settings-tray" aria-label="Settings" aria-hidden="true">
@@ -22,11 +29,6 @@
                </div>
             </div>
          </aside>
-
-         <div id="seasonal-alerts" class="seasonal-alerts" hidden>
-            <div class="seasonal-alerts-heading">Seasonal &amp; Limited Time</div>
-            <div class="seasonal-alerts-grid" id="seasonal-alerts-grid"></div>
-         </div>
 
          <button type="button" class="collapsible">Quick Links</button>
          <div class="grid content">
