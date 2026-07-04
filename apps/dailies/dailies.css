@@ -1,502 +1,663 @@
 .dailies-app {
-         display: block;
-         background-color: #000000;
-      }
+   display: block;
+   background-color: #000000;
+}
 
 .dailies-app a {
-         color: #000;
-         text-decoration: none;
-         font-weight: bold;
-      }
-
-/* Collapsible Styling */
-      .collapsible {
-         background-color: #777;
-         color: white;
-         cursor: pointer;
-         padding: 18px;
-         width: 100%;
-         border: none;
-         text-align: left;
-         outline: none;
-         font-size: 15px;
-         margin: 0;
-      }
-
-      .active,
-      .collapsible:hover {
-         background-color: #555;
-      }
-
-      .content {
-         max-height: 0;
-         overflow: hidden;
-         padding: 0;
-         box-sizing: border-box;
-         background-color: transparent;
-         transition: max-height 0.25s ease-out, padding 0.25s ease-out;
-      }
-
-      .collapsible.active + .content {
-         max-height: 8000px;
-         background-color: white;
-      }
-
-      .collapsible.active + .content.grid {
-         padding: 8px;
-      }
-
-      .collapsible:after {
-         content: 'v';
-         font-size: 13px;
-         font-weight: bold;
-         color: white;
-         float: right;
-         margin-left: 5px;
-      }
-
-      .active:after {
-         content: ">";
-      }
-
-      /** General Styling*/
-
-      .page_title {
-         margin: 0px;
-         padding: 20px;
-      }
-
-      .site-header {
-         display: flex;
-         align-items: center;
-         justify-content: space-between;
-         gap: 12px;
-         padding: 16px 20px;
-         margin: 0;
-         box-sizing: border-box;
-      }
-
-      .site-header-start {
-         display: flex;
-         align-items: center;
-         gap: 14px;
-         min-width: 0;
-      }
-
-      .site-header h1 {
-         margin: 0;
-         font-size: 1.5rem;
-         line-height: 1.2;
-      }
-
-      .dailies-sticky-chrome {
-         background: #fff;
-      }
-
-      .dailies-sticky-chrome .hub-progress-host:not(:empty) {
-         border-bottom: 1px solid #e2e8f0;
-      }
-
-      .pet-headshot-link {
-         flex-shrink: 0;
-         line-height: 0;
-      }
-
-      .pet-headshot {
-         width: 52px;
-         height: 52px;
-         border-radius: 50%;
-         object-fit: cover;
-         object-position: center top;
-         border: 2px solid #777;
-         background: #eee;
-         display: block;
-      }
-
-      .pet-headshot-link:hover .pet-headshot {
-         border-color: #333;
-      }
-
-      .settings-gear {
-         flex-shrink: 0;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         width: 40px;
-         height: 40px;
-         padding: 0;
-         border: none;
-         border-radius: 8px;
-         background: transparent;
-         color: #444;
-         cursor: pointer;
-         font-size: 22px;
-         line-height: 1;
-      }
-
-      .settings-gear:hover,
-      .settings-gear:focus-visible {
-         background: #f0f0f0;
-         color: #111;
-         outline: none;
-      }
-
-      .settings-backdrop {
-         position: fixed;
-         inset: 0;
-         background: rgba(0, 0, 0, 0.35);
-         z-index: 999;
-      }
-
-      .settings-backdrop[hidden] {
-         display: none;
-      }
-
-      .settings-tray {
-         position: fixed;
-         top: 0;
-         right: 0;
-         width: min(340px, 92vw);
-         height: 100vh;
-         background: #fff;
-         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.18);
-         z-index: 1000;
-         transform: translateX(100%);
-         transition: transform 0.25s ease;
-         display: flex;
-         flex-direction: column;
-         box-sizing: border-box;
-      }
-
-      .settings-tray.open {
-         transform: translateX(0);
-      }
-
-      .settings-tray-header {
-         display: flex;
-         align-items: center;
-         justify-content: space-between;
-         gap: 12px;
-         padding: 18px 20px;
-         border-bottom: 1px solid #ddd;
-         background: #f7f7f7;
-      }
-
-      .settings-tray-header h2 {
-         margin: 0;
-         font-size: 1.1rem;
-      }
-
-      .settings-tray-close {
-         border: none;
-         background: transparent;
-         font-size: 1.6rem;
-         line-height: 1;
-         cursor: pointer;
-         color: #555;
-         padding: 4px 8px;
-      }
-
-      .settings-tray-close:hover {
-         color: #111;
-      }
-
-      .settings-tray-body {
-         flex: 1;
-         overflow-y: auto;
-         padding: 20px;
-      }
-
-      .settings-field {
-         margin-bottom: 18px;
-      }
-
-      .settings-field label {
-         display: block;
-         font-size: 13px;
-         font-weight: bold;
-         margin-bottom: 6px;
-      }
-
-      .settings-field input {
-         width: 100%;
-         padding: 8px 10px;
-         font-size: 14px;
-         box-sizing: border-box;
-         border: 1px solid #ccc;
-         border-radius: 4px;
-      }
-
-      .settings-hint {
-         margin: 6px 0 0;
-         font-size: 12px;
-         color: #666;
-         line-height: 1.35;
-      }
-
-      .mainshell {
-         width: 725px;
-         padding: 0px;
-         margin: 0px;
-         background: white;
-         position: relative;
-      }
-
-      .center_column {
-         width: 709px;
-         margin: auto;
-         padding: 0px;
-         line-height: 130%;
-         text-align: center;
-         background-color: white;
-      }
-
-      /** Dailies Grid Styling */
-
-      .grid {
-         display: grid;
-         grid-template-columns: repeat(4, 1fr);
-         gap: 4px;
-         box-sizing: border-box;
-      }
-
-      .grid > div {
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-         justify-content: flex-start;
-         gap: 6px;
-         padding: 8px 4px;
-         box-sizing: border-box;
-         min-width: 0;
-         text-align: center;
-      }
-
-      .grid > div > br {
-         display: none;
-      }
-
-      .daily-icon-box {
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         width: 80px;
-         height: 80px;
-         flex-shrink: 0;
-      }
-
-      .grid > div > a:has(img),
-      .grid > div > a:has(svg) {
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         width: 80px;
-         height: 80px;
-         flex-shrink: 0;
-      }
-
-      .grid img,
-      .grid svg {
-         max-width: 72px;
-         max-height: 72px;
-         width: auto;
-         height: auto;
-         object-fit: contain;
-         display: block;
-      }
-
-      .grid > div > a:not(:has(img)) {
-         font-size: 12px;
-         line-height: 1.25;
-         word-wrap: break-word;
-         max-width: 100%;
-      }
-
-      .text-small {
-         font-size: 11px;
-         font-weight: normal;
-         color: #666;
-         line-height: 1.2;
-      }
-
-      .seasonal-alerts {
-         background: #f5f0e6;
-         border-bottom: 3px solid #c9a227;
-         padding: 14px 16px;
-         text-align: left;
-         margin: 0;
-      }
-
-      .seasonal-alerts[hidden] {
-         display: none;
-      }
-
-      .seasonal-alerts-heading {
-         font-size: 13px;
-         font-weight: bold;
-         letter-spacing: 0.04em;
-         text-transform: uppercase;
-         color: #5c4a1f;
-         margin-bottom: 10px;
-      }
-
-      .seasonal-alerts-grid {
-         display: flex;
-         flex-wrap: wrap;
-         gap: 10px;
-      }
-
-      .seasonal-alert-card {
-         display: flex;
-         align-items: center;
-         gap: 12px;
-         padding: 10px 14px;
-         border-radius: 6px;
-         flex: 1 1 220px;
-         max-width: 340px;
-         box-sizing: border-box;
-         text-decoration: none;
-         color: #fff;
-         font-weight: bold;
-         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      }
-
-      .seasonal-alert-card:visited {
-         color: #fff;
-      }
-
-      .seasonal-alert-card:hover {
-         filter: brightness(1.08);
-      }
-
-      .seasonal-alert-card img {
-         width: 56px;
-         height: 56px;
-         object-fit: contain;
-         flex-shrink: 0;
-      }
-
-      .seasonal-alert-card .seasonal-alert-label {
-         font-size: 14px;
-         line-height: 1.2;
-      }
-
-      .seasonal-alert-card .seasonal-alert-note {
-         display: block;
-         font-size: 11px;
-         font-weight: normal;
-         opacity: 0.9;
-         margin-top: 3px;
-      }
-
-      .seasonal-alert--festive {
-         background: linear-gradient(135deg, #b71c1c, #1b5e20);
-      }
-
-      .seasonal-alert--winter {
-         background: linear-gradient(135deg, #1565c0, #4fc3f7);
-      }
-
-      .seasonal-alert--midnight {
-         background: linear-gradient(135deg, #1a0a2e, #4a148c);
-      }
-
-      .seasonal-alert--altador {
-         background: linear-gradient(135deg, #e65100, #f9a825);
-      }
-
-      .automated-panel {
-         text-align: left;
-      }
-
-      .automated-item {
-         max-width: 520px;
-         margin: 0 auto;
-         padding: 16px;
-      }
-
-      .automated-header {
-         display: flex;
-         align-items: center;
-         gap: 16px;
-         margin-bottom: 12px;
-      }
-
-      .automated-header .daily-icon-box img {
-         max-width: 72px;
-         max-height: 72px;
-         object-fit: contain;
-      }
-
-      a.daily-icon-box {
-         text-decoration: none;
-         color: inherit;
-      }
-
-      a.daily-icon-box:hover {
-         filter: brightness(1.08);
-      }
-
-      .automated-run {
-         background-color: #555;
-         color: white;
-         border: none;
-         padding: 10px 16px;
-         font-size: 14px;
-         font-weight: bold;
-         cursor: pointer;
-         margin-right: 8px;
-      }
-
-      .automated-run:hover:not(:disabled) {
-         background-color: #333;
-      }
-
-      .automated-run:disabled {
-         opacity: 0.6;
-         cursor: wait;
-      }
-
-      .automated-status {
-         margin: 12px 0 0;
-         font-size: 14px;
-      }
-
-      .automated-status.win {
-         color: #006400;
-         font-weight: bold;
-      }
-
-      .automated-status.error {
-         color: #8b0000;
-      }
-
-      .automated-status.notice {
-         color: #8b4513;
-         font-weight: bold;
-      }
-
-      .automated-divider {
-         border: none;
-         border-top: 1px solid #ccc;
-         margin: 20px auto;
-         max-width: 520px;
-      }
-
-      .automated-field {
-         margin-bottom: 10px;
-      }
-
-      .automated-field label {
-         display: block;
-         font-size: 13px;
-         margin-bottom: 4px;
-      }
-
-      .automated-field input {
-         width: 100%;
-         max-width: 320px;
-         padding: 6px 8px;
-         font-size: 14px;
-         box-sizing: border-box;
-      }
+   color: #000;
+   text-decoration: none;
+   font-weight: bold;
+}
+
+.page_title {
+   margin: 0;
+   padding: 20px;
+}
+
+.site-header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   padding: 16px 20px;
+   margin: 0;
+   box-sizing: border-box;
+}
+
+.site-header-start {
+   display: flex;
+   align-items: center;
+   gap: 14px;
+   min-width: 0;
+}
+
+.site-header h1 {
+   margin: 0;
+   font-size: 1.5rem;
+   line-height: 1.2;
+}
+
+.dailies-sticky-chrome {
+   background: #fff;
+}
+
+.dailies-sticky-chrome .hub-progress-host:not(:empty) {
+   border-bottom: 1px solid #e2e8f0;
+}
+
+.dailies-layout {
+   display: grid;
+   grid-template-columns: 1fr 180px;
+   gap: 12px;
+   padding: 8px;
+   box-sizing: border-box;
+   background: #fff;
+   text-align: center;
+}
+
+.dailies-main {
+   min-width: 0;
+}
+
+.dailies-sidebar {
+   border-left: 1px solid #e2e8f0;
+   padding-left: 8px;
+}
+
+.dailies-sidebar-heading {
+   font-size: 12px;
+   font-weight: bold;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   color: #555;
+   margin-bottom: 8px;
+   text-align: center;
+}
+
+.dailies-sidebar-grid {
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+}
+
+.sidebar-tile {
+   padding: 4px 2px;
+}
+
+.sidebar-tile img {
+   max-width: 56px;
+   max-height: 56px;
+}
+
+.sidebar-tile a {
+   font-size: 11px;
+   line-height: 1.2;
+}
+
+.dailies-sidebar-pet {
+   margin-bottom: 8px;
+}
+
+.dailies-section-heading {
+   font-size: 13px;
+   font-weight: bold;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   color: #555;
+   margin: 12px 0 4px;
+   text-align: left;
+   padding: 0 4px;
+}
+
+.dailies-wishlists-section {
+   margin-bottom: 4px;
+}
+
+.dailies-dailies-section {
+   margin-bottom: 4px;
+}
+
+.dailies-automated-section {
+   margin-top: 8px;
+   text-align: left;
+}
+
+.collapsible {
+   display: block;
+   width: 100%;
+   background: #f5f5f5;
+   color: #333;
+   border: 1px solid #ddd;
+   border-radius: 4px;
+   padding: 8px 28px 8px 10px;
+   margin: 6px 0 0;
+   font-size: 11px;
+   font-weight: bold;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   text-align: left;
+   cursor: pointer;
+   position: relative;
+   box-sizing: border-box;
+}
+
+.collapsible::after {
+   content: '+';
+   position: absolute;
+   right: 10px;
+   top: 50%;
+   transform: translateY(-50%);
+   font-size: 14px;
+   line-height: 1;
+}
+
+.collapsible.active::after {
+   content: '−';
+}
+
+.collapsible-content {
+   display: none;
+   padding: 4px 0 8px;
+}
+
+.collapsible.active + .collapsible-content,
+.collapsible-content.active {
+   display: block;
+}
+
+.collapsible:not(.active) + .collapsible-content {
+   display: none;
+}
+
+.sidebar-collapsible + .collapsible-content .dailies-sidebar-grid {
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+}
+
+.sidebar-collapsible + .collapsible-content .dailies-grid {
+   grid-template-columns: 1fr;
+   padding: 4px 0;
+}
+
+.pet-headshot-link {
+   flex-shrink: 0;
+   line-height: 0;
+}
+
+.pet-headshot {
+   width: 52px;
+   height: 52px;
+   border-radius: 50%;
+   object-fit: cover;
+   object-position: center top;
+   border: 2px solid #777;
+   background: #eee;
+   display: block;
+}
+
+.pet-headshot-link:hover .pet-headshot {
+   border-color: #333;
+}
+
+.settings-gear {
+   flex-shrink: 0;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   width: 40px;
+   height: 40px;
+   padding: 0;
+   border: none;
+   border-radius: 8px;
+   background: transparent;
+   color: #444;
+   cursor: pointer;
+   font-size: 22px;
+   line-height: 1;
+}
+
+.settings-gear:hover,
+.settings-gear:focus-visible {
+   background: #f0f0f0;
+   color: #111;
+   outline: none;
+}
+
+.settings-backdrop {
+   position: fixed;
+   inset: 0;
+   background: rgba(0, 0, 0, 0.35);
+   z-index: 999;
+}
+
+.settings-backdrop[hidden] {
+   display: none;
+}
+
+.settings-tray {
+   position: fixed;
+   top: 0;
+   right: 0;
+   width: min(340px, 92vw);
+   height: 100vh;
+   background: #fff;
+   box-shadow: -4px 0 20px rgba(0, 0, 0, 0.18);
+   z-index: 1000;
+   transform: translateX(100%);
+   transition: transform 0.25s ease;
+   display: flex;
+   flex-direction: column;
+   box-sizing: border-box;
+}
+
+.settings-tray.open {
+   transform: translateX(0);
+}
+
+.settings-tray-header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   padding: 18px 20px;
+   border-bottom: 1px solid #ddd;
+   background: #f7f7f7;
+}
+
+.settings-tray-header h2 {
+   margin: 0;
+   font-size: 1.1rem;
+}
+
+.settings-tray-close {
+   border: none;
+   background: transparent;
+   font-size: 1.6rem;
+   line-height: 1;
+   cursor: pointer;
+   color: #555;
+   padding: 4px 8px;
+}
+
+.settings-tray-close:hover {
+   color: #111;
+}
+
+.settings-tray-body {
+   flex: 1;
+   overflow-y: auto;
+   padding: 20px;
+}
+
+.settings-field {
+   margin-bottom: 18px;
+}
+
+.settings-field label,
+.settings-label {
+   display: block;
+   font-size: 13px;
+   font-weight: bold;
+   margin-bottom: 6px;
+}
+
+.settings-field input {
+   width: 100%;
+   padding: 8px 10px;
+   font-size: 14px;
+   box-sizing: border-box;
+   border: 1px solid #ccc;
+   border-radius: 4px;
+}
+
+.settings-radio,
+.settings-checkbox {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 13px;
+   font-weight: normal;
+   margin: 6px 0;
+   cursor: pointer;
+}
+
+.settings-radio input,
+.settings-checkbox input {
+   flex-shrink: 0;
+   margin: 0;
+}
+
+.settings-radios {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 12px 20px;
+   align-items: center;
+   margin-top: 4px;
+}
+
+.settings-checkboxes {
+   margin-top: 4px;
+}
+
+.settings-save {
+   width: 100%;
+   padding: 10px 14px;
+   font-size: 14px;
+   font-weight: bold;
+   border: none;
+   border-radius: 4px;
+   background: #555;
+   color: #fff;
+   cursor: pointer;
+}
+
+.settings-save:hover {
+   background: #333;
+}
+
+.settings-hint {
+   margin: 6px 0 0;
+   font-size: 12px;
+   color: #666;
+   line-height: 1.35;
+}
+
+.mainshell {
+   width: 100%;
+   max-width: 900px;
+   padding: 0;
+   margin: 0 auto;
+   background: white;
+   position: relative;
+}
+
+.center_column {
+   width: 100%;
+   max-width: 900px;
+   margin: auto;
+   padding: 0;
+   line-height: 130%;
+   text-align: center;
+   background-color: white;
+}
+
+.grid,
+.dailies-grid {
+   display: grid;
+   grid-template-columns: repeat(4, 1fr);
+   gap: 4px;
+   box-sizing: border-box;
+   padding: 8px 0;
+}
+
+.daily-tile {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: flex-start;
+   gap: 6px;
+   padding: 8px 4px;
+   box-sizing: border-box;
+   min-width: 0;
+   text-align: center;
+}
+
+.daily-tile > a:has(img),
+.daily-tile > a:has(svg) {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   width: 80px;
+   height: 80px;
+   flex-shrink: 0;
+}
+
+.daily-tile img,
+.daily-tile svg {
+   max-width: 72px;
+   max-height: 72px;
+   width: auto;
+   height: auto;
+   object-fit: contain;
+   display: block;
+}
+
+.daily-tile > a:not(:has(img)) {
+   font-size: 12px;
+   line-height: 1.25;
+   word-wrap: break-word;
+   max-width: 100%;
+}
+
+.itemdb-list-link {
+   font-size: 10px;
+   font-weight: normal;
+   color: #666;
+}
+
+.daily-icon-box {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   width: 80px;
+   height: 80px;
+   flex-shrink: 0;
+}
+
+.text-small {
+   font-size: 11px;
+   font-weight: normal;
+   color: #666;
+   line-height: 1.2;
+}
+
+.seasonal-alerts {
+   background: #f5f0e6;
+   border-bottom: 3px solid #c9a227;
+   padding: 14px 16px;
+   text-align: left;
+   margin: 0;
+}
+
+.seasonal-alerts[hidden] {
+   display: none;
+}
+
+.seasonal-alerts-heading {
+   font-size: 13px;
+   font-weight: bold;
+   letter-spacing: 0.04em;
+   text-transform: uppercase;
+   color: #5c4a1f;
+   margin-bottom: 10px;
+}
+
+.seasonal-alerts-grid {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 10px;
+}
+
+.seasonal-alert-card {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding: 10px 14px;
+   border-radius: 6px;
+   flex: 1 1 220px;
+   max-width: 340px;
+   box-sizing: border-box;
+   text-decoration: none;
+   color: #fff;
+   font-weight: bold;
+   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.seasonal-alert-card:visited {
+   color: #fff;
+}
+
+.seasonal-alert-card:hover {
+   filter: brightness(1.08);
+}
+
+.seasonal-alert-card img {
+   width: 56px;
+   height: 56px;
+   object-fit: contain;
+   flex-shrink: 0;
+}
+
+.seasonal-alert-card .seasonal-alert-label {
+   font-size: 14px;
+   line-height: 1.2;
+}
+
+.seasonal-alert-card .seasonal-alert-note {
+   display: block;
+   font-size: 11px;
+   font-weight: normal;
+   opacity: 0.9;
+   margin-top: 3px;
+}
+
+.seasonal-alert--festive {
+   background: linear-gradient(135deg, #b71c1c, #1b5e20);
+}
+
+.seasonal-alert--winter {
+   background: linear-gradient(135deg, #1565c0, #4fc3f7);
+}
+
+.seasonal-alert--midnight {
+   background: linear-gradient(135deg, #1a0a2e, #4a148c);
+}
+
+.seasonal-alert--altador {
+   background: linear-gradient(135deg, #e65100, #f9a825);
+}
+
+.seasonal-alert--magma {
+   background: linear-gradient(135deg, #bf360c, #ff6f00);
+}
+
+.automated-panel {
+   text-align: left;
+   padding: 8px;
+}
+
+.automated-item {
+   max-width: 520px;
+   margin: 0 auto;
+   padding: 16px;
+}
+
+.automated-header {
+   display: flex;
+   align-items: center;
+   gap: 16px;
+   margin-bottom: 12px;
+}
+
+.automated-header .daily-icon-box img {
+   max-width: 72px;
+   max-height: 72px;
+   object-fit: contain;
+}
+
+a.daily-icon-box {
+   text-decoration: none;
+   color: inherit;
+}
+
+a.daily-icon-box:hover {
+   filter: brightness(1.08);
+}
+
+.automated-run {
+   background-color: #555;
+   color: white;
+   border: none;
+   padding: 10px 16px;
+   font-size: 14px;
+   font-weight: bold;
+   cursor: pointer;
+   margin-right: 8px;
+}
+
+.automated-run:hover:not(:disabled) {
+   background-color: #333;
+}
+
+.automated-run:disabled {
+   opacity: 0.6;
+   cursor: wait;
+}
+
+.automated-status {
+   margin: 12px 0 0;
+   font-size: 14px;
+}
+
+.automated-status.win {
+   color: #006400;
+   font-weight: bold;
+}
+
+.automated-status.error {
+   color: #8b0000;
+}
+
+.automated-status.notice {
+   color: #8b4513;
+   font-weight: bold;
+}
+
+.automated-divider {
+   border: none;
+   border-top: 1px solid #ccc;
+   margin: 20px auto;
+   max-width: 520px;
+}
+
+.automated-field {
+   margin-bottom: 10px;
+}
+
+.automated-field label {
+   display: block;
+   font-size: 13px;
+   margin-bottom: 4px;
+}
+
+.automated-field input {
+   width: 100%;
+   max-width: 320px;
+   padding: 6px 8px;
+   font-size: 14px;
+   box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+   .dailies-layout {
+      grid-template-columns: 1fr;
+   }
+
+   .dailies-sidebar {
+      border-left: none;
+      border-top: 1px solid #e2e8f0;
+      padding-left: 0;
+      padding-top: 12px;
+   }
+
+   .dailies-sidebar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+   }
+
+   .grid,
+   .dailies-grid {
+      grid-template-columns: repeat(3, 1fr);
+   }
+}

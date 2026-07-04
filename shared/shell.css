@@ -16,7 +16,8 @@ body {
 
 .hub-layout {
    display: flex;
-   min-height: 100vh;
+   height: 100vh;
+   overflow: hidden;
 }
 
 .hub-nav {
@@ -131,6 +132,8 @@ body {
 .hub-main {
    flex: 1;
    min-width: 0;
+   min-height: 0;
+   overflow-y: auto;
    overflow-x: auto;
    background: #000;
 }

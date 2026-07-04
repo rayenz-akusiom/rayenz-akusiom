@@ -507,156 +507,103 @@
                   refreshWishingWellStatus();
                }
 
-            function initDailiesPage() {
-               // Preview/testing override — set enabled: false for normal NST behaviour.
-               // mode: 'all' shows every event; 'simulate' runs isActive() against simulateNst.
-               var SEASONAL_OVERRIDE = {
-                  enabled: false,
-                  mode: 'all',
-                  simulateNst: new Date(2025, 11, 15)
-               };
-
-               function isVonRooActive(nst) {
-                  if (nst.getMonth() === 9 && nst.getDate() === 31) {
-                     return true;
-                  }
-                  return nst.getHours() === 0;
-               }
-
-               function isAltadorCupActive(nst) {
-                  var month = nst.getMonth();
-                  var day = nst.getDate();
-                  if (month === 5 && day >= 22) {
-                     return true;
-                  }
-                  return month === 6 && day <= 14;
-               }
-
-               var SEASONAL_EVENTS = [
-                  {
-                     name: 'Altador Cup',
-                     url: 'https://www.neopets.com/altador/colosseum/',
-                     img: 'https://images.neopets.com/items/toy_altador_cup_gold_whistle.gif',
-                     note: 'Press tour trivia · sign-ups · tournament through July 14',
-                     styleClass: 'seasonal-alert--altador',
-                     isActive: isAltadorCupActive
-                  },
-                  {
-                     name: 'Advent Calendar',
-                     url: 'https://www.neopets.com/winter/adventcalendar.phtml',
-                     img: 'https://images.neopets.com/items/fur_mistletoe_wreath.gif',
-                     note: 'Once per day in December',
-                     styleClass: 'seasonal-alert--festive',
-                     isActive: function (nst) { return nst.getMonth() === 11; }
-                  },
-                  {
-                     name: 'Snowager',
-                     url: 'https://www.neopets.com/winter/snowager.phtml',
-                     img: 'https://images.neopets.com/items/toy_snowager_plushie.gif',
-                     note: 'Once per day, all day in December',
-                     styleClass: 'seasonal-alert--winter',
-                     isActive: function (nst) { return nst.getMonth() === 11; }
-                  },
-                  {
-                     name: 'Deadly Dice',
-                     url: 'https://www.neopets.com/worlds/deadlydice.phtml',
-                     img: 'https://images.neopets.com/items/plu_von_roo.gif',
-                     note: 'Midnight hour NST · all day on Halloween',
-                     styleClass: 'seasonal-alert--midnight',
-                     isActive: isVonRooActive
-                  }
-               ];
-
-               function getNstDate() {
-                  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-               }
-
-               function msUntilNextNstMidnight() {
-                  var nst = getNstDate();
-                  var next = new Date(nst);
-                  next.setDate(nst.getDate() + 1);
-                  next.setHours(0, 0, 0, 0);
-                  return Math.max(1000, next.getTime() - nst.getTime());
-               }
-
-               function msUntilNextNstHour() {
-                  var nst = getNstDate();
-                  var next = new Date(nst);
-                  next.setMinutes(0, 0, 0);
-                  next.setHours(nst.getHours() + 1);
-                  return Math.max(1000, next.getTime() - nst.getTime());
-               }
-
-               function renderSeasonalAlerts() {
-                  var container = document.getElementById('seasonal-alerts');
-                  var grid = document.getElementById('seasonal-alerts-grid');
-                  if (!container || !grid) return;
-
-                  var nst = getNstDate();
-                  if (SEASONAL_OVERRIDE.enabled && SEASONAL_OVERRIDE.mode === 'simulate') {
-                     nst = SEASONAL_OVERRIDE.simulateNst;
-                  }
-
-                  var active = SEASONAL_EVENTS.filter(function (event) {
-                     if (SEASONAL_OVERRIDE.enabled && SEASONAL_OVERRIDE.mode === 'all') {
-                        return true;
+            function initCollapsibles() {
+               document.querySelectorAll('#dailies-links .collapsible, #dailies-books .collapsible').forEach(function (btn) {
+                  btn.addEventListener('click', function () {
+                     var content = btn.nextElementSibling;
+                     btn.classList.toggle('active');
+                     if (content && content.classList.contains('collapsible-content')) {
+                        content.classList.toggle('active');
                      }
-                     return event.isActive(nst);
                   });
+               });
+            }
 
-                  if (active.length === 0) {
-                     container.hidden = true;
-                     grid.innerHTML = '';
-                     return;
+            function initDailiesPage() {
+               var settings = DailiesSettings.loadSettings();
+
+               function applyMainPetFromSettings() {
+                  var petName = DailiesSettings.getMainPet();
+                  var slug = DailiesSettings.getMainPetSlug();
+                  var headshotLink = document.getElementById('pet-headshot-link');
+                  var headshotImg = document.getElementById('pet-headshot');
+                  if (headshotLink) {
+                     headshotLink.href = 'https://www.neopets.com/petlookup.phtml?pet=' + encodeURIComponent(petName);
                   }
-
-                  grid.innerHTML = active.map(function (event) {
-                     return '<a class="seasonal-alert-card ' + event.styleClass + '" href="' + event.url + '" target="_blank">' +
-                        '<img src="' + event.img + '" alt="">' +
-                        '<span><span class="seasonal-alert-label">' + event.name + '</span>' +
-                        (event.note ? '<span class="seasonal-alert-note">' + event.note + '</span>' : '') +
-                        '</span></a>';
-                  }).join('');
-
-                  container.hidden = false;
+                  if (headshotImg) {
+                     headshotImg.src = slug
+                        ? 'https://pets.neopets.com/cp/' + slug + '/4/1.png'
+                        : 'https://pets.neopets.com/cpn/' + encodeURIComponent(petName) + '/1/4.png';
+                     headshotImg.alt = petName;
+                  }
+                  document.querySelectorAll('.main-pet-link').forEach(function (link) {
+                     var template = link.dataset.petHref;
+                     if (template) {
+                        link.href = template.replace('{pet}', encodeURIComponent(petName));
+                     }
+                  });
+                  var petTile = document.querySelector('[data-link-id="main-pet"]');
+                  if (petTile) {
+                     var petLabel = petTile.querySelector('.main-pet-label');
+                     if (petLabel) {
+                        petLabel.textContent = petName;
+                     }
+                     var petImg = petTile.querySelector('img');
+                     if (petImg) {
+                        petImg.src = 'https://pets.neopets.com/cpn/' + encodeURIComponent(petName) + '/1/4.png';
+                     }
+                  }
+                  var mainPetInput = document.getElementById('main-pet-name');
+                  if (mainPetInput) {
+                     mainPetInput.value = petName;
+                  }
                }
 
-               function scheduleSeasonalAlerts() {
-                  renderSeasonalAlerts();
+               function scheduleTimedCards() {
+                  DailiesRender.renderAlertCards(settings);
                   if (__dailiesTimersStarted) {
                      return;
                   }
                   __dailiesTimersStarted = true;
-                  setInterval(renderSeasonalAlerts, 60000);
+                  setInterval(function () {
+                     DailiesRender.renderAlertCards(settings);
+                  }, 60000);
                   (function waitForNstMidnight() {
                      setTimeout(function () {
-                        renderSeasonalAlerts();
+                        DailiesRender.renderAlertCards(settings);
                         waitForNstMidnight();
-                     }, msUntilNextNstMidnight());
+                     }, DailiesTimed.msUntilNextNstMidnight());
                   })();
                   (function waitForNstHour() {
                      setTimeout(function () {
-                        renderSeasonalAlerts();
+                        DailiesRender.renderAlertCards(settings);
                         waitForNstHour();
-                     }, msUntilNextNstHour());
+                     }, DailiesTimed.msUntilNextNstHour());
+                  })();
+                  (function waitForLocalMinute() {
+                     setTimeout(function () {
+                        DailiesRender.renderAlertCards(settings);
+                        waitForLocalMinute();
+                     }, DailiesTimed.msUntilNextLocalMinute());
                   })();
                }
 
-               scheduleSeasonalAlerts();
+               DailiesRender.renderSettingsTray(settings);
+               DailiesRender.renderDailiesShell(settings);
+               applyMainPetFromSettings();
+               initCollapsibles();
+               initCoconutShyAutomation();
+               initWishingWellAutomation();
+               DailiesRender.refreshWishlists(settings);
+               scheduleTimedCards();
 
                (function initSiteSettings() {
-                  var MAIN_PET_KEY = 'rayenz-main-pet';
-                  var MAIN_PET_SLUG_KEY = 'rayenz-main-pet-slug';
-                  var DEFAULT_PET = 'Blue_Eyes_WhDragon';
-                  var DEFAULT_SLUG = 'l88flmjv';
-
+                  var DEFAULT_PET = DailiesSettings.DEFAULT_PET;
                   var settingsOpen = document.getElementById('settings-open');
                   var settingsClose = document.getElementById('settings-close');
                   var settingsTray = document.getElementById('settings-tray');
                   var settingsBackdrop = document.getElementById('settings-backdrop');
                   var mainPetInput = document.getElementById('main-pet-name');
-                  var headshotLink = document.getElementById('pet-headshot-link');
-                  var headshotImg = document.getElementById('pet-headshot');
                   var slugRequestId = 0;
                   var petInputTimer = null;
 
@@ -673,66 +620,17 @@
                      return String(name || '').trim().replace(/\s+/g, '_');
                   }
 
-                  function petProfileUrl(petName) {
-                     return 'https://www.neopets.com/petlookup.phtml?pet=' + encodeURIComponent(petName);
-                  }
-
-                  function petPortraitUrl(petName) {
-                     return 'https://pets.neopets.com/cpn/' + encodeURIComponent(petName) + '/1/4.png';
-                  }
-
-                  function petHeadshotUrl(slug, petName) {
-                     if (slug) {
-                        return 'https://pets.neopets.com/cp/' + slug + '/4/1.png';
-                     }
-                     return petPortraitUrl(petName);
-                  }
-
-                  function buildPetHref(template, petName) {
-                     if (!template) {
-                        return petProfileUrl(petName);
-                     }
-                     return template.replace('{pet}', encodeURIComponent(petName));
-                  }
-
                   function parsePetImageSlug(html) {
                      var match = String(html || '').match(/pets\.neopets\.com\/cp\/([a-z0-9]+)\//i);
                      return match ? match[1] : null;
                   }
 
-                  function applyMainPet(petName, slug) {
-                     var normalized = normalizePetName(petName) || DEFAULT_PET;
-                     var resolvedSlug = slug || localStorage.getItem(MAIN_PET_SLUG_KEY) || DEFAULT_SLUG;
-
-                     if (headshotLink) {
-                        headshotLink.href = petProfileUrl(normalized);
-                        headshotLink.title = normalized + ' — view pet profile';
-                     }
-
-                     if (headshotImg) {
-                        headshotImg.src = petHeadshotUrl(resolvedSlug, normalized);
-                        headshotImg.alt = normalized;
-                     }
-
-                     document.querySelectorAll('.main-pet-portrait').forEach(function (img) {
-                        img.src = petPortraitUrl(normalized);
-                     });
-
-                     document.querySelectorAll('.main-pet-label').forEach(function (label) {
-                        label.textContent = normalized;
-                     });
-
-                     document.querySelectorAll('.main-pet-link').forEach(function (link) {
-                        link.href = buildPetHref(link.dataset.petHref, normalized);
-                     });
-                  }
-
-                  function saveMainPet(petName, slug) {
-                     var normalized = normalizePetName(petName) || DEFAULT_PET;
-                     localStorage.setItem(MAIN_PET_KEY, normalized);
-                     if (slug) {
-                        localStorage.setItem(MAIN_PET_SLUG_KEY, slug);
-                     }
+                  function handlePetInputChange() {
+                     var petName = normalizePetName(mainPetInput.value) || DEFAULT_PET;
+                     mainPetInput.value = petName;
+                     DailiesSettings.saveMainPet(petName, null);
+                     applyMainPetFromSettings();
+                     refreshPetSlug(petName);
                   }
 
                   function refreshPetSlug(petName) {
@@ -740,7 +638,6 @@
                      if (!normalized) {
                         return Promise.resolve(null);
                      }
-
                      var requestId = ++slugRequestId;
                      return fetchNeopets('https://www.neopets.com/petlookup.phtml?pet=' + encodeURIComponent(normalized))
                         .then(function (html) {
@@ -749,14 +646,12 @@
                            }
                            var slug = parsePetImageSlug(html);
                            if (slug) {
-                              saveMainPet(normalized, slug);
-                              applyMainPet(normalized, slug);
+                              DailiesSettings.saveMainPet(normalized, slug);
+                              applyMainPetFromSettings();
                            }
                            return slug;
                         })
-                        .catch(function () {
-                           return null;
-                        });
+                        .catch(function () { return null; });
                   }
 
                   function openSettings() {
@@ -769,14 +664,6 @@
                      settingsTray.classList.remove('open');
                      settingsTray.setAttribute('aria-hidden', 'true');
                      settingsBackdrop.hidden = true;
-                  }
-
-                  function handlePetInputChange() {
-                     var petName = normalizePetName(mainPetInput.value) || DEFAULT_PET;
-                     mainPetInput.value = petName;
-                     saveMainPet(petName, null);
-                     applyMainPet(petName, localStorage.getItem(MAIN_PET_SLUG_KEY));
-                     refreshPetSlug(petName);
                   }
 
                   if (settingsOpen) {
@@ -800,16 +687,27 @@
                      });
                   }
 
-                  if (mainPetInput) {
-                     var storedPet = localStorage.getItem(MAIN_PET_KEY) || DEFAULT_PET;
-                     mainPetInput.value = storedPet;
-                     applyMainPet(storedPet, localStorage.getItem(MAIN_PET_SLUG_KEY) || DEFAULT_SLUG);
+                  var saveBtn = document.getElementById('settings-save');
+                  if (saveBtn) {
+                     saveBtn.addEventListener('click', function () {
+                        settings = DailiesRender.readSettingsFromTray(settings);
+                        DailiesSettings.saveSettings(settings);
+                        DailiesRender.renderDailiesShell(settings);
+                        applyMainPetFromSettings();
+                        initCollapsibles();
+                        initCoconutShyAutomation();
+                        initWishingWellAutomation();
+                        DailiesRender.refreshWishlists(settings);
+                        DailiesRender.renderAlertCards(settings);
+                        closeSettings();
+                     });
+                  }
 
+                  if (mainPetInput) {
                      mainPetInput.addEventListener('input', function () {
                         clearTimeout(petInputTimer);
                         petInputTimer = setTimeout(handlePetInputChange, 400);
                      });
-
                      mainPetInput.addEventListener('change', handlePetInputChange);
                   }
 
@@ -831,17 +729,6 @@
                      });
                   }
                })();
-
-               //Collapsible event listener
-               var coll = document.getElementsByClassName("collapsible");
-
-               for (var i = 0; i < coll.length; i++) {
-                  coll[i].classList.add("active");
-
-                  coll[i].addEventListener("click", function () {
-                     this.classList.toggle("active");
-                  });
-               }
             }
 
             function initDailiesApp() {

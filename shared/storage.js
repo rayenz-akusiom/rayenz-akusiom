@@ -227,6 +227,47 @@
       }
    }
 
+   var DAILIES_SETTINGS_KEY = 'rayenz-dailies-settings';
+   var DEFAULT_DAILIES_SETTINGS = {
+      faerieQuest: 'illusen',
+      schools: {
+         swashbuckling: true,
+         'mystery-island': true,
+         'secret-ninja': true,
+         'lab-ray': true,
+         'kitchen-quests': true,
+         'healing-springs': true,
+         battledome: true,
+         'faerie-quests': true
+      },
+      magmaPoolLocalTime: '14:47',
+      magmaPoolBufferMinutes: 15,
+      itemdbApiKey: ''
+   };
+
+   function loadDailiesSettings() {
+      var raw = getItem(DAILIES_SETTINGS_KEY);
+      if (!raw) {
+         return Object.assign({}, DEFAULT_DAILIES_SETTINGS, {
+            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools)
+         });
+      }
+      try {
+         var parsed = JSON.parse(raw);
+         return Object.assign({}, DEFAULT_DAILIES_SETTINGS, parsed, {
+            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools, parsed.schools || {})
+         });
+      } catch (e) {
+         return Object.assign({}, DEFAULT_DAILIES_SETTINGS, {
+            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools)
+         });
+      }
+   }
+
+   function saveDailiesSettings(settings) {
+      setItem(DAILIES_SETTINGS_KEY, JSON.stringify(settings || {}));
+   }
+
    global.HubStorage = {
       getLastRoute: getLastRoute,
       setLastRoute: setLastRoute,
@@ -245,6 +286,8 @@
       clearSetPoolCache: clearSetPoolCache,
       saveReviewHandoff: saveReviewHandoff,
       consumeReviewHandoff: consumeReviewHandoff,
-      consumeMemoryReviewHandoff: consumeMemoryReviewHandoff
+      consumeMemoryReviewHandoff: consumeMemoryReviewHandoff,
+      loadDailiesSettings: loadDailiesSettings,
+      saveDailiesSettings: saveDailiesSettings
    };
 })(window);
