@@ -76,6 +76,7 @@
       { id: 'fruit-machine', label: 'Fruit Machine', group: 3, url: 'https://www.neopets.com/desert/fruitmachine.phtml', img: IMG + 'food_desert3.gif' },
       { id: 'giant-jelly', label: 'Giant Jelly', group: 3, url: 'https://www.neopets.com/jelly/jelly.phtml', img: IMG + 'jel_stone_whole.gif', note: 'Once a day' },
       { id: 'giant-omelette', label: 'Giant Omelette', group: 3, url: 'https://www.neopets.com/prehistoric/omelette.phtml', img: IMG + 'om_sausage_pepperoni1.gif' },
+      { id: 'lair-of-the-beast', label: 'Lair of the Beast', group: 3, url: 'https://www.neopets.com/prehistoric/thebeast.phtml', img: IMG + 'bd_tyrannia_beastclaw.gif' },
       { id: 'meteor', label: 'Meteor', group: 3, url: 'https://www.neopets.com/moon/meteor.phtml', img: IMG + 'bd_meteor_rock.gif', note: 'Once every hour' },
       { id: 'negg-cave', label: 'Mysterious Negg Cave', group: 3, url: 'https://www.neopets.com/shenkuu/neggcave/', img: IMG + 'plu_fony14_neggbreaker.gif' },
       { id: 'wheel-extravagance', label: 'Wheel of Extravagance', group: 3, url: 'https://www.neopets.com/desert/extravagance.phtml', img: IMG + 'sta_wheel_of_extravagance.gif', note: 'Twice a day' },
