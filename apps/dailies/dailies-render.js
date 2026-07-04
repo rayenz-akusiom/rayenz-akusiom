@@ -44,35 +44,116 @@
       return html;
    }
 
-   function renderItemdbTile(target, petName) {
-      var list = target.list;
-      var item = target.item;
-      if (!item) {
-         var fallbackNote = 'List link';
-         if (target.error === 'no-key') {
-            fallbackNote = 'Set ItemDB key';
-         } else if (target.error === 'loading') {
-            fallbackNote = 'Loading…';
-         }
-         return renderLinkTile({
-            id: list.id,
-            label: list.label,
-            url: list.listUrl,
-            img: list.img,
-            note: fallbackNote
-         }, petName);
+   function formatNpPrice(value) {
+      if (value == null || value === Infinity || isNaN(value)) {
+         return null;
       }
-      var sswUrl = item.findAt && item.findAt.shopWizard
-         ? item.findAt.shopWizard
-         : 'https://www.neopets.com/shops/wizard.phtml?string=' + encodeURIComponent(item.name);
-      var html = '<div class="daily-tile itemdb-tile" data-link-id="' + escapeHtml(list.id) + '">';
-      html += '<a href="' + escapeHtml(sswUrl) + '" target="_blank" title="Shop Wizard: ' + escapeHtml(item.name) + '">';
-      html += '<img src="' + escapeHtml(item.image || list.img) + '" alt="" referrerpolicy="no-referrer">';
-      html += '</a>';
-      html += '<a href="' + escapeHtml(sswUrl) + '" target="_blank">' + escapeHtml(item.name) + '</a>';
-      html += '<a class="itemdb-list-link" href="' + escapeHtml(list.listUrl) + '" target="_blank" title="Open ItemDB list">List</a>';
+      return Number(value).toLocaleString('en-US') + ' NP';
+   }
+
+   function sswUrlForItem(item) {
+      if (item.findAt && item.findAt.shopWizard) {
+         return item.findAt.shopWizard;
+      }
+      return 'https://www.neopets.com/shops/wizard.phtml?string=' + encodeURIComponent(item.name);
+   }
+
+   function renderWishlistCardHeader(list) {
+      var html = '<div class="wishlist-card-header">';
+      if (list.img) {
+         html += '<img class="wishlist-card-list-icon" src="' + escapeHtml(list.img) + '" alt="" referrerpolicy="no-referrer">';
+      }
+      html += '<a class="wishlist-card-title" href="' + escapeHtml(list.listUrl) + '" target="_blank">' + escapeHtml(list.label) + '</a>';
+      html += '<a class="wishlist-card-list-link" href="' + escapeHtml(list.listUrl) + '" target="_blank">ItemDB list →</a>';
       html += '</div>';
       return html;
+   }
+
+   function renderWishlistFallbackMessage(target) {
+      if (target.error === 'loading') {
+         return 'Loading…';
+      }
+      if (target.error === 'no-bridge') {
+         return 'Install the Rayenz Dailies userscript to load wishlists';
+      }
+      if (target.error && target.error.indexOf('session expired') !== -1) {
+         return target.error;
+      }
+      if (target.error) {
+         return target.error;
+      }
+      return 'No tradeable items found';
+   }
+
+   function formatWishlistCacheAge(cachedAt) {
+      if (!cachedAt || !global.DailiesItemdb || !global.DailiesItemdb.formatCacheAgeMs) {
+         return '';
+      }
+      var age = global.DailiesItemdb.formatCacheAgeMs(Date.now() - cachedAt);
+      return age ? 'Cached ' + age + ' ago' : '';
+   }
+
+   function renderWishlistCard(target) {
+      var list = target.list;
+      var html = '<article class="wishlist-card" data-wishlist-id="' + escapeHtml(list.id) + '">';
+      html += renderWishlistCardHeader(list);
+      if (!target.item) {
+         html += '<div class="wishlist-card-body wishlist-card-body--fallback">';
+         html += '<p class="wishlist-card-message">' + escapeHtml(renderWishlistFallbackMessage(target)) + '</p>';
+         html += '</div>';
+      } else {
+         var item = target.item;
+         var sswUrl = sswUrlForItem(item);
+         var price = formatNpPrice(item.price && item.price.value);
+         var itemIid = item.internal_id != null ? item.internal_id : '';
+         html += '<div class="wishlist-card-body">';
+         html += '<a class="wishlist-card-item-image" href="' + escapeHtml(sswUrl) + '" target="_blank" title="Shop Wizard: ' + escapeHtml(item.name) + '">';
+         html += '<img src="' + escapeHtml(item.image || list.img) + '" alt="" referrerpolicy="no-referrer">';
+         html += '</a>';
+         html += '<div class="wishlist-card-item-text">';
+         html += '<div class="wishlist-card-item-name">' + escapeHtml(item.name) + '</div>';
+         if (item.description) {
+            html += '<div class="wishlist-card-item-desc">' + escapeHtml(item.description) + '</div>';
+         }
+         html += '<div class="wishlist-card-actions">';
+         html += '<button type="button" class="wishlist-next-btn" data-wishlist-next data-wishlist-id="' + escapeHtml(list.id) + '" data-item-iid="' + escapeHtml(String(itemIid)) + '">Next item</button>';
+         html += '<a class="wishlist-hide-link" href="' + escapeHtml(list.listUrl) + '" target="_blank" rel="noopener">Hide on ItemDB</a>';
+         if (target.cachedAt) {
+            html += '<span class="wishlist-cache-hint">' + escapeHtml(formatWishlistCacheAge(target.cachedAt)) + '</span>';
+         }
+         html += '</div>';
+         html += '</div>';
+         if (price) {
+            html += '<div class="wishlist-card-price">' + escapeHtml(price) + '</div>';
+         }
+         html += '</div>';
+      }
+      html += '</article>';
+      return html;
+   }
+
+   function refreshSingleWishlistCard(target) {
+      var card = document.querySelector('.wishlist-card[data-wishlist-id="' + target.list.id + '"]');
+      if (card) {
+         card.outerHTML = renderWishlistCard(target);
+      }
+   }
+
+   /* Wishlist targets come from DailiesItemdb.loadListTargets; this module only renders. */
+   function renderWishlistsSection(targets) {
+      targets = targets || [];
+      var cards = targets.map(function (target) {
+         return renderWishlistCard(target);
+      }).join('');
+      var emptyNote = targets.length === 0
+         ? '<p class="wishlist-empty-note">No wishlists configured. Add some in settings.</p>'
+         : '';
+      return (
+         '<section class="dailies-wishlists-section">' +
+         '<h2 class="dailies-section-heading">Wishlists</h2>' +
+         '<div class="wishlist-cards">' + cards + emptyNote + '</div>' +
+         '</section>'
+      );
    }
 
    function renderCollapsible(title, innerHtml, extraClass) {
@@ -88,15 +169,11 @@
       return '<div class="' + cls + '">' + tilesHtml + '</div>';
    }
 
-   function renderWishlistsSection(itemdbTargets, petName) {
-      var tiles = (itemdbTargets || []).map(function (target) {
-         return renderItemdbTile(target, petName);
-      }).join('');
+   function renderMainGrid(settings, itemdbTargets, petName) {
       return (
-         '<section class="dailies-wishlists-section">' +
-         '<h2 class="dailies-section-heading">Wishlists</h2>' +
-         renderTileGrid(tiles, 'dailies-wishlists-grid') +
-         '</section>'
+         renderWishlistsSection(itemdbTargets) +
+         renderDailiesSection(settings, petName) +
+         renderAutomatedSection()
       );
    }
 
@@ -154,14 +231,6 @@
          '<h2 class="dailies-section-heading">Dailies</h2>' +
          renderTileGrid(tiles) +
          '</section>'
-      );
-   }
-
-   function renderMainGrid(settings, itemdbTargets, petName) {
-      return (
-         renderWishlistsSection(itemdbTargets, petName) +
-         renderDailiesSection(settings, petName) +
-         renderAutomatedSection()
       );
    }
 
@@ -253,6 +322,131 @@
       });
    }
 
+   function renderWishlistSettingsRow(wishlist, index) {
+      return (
+         '<div class="wishlist-settings-row" data-wishlist-index="' + index + '">' +
+         '<div class="wishlist-settings-row-actions">' +
+         '<button type="button" class="wishlist-move-up" title="Move up" aria-label="Move up">↑</button>' +
+         '<button type="button" class="wishlist-move-down" title="Move down" aria-label="Move down">↓</button>' +
+         '<button type="button" class="wishlist-remove" title="Remove" aria-label="Remove">×</button>' +
+         '</div>' +
+         '<label class="wishlist-settings-field">Label' +
+         '<input type="text" class="wishlist-label" value="' + escapeHtml(wishlist.label || '') + '" autocomplete="off">' +
+         '</label>' +
+         '<label class="wishlist-settings-field">ItemDB list URL' +
+         '<input type="url" class="wishlist-list-url" value="' + escapeHtml(wishlist.listUrl || '') + '" autocomplete="off" placeholder="https://itemdb.com.br/lists/user/slug">' +
+         '</label>' +
+         '<label class="wishlist-settings-field">Icon URL' +
+         '<input type="url" class="wishlist-img" value="' + escapeHtml(wishlist.img || '') + '" autocomplete="off" placeholder="https://images.neopets.com/items/...">' +
+         '</label>' +
+         '</div>'
+      );
+   }
+
+   function renderWishlistSettingsRows(wishlists) {
+      return (wishlists || []).map(function (wishlist, index) {
+         return renderWishlistSettingsRow(wishlist, index);
+      }).join('');
+   }
+
+   function readWishlistRowsFromDom() {
+      var rows = document.querySelectorAll('.wishlist-settings-row');
+      return Array.prototype.map.call(rows, function (row) {
+         var label = row.querySelector('.wishlist-label');
+         var listUrl = row.querySelector('.wishlist-list-url');
+         var img = row.querySelector('.wishlist-img');
+         return {
+            label: label ? label.value.trim() : '',
+            listUrl: listUrl ? listUrl.value.trim() : '',
+            img: img ? img.value.trim() : ''
+         };
+      });
+   }
+
+   function readWishlistsFromTray() {
+      var DS = global.DailiesSettings;
+      var rows = document.querySelectorAll('.wishlist-settings-row');
+      var wishlists = [];
+      rows.forEach(function (row) {
+         var label = row.querySelector('.wishlist-label');
+         var listUrl = row.querySelector('.wishlist-list-url');
+         var img = row.querySelector('.wishlist-img');
+         var entry = DS.normalizeWishlist({
+            label: label ? label.value.trim() : '',
+            listUrl: listUrl ? listUrl.value.trim() : '',
+            img: img ? img.value.trim() : ''
+         }, wishlists.length);
+         if (entry.listUrl && entry.slug) {
+            wishlists.push(entry);
+         }
+      });
+      return wishlists;
+   }
+
+   function refreshWishlistSettingsRows(wishlists) {
+      var container = document.getElementById('wishlist-settings-rows');
+      if (container) {
+         container.innerHTML = renderWishlistSettingsRows(wishlists);
+      }
+   }
+
+   function bindWishlistSettingsEvents() {
+      var container = document.getElementById('wishlist-settings-rows');
+      if (!container || container.getAttribute('data-bound') === '1') {
+         return;
+      }
+      container.setAttribute('data-bound', '1');
+
+      var addBtn = document.getElementById('wishlist-add');
+      if (addBtn) {
+         addBtn.addEventListener('click', function () {
+            var current = readWishlistRowsFromDom();
+            current.push({ label: '', listUrl: '', img: '' });
+            refreshWishlistSettingsRows(current);
+         });
+      }
+
+      var resetBtn = document.getElementById('wishlist-reset-defaults');
+      if (resetBtn) {
+         resetBtn.addEventListener('click', function () {
+            refreshWishlistSettingsRows(global.DailiesSettings.DEFAULT_WISHLISTS.map(function (w) {
+               return Object.assign({}, w);
+            }));
+         });
+      }
+
+      container.addEventListener('click', function (event) {
+         var btn = event.target.closest('button');
+         if (!btn || !container.contains(btn)) {
+            return;
+         }
+         var row = btn.closest('.wishlist-settings-row');
+         if (!row) {
+            return;
+         }
+         var current = readWishlistRowsFromDom();
+         var index = Array.prototype.indexOf.call(container.querySelectorAll('.wishlist-settings-row'), row);
+         if (btn.classList.contains('wishlist-remove')) {
+            current.splice(index, 1);
+            refreshWishlistSettingsRows(current);
+            return;
+         }
+         if (btn.classList.contains('wishlist-move-up') && index > 0) {
+            var prev = current[index - 1];
+            current[index - 1] = current[index];
+            current[index] = prev;
+            refreshWishlistSettingsRows(current);
+            return;
+         }
+         if (btn.classList.contains('wishlist-move-down') && index < current.length - 1) {
+            var next = current[index + 1];
+            current[index + 1] = current[index];
+            current[index] = next;
+            refreshWishlistSettingsRows(current);
+         }
+      });
+   }
+
    function renderSettingsTray(settings) {
       var DS = global.DailiesSettings;
       var schoolKeys = Object.keys(DS.SCHOOL_LABELS);
@@ -280,9 +474,15 @@
       html += '<div class="settings-field"><label for="magma-pool-buffer">Magma Pool buffer (minutes)</label>';
       html += '<input type="number" id="magma-pool-buffer" min="1" max="120" value="' + escapeHtml(String(settings.magmaPoolBufferMinutes || 15)) + '"></div>';
 
-      html += '<div class="settings-field"><label for="itemdb-api-key">ItemDB API key (optional)</label>';
-      html += '<input type="password" id="itemdb-api-key" autocomplete="off" value="' + escapeHtml(settings.itemdbApiKey || '') + '">';
-      html += '<p class="settings-hint">Requires Rayenz Dailies userscript for ItemDB API access.</p></div>';
+      var wishlists = global.DailiesSettings.getWishlists(settings);
+      html += '<div class="settings-field settings-wishlists-field">';
+      html += '<span class="settings-label">Wishlists</span>';
+      html += '<p class="settings-hint">Uses your ItemDB login via the userscript. Visit itemdb.com.br if lists stop loading. Verbose console logs: set <code>localStorage.dailies-itemdb-debug</code> to <code>"1"</code> and refresh.</p>';
+      html += '<div id="wishlist-settings-rows" class="wishlist-settings-rows">' + renderWishlistSettingsRows(wishlists) + '</div>';
+      html += '<div class="wishlist-settings-actions">';
+      html += '<button type="button" id="wishlist-add" class="wishlist-settings-btn">Add wishlist</button>';
+      html += '<button type="button" id="wishlist-reset-defaults" class="wishlist-settings-btn wishlist-settings-btn-secondary">Reset to defaults</button>';
+      html += '</div></div>';
 
       html += '<button type="button" id="settings-save" class="settings-save">Save settings</button>';
 
@@ -290,6 +490,7 @@
       if (body) {
          body.innerHTML = html;
       }
+      bindWishlistSettingsEvents();
    }
 
    function readSettingsFromTray(current) {
@@ -311,15 +512,12 @@
       if (magmaBuffer) {
          settings.magmaPoolBufferMinutes = parseInt(magmaBuffer.value, 10) || 15;
       }
-      var apiKey = document.getElementById('itemdb-api-key');
-      if (apiKey) {
-         settings.itemdbApiKey = apiKey.value.trim();
-      }
+      settings.wishlists = readWishlistsFromTray();
       return settings;
    }
 
-   function fallbackItemdbTargets() {
-      return global.DailiesLinks.ITEMDB_LISTS.map(function (list) {
+   function fallbackItemdbTargets(settings) {
+      return global.DailiesSettings.getWishlists(settings).map(function (list) {
          return { list: list, item: null, error: 'loading' };
       });
    }
@@ -329,7 +527,7 @@
       var mainEl = document.getElementById('dailies-links');
       var sidebarEl = document.getElementById('dailies-books');
       if (mainEl) {
-         mainEl.innerHTML = renderMainGrid(settings, fallbackItemdbTargets(), petName);
+         mainEl.innerHTML = renderMainGrid(settings, fallbackItemdbTargets(settings), petName);
       }
       if (sidebarEl) {
          sidebarEl.innerHTML = renderSidebar(settings, petName);
@@ -338,15 +536,15 @@
    }
 
    function refreshWishlists(settings) {
-      var petName = global.DailiesSettings.getMainPet();
-      return global.DailiesItemdb.loadListTargets(global.DailiesLinks.ITEMDB_LISTS, settings)
+      var wishlists = global.DailiesSettings.getWishlists(settings);
+      return global.DailiesItemdb.loadListTargets(wishlists, settings)
          .then(function (itemdbTargets) {
             var mainEl = document.getElementById('dailies-links');
             if (!mainEl) {
                return;
             }
             var existing = mainEl.querySelector('.dailies-wishlists-section');
-            var fresh = renderWishlistsSection(itemdbTargets, petName);
+            var fresh = renderWishlistsSection(itemdbTargets);
             if (existing) {
                existing.outerHTML = fresh;
             }
@@ -368,6 +566,10 @@
       renderSettingsTray: renderSettingsTray,
       readSettingsFromTray: readSettingsFromTray,
       renderDailiesPage: renderDailiesPage,
-      renderLinkTile: renderLinkTile
+      renderLinkTile: renderLinkTile,
+      renderWishlistCard: renderWishlistCard,
+      renderWishlistsSection: renderWishlistsSection,
+      refreshSingleWishlistCard: refreshSingleWishlistCard,
+      formatNpPrice: formatNpPrice
    };
 })(window);

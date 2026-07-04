@@ -519,6 +519,36 @@
                });
             }
 
+               function initWishlistActions() {
+                  if (window.__dailiesWishlistActionsBound) {
+                     return;
+                  }
+                  window.__dailiesWishlistActionsBound = true;
+                  document.addEventListener('click', function (event) {
+                     var btn = event.target.closest('[data-wishlist-next]');
+                     if (!btn) {
+                        return;
+                     }
+                     var mainCol = document.getElementById('dailies-links');
+                     if (!mainCol || !mainCol.contains(btn)) {
+                        return;
+                     }
+                     var listId = btn.getAttribute('data-wishlist-id');
+                     var itemIid = parseInt(btn.getAttribute('data-item-iid'), 10);
+                     if (!listId || isNaN(itemIid)) {
+                        return;
+                     }
+                     var currentSettings = DailiesSettings.loadSettings();
+                     var wishlists = DailiesSettings.getWishlists(currentSettings);
+                     var list = wishlists.find(function (w) { return w.id === listId; });
+                     if (!list || !window.DailiesItemdb) {
+                        return;
+                     }
+                     var target = window.DailiesItemdb.skipCurrentItem(list, itemIid);
+                     DailiesRender.refreshSingleWishlistCard(target);
+                  });
+               }
+
             function initDailiesPage() {
                var settings = DailiesSettings.loadSettings();
 
@@ -594,6 +624,7 @@
                initCollapsibles();
                initCoconutShyAutomation();
                initWishingWellAutomation();
+               initWishlistActions();
                DailiesRender.refreshWishlists(settings);
                scheduleTimedCards();
 

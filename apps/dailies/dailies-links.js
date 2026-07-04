@@ -3,41 +3,6 @@
 
    var IMG = 'https://images.neopets.com/items/';
 
-   var ITEMDB_LISTS = [
-      {
-         id: 'stamps-wishlist',
-         label: 'Stamps Wishlist',
-         listUrl: 'https://itemdb.com.br/lists/rayenz/all-collectibles-checklist',
-         slug: 'all-collectibles-checklist',
-         img: IMG + 'd3cf0h2ki5.gif',
-         kind: 'itemdb'
-      },
-      {
-         id: 'gourmet-food',
-         label: 'Gourmet Food',
-         listUrl: 'https://itemdb.com.br/lists/rayenz/gourmet-food-checklist',
-         slug: 'gourmet-food-checklist',
-         img: IMG + 'food_acara_cone.gif',
-         kind: 'itemdb'
-      },
-      {
-         id: 'books-checklist',
-         label: 'Books',
-         listUrl: 'https://itemdb.com.br/lists/rayenz/book-award-checklist-2',
-         slug: 'book-award-checklist-2',
-         img: IMG + 'boo_acy15vii_neotradbeg.gif',
-         kind: 'itemdb'
-      },
-      {
-         id: 'booktastic-checklist',
-         label: 'Booktastic',
-         listUrl: 'https://itemdb.com.br/lists/rayenz/booktastic-book-award-checklist-2',
-         slug: 'booktastic-book-award-checklist-2',
-         img: IMG + 'boo_stuck_in_space.gif',
-         kind: 'itemdb'
-      }
-   ];
-
    var ALBUM_LINK_IDS = ['gourmet-club', 'stamp-album', 'books-read', 'booktastic-read'];
 
    var BOOK_SHOPS = [
@@ -173,7 +138,6 @@
    }
 
    global.DailiesLinks = {
-      ITEMDB_LISTS: ITEMDB_LISTS,
       BOOK_SHOPS: BOOK_SHOPS,
       ALBUM_LINK_IDS: ALBUM_LINK_IDS,
       DAILIES_LINKS: DAILIES_LINKS,

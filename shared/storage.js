@@ -228,6 +228,40 @@
    }
 
    var DAILIES_SETTINGS_KEY = 'rayenz-dailies-settings';
+   var DEFAULT_WISHLISTS = [
+      {
+         id: 'stamps-wishlist',
+         label: 'Stamps Wishlist',
+         listUrl: 'https://itemdb.com.br/lists/rayenz/all-collectibles-checklist',
+         slug: 'all-collectibles-checklist',
+         user: 'rayenz',
+         img: 'https://images.neopets.com/items/d3cf0h2ki5.gif'
+      },
+      {
+         id: 'gourmet-food',
+         label: 'Gourmet Food',
+         listUrl: 'https://itemdb.com.br/lists/rayenz/gourmet-food-checklist',
+         slug: 'gourmet-food-checklist',
+         user: 'rayenz',
+         img: 'https://images.neopets.com/items/food_acara_cone.gif'
+      },
+      {
+         id: 'books-checklist',
+         label: 'Books',
+         listUrl: 'https://itemdb.com.br/lists/rayenz/book-award-checklist-2',
+         slug: 'book-award-checklist-2',
+         user: 'rayenz',
+         img: 'https://images.neopets.com/items/boo_acy15vii_neotradbeg.gif'
+      },
+      {
+         id: 'booktastic-checklist',
+         label: 'Booktastic',
+         listUrl: 'https://itemdb.com.br/lists/rayenz/booktastic-book-award-checklist-2',
+         slug: 'booktastic-book-award-checklist-2',
+         user: 'rayenz',
+         img: 'https://images.neopets.com/items/boo_stuck_in_space.gif'
+      }
+   ];
    var DEFAULT_DAILIES_SETTINGS = {
       faerieQuest: 'illusen',
       schools: {
@@ -242,24 +276,29 @@
       },
       magmaPoolLocalTime: '14:47',
       magmaPoolBufferMinutes: 15,
-      itemdbApiKey: ''
+      wishlists: DEFAULT_WISHLISTS
    };
 
    function loadDailiesSettings() {
       var raw = getItem(DAILIES_SETTINGS_KEY);
       if (!raw) {
          return Object.assign({}, DEFAULT_DAILIES_SETTINGS, {
-            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools)
+            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools),
+            wishlists: DEFAULT_WISHLISTS.map(function (w) { return Object.assign({}, w); })
          });
       }
       try {
          var parsed = JSON.parse(raw);
          return Object.assign({}, DEFAULT_DAILIES_SETTINGS, parsed, {
-            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools, parsed.schools || {})
+            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools, parsed.schools || {}),
+            wishlists: Array.isArray(parsed.wishlists)
+               ? parsed.wishlists.map(function (w) { return Object.assign({}, w); })
+               : DEFAULT_WISHLISTS.map(function (w) { return Object.assign({}, w); })
          });
       } catch (e) {
          return Object.assign({}, DEFAULT_DAILIES_SETTINGS, {
-            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools)
+            schools: Object.assign({}, DEFAULT_DAILIES_SETTINGS.schools),
+            wishlists: DEFAULT_WISHLISTS.map(function (w) { return Object.assign({}, w); })
          });
       }
    }
