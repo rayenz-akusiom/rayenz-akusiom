@@ -204,7 +204,10 @@
          return 'ItemDB list not found';
       }
       if (status === 429) {
-         return 'ItemDB rate limit — wait a moment and refresh';
+         return 'ItemDB rate limit or temporary outage — wait and refresh';
+      }
+      if (status === 502 || status === 503 || status === 504 || status === 520) {
+         return 'ItemDB temporarily unavailable — try again later';
       }
       return 'ItemDB ' + context + ' fetch failed (' + status + ')';
    }
@@ -367,8 +370,12 @@
       return getIneligibilityReason(row, byItemId, skipItemIds) === null;
    }
 
+   function hasValidPrice(item) {
+      return item && item.price && typeof item.price.value === 'number' && item.price.value > 0;
+   }
+
    function itemPriceValue(item) {
-      if (!item || !item.price || typeof item.price.value !== 'number') {
+      if (!hasValidPrice(item)) {
          return Infinity;
       }
       return item.price.value;
@@ -428,7 +435,7 @@
             return;
          }
          stats.eligible += 1;
-         if (itemPriceValue(item) !== Infinity) {
+         if (hasValidPrice(item)) {
             stats.withPrice += 1;
          }
       });
@@ -445,6 +452,11 @@
          var item = sorted[i];
          var row = findInfoRow(info, item);
          var skipReason = row ? getIneligibilityReason(row, byItemId, skipItemIds) : 'not-in-list-info';
+         if (!skipReason && row && isEligibleTradeableItem(row, byItemId, skipItemIds) && !hasValidPrice(item)) {
+            skipReason = item.price && typeof item.price.value === 'number' && item.price.value === 0
+               ? 'zero-price'
+               : 'no-price';
+         }
          var entry = {
             name: item.name,
             price: itemPriceValue(item),
@@ -483,7 +495,7 @@
          if (!row || !isEligibleTradeableItem(row, byItemId, skipItemIds)) {
             continue;
          }
-         if (itemPriceValue(item) === Infinity) {
+         if (!hasValidPrice(item)) {
             if (!unpricedFallback) {
                unpricedFallback = item;
             }
@@ -539,7 +551,7 @@
       console.groupEnd();
    }
 
-   function buildTargetFromListData(list, data, debug, meta, fromCache, cachedAt, refreshed) {
+   function buildTargetFromListData(list, data, debug, meta, fromCache, cachedAt, refreshed, logSource) {
       var skipItemIds = getLocalSkipIds(list.id);
       var pickOptions = { skipItemIds: skipItemIds };
       if (debug) {
@@ -547,7 +559,7 @@
       }
       var pickResult = pickCheapestTradeableItem(data.info, data.itemdata, pickOptions);
       var item = debug ? pickResult.item : pickResult;
-      var source = fromCache ? 'cached' : 'network';
+      var source = logSource || (fromCache ? 'cached' : 'network');
       var cacheAge = cachedAt != null ? formatCacheAgeMs(Date.now() - cachedAt) : null;
       logItemdbSummary(list, data, debug ? pickResult : item, fromCache ? [] : data.fetches, null, {
          source: source,
@@ -651,15 +663,30 @@
             results[refreshIndex] = await fetchAndCacheList(toRefresh, debug, now, meta);
          } catch (err) {
             var refreshMessage = err.message || 'fetch-failed';
-            logItemdbSummary(toRefresh, null, null, null, refreshMessage);
-            results[refreshIndex] = {
-               list: toRefresh,
-               item: null,
-               error: refreshMessage,
-               fromCache: false,
-               cachedAt: caches[toRefresh.id] ? caches[toRefresh.id].fetchedAt : null,
-               refreshed: false
-            };
+            var staleCache = caches[toRefresh.id];
+            if (staleCache) {
+               logItemdbSummary(toRefresh, null, null, null, refreshMessage);
+               results[refreshIndex] = buildTargetFromListData(
+                  toRefresh,
+                  staleCache,
+                  debug,
+                  meta,
+                  true,
+                  staleCache.fetchedAt,
+                  false,
+                  'cached-fallback'
+               );
+            } else {
+               logItemdbSummary(toRefresh, null, null, null, refreshMessage);
+               results[refreshIndex] = {
+                  list: toRefresh,
+                  item: null,
+                  error: refreshMessage,
+                  fromCache: false,
+                  cachedAt: null,
+                  refreshed: false
+               };
+            }
          }
          saveRefreshMeta(meta);
       }
@@ -682,6 +709,9 @@
       mergeListItemRows: mergeListItemRows,
       isItemdbDebugEnabled: isItemdbDebugEnabled,
       getIneligibilityReason: getIneligibilityReason,
+      hasValidPrice: hasValidPrice,
+      itemPriceValue: itemPriceValue,
+      itemdbErrorMessage: itemdbErrorMessage,
       loadListCache: loadListCache,
       saveListCache: saveListCache,
       loadRefreshMeta: loadRefreshMeta,
