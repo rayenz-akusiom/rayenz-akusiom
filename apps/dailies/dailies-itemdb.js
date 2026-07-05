@@ -44,6 +44,9 @@
    var MIN_REFRESH_GAP_MS = 2 * 60 * 60 * 1000;
    var RATE_LIMIT_BACKOFF_MS = 30 * 60 * 1000;
 
+   /** ItemDB item_iids to trace on cache serve — hidden-state debugging. */
+   var WATCH_ITEM_IIDS = [34756, 8781, 16232, 32402];
+
    function hasBridge() {
       return typeof global.__bridgeFetch === 'function';
    }
@@ -618,6 +621,40 @@
       return Math.floor(hours / 24) + 'd';
    }
 
+   function logWatchItemsFromCache(list, cache, skipItemIds, wishlistItem, cachedAt, fromCache) {
+      if (!fromCache || !cache || !Array.isArray(cache.items) || !WATCH_ITEM_IIDS.length) {
+         return;
+      }
+      var label = (list && list.label) || (list && list.slug) || 'wishlist';
+      var slug = (list && list.slug) || '';
+      var cacheAge = cachedAt != null ? formatCacheAgeMs(Date.now() - cachedAt) : null;
+      var watchSet = {};
+      WATCH_ITEM_IIDS.forEach(function (id) {
+         watchSet[id] = true;
+      });
+      cache.items.forEach(function (item, index) {
+         if (!item || !watchSet[item.itemIid]) {
+            return;
+         }
+         console.info(
+            '[Dailies ItemDB] watch item (cache)',
+            label,
+            slug,
+            JSON.stringify({
+               item: item,
+               cacheIndex: index,
+               totalCached: cache.items.length,
+               inLocalSkips: isSkippedItemId(skipItemIds, item.itemIid),
+               isPicked: !!(wishlistItem && wishlistItem.itemIid === item.itemIid),
+               localSkipIds: skipItemIds.slice(),
+               fetchedAt: cache.fetchedAt != null ? cache.fetchedAt : cachedAt,
+               cacheAge: cacheAge,
+               note: 'v2 cache stores no isHidden; present here means API reported visible when last saved'
+            })
+         );
+      });
+   }
+
    function logItemdbSummary(list, cache, wishlistItem, fetches, error, logMeta) {
       var label = (list && list.label) || (list && list.slug) || 'wishlist';
       var slug = (list && list.slug) || '';
@@ -663,6 +700,7 @@
       cache = ensureCacheSkips(list, cache);
       var skipItemIds = cache.localSkipIds || [];
       var wishlistItem = pickFirstWishlistItem(cache.items, { skipItemIds: skipItemIds });
+      logWatchItemsFromCache(list, cache, skipItemIds, wishlistItem, cachedAt, fromCache);
       var source = logSource || (fromCache ? 'cached' : 'network');
       var cacheAge = cachedAt != null ? formatCacheAgeMs(Date.now() - cachedAt) : null;
       var fetches = fromCache ? [] : (cache.fetches || []);
@@ -802,7 +840,8 @@
       CACHE_TTL_MS: CACHE_TTL_MS,
       MIN_REFRESH_GAP_MS: MIN_REFRESH_GAP_MS,
       RATE_LIMIT_BACKOFF_MS: RATE_LIMIT_BACKOFF_MS,
-      ITEMDB_DEBUG_KEY: ITEMDB_DEBUG_KEY
+      ITEMDB_DEBUG_KEY: ITEMDB_DEBUG_KEY,
+      WATCH_ITEM_IIDS: WATCH_ITEM_IIDS
    };
 
 })(window);
