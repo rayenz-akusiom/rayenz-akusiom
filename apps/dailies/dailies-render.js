@@ -51,9 +51,9 @@
       return Number(value).toLocaleString('en-US') + ' NP';
    }
 
-   function sswUrlForItem(item) {
-      if (item.findAt && item.findAt.shopWizard) {
-         return item.findAt.shopWizard;
+   function sswUrlForWishlistItem(item) {
+      if (item.shopWizardUrl) {
+         return item.shopWizardUrl;
       }
       return 'https://www.neopets.com/shops/wizard.phtml?string=' + encodeURIComponent(item.name);
    }
@@ -75,6 +75,9 @@
       }
       if (target.error === 'no-bridge') {
          return 'Install the Rayenz Dailies userscript to load wishlists';
+      }
+      if (target.error === 'waiting-for-cache') {
+         return 'Wishlist not cached yet — will fetch on a later visit';
       }
       if (target.error && target.error.indexOf('session expired') !== -1) {
          return target.error;
@@ -103,9 +106,9 @@
          html += '</div>';
       } else {
          var item = target.item;
-         var sswUrl = sswUrlForItem(item);
-         var price = formatNpPrice(item.price && item.price.value);
-         var itemIid = item.internal_id != null ? item.internal_id : '';
+         var sswUrl = sswUrlForWishlistItem(item);
+         var price = item.priceNp != null ? formatNpPrice(item.priceNp) : null;
+         var itemIid = item.itemIid != null ? item.itemIid : '';
          html += '<div class="wishlist-card-body">';
          html += '<a class="wishlist-card-item-image" href="' + escapeHtml(sswUrl) + '" target="_blank" title="Shop Wizard: ' + escapeHtml(item.name) + '">';
          html += '<img src="' + escapeHtml(item.image || list.img) + '" alt="" referrerpolicy="no-referrer">';

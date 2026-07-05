@@ -9,6 +9,7 @@
       'apps/dailies/dailies-links.js',
       'apps/dailies/dailies-timed.js',
       'apps/dailies/dailies-itemdb.js',
+      'apps/dailies/dailies-wishing-well.js',
       'apps/dailies/dailies-render.js'
    ];
 

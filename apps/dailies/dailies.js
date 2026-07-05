@@ -160,170 +160,49 @@
 
                var WISHING_PAGE_URL = 'https://www.neopets.com/wishing.phtml';
                var WISHING_PROCESS_URL = 'https://www.neopets.com/process_wishing.phtml';
-               var WISHING_MAX = 7;
                var WISHING_DELAY_MS = 400;
-               var WISHING_WISH_KEY = 'rayenz-wishing-well-wish';
-               var WISHING_DONATION_KEY = 'rayenz-wishing-well-donation';
-               var WISHING_PERIOD_KEY = 'rayenz-wishing-well-period';
 
-               function getNstDate() {
-                  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-               }
-
-               function getWishingPeriodKey() {
-                  var nst = getNstDate();
-                  var y = nst.getFullYear();
-                  var m = nst.getMonth();
-                  var d = nst.getDate();
-                  var hour = nst.getHours();
-                  var slot;
-
-                  if (hour >= 8 && hour < 20) {
-                     slot = 'day';
-                  } else {
-                     slot = 'night';
-                     if (hour < 8) {
-                        var prev = new Date(nst);
-                        prev.setDate(prev.getDate() - 1);
-                        y = prev.getFullYear();
-                        m = prev.getMonth();
-                        d = prev.getDate();
-                     }
-                  }
-
-                  return y + '-' + m + '-' + d + '-' + slot;
-               }
-
-               function parseWishCount(html) {
-                  var match = html.match(/Wish Count:\s*(\d+)/i);
-                  if (match) {
-                     return parseInt(match[1], 10);
-                  }
-                  if (/process_wishing|Make a Wish/i.test(html)) {
-                     return WISHING_MAX;
-                  }
-                  return null;
-               }
-
-               function parseWishingForm(html) {
-                  var doc = new DOMParser().parseFromString(html, 'text/html');
-                  var form = doc.querySelector('form[action*="process_wishing"]');
-                  if (!form) return null;
-
-                  var data = {};
-                  var fields = form.querySelectorAll('input[name], select[name], textarea[name]');
-                  for (var i = 0; i < fields.length; i++) {
-                     var field = fields[i];
-                     if (field.type === 'submit' || field.type === 'button') {
-                        if (field.name) {
-                           data[field.name] = field.value;
-                        }
-                        continue;
-                     }
-                     if (field.type === 'radio' || field.type === 'checkbox') {
-                        if (field.checked) {
-                           data[field.name] = field.value;
-                        }
-                        continue;
-                     }
-                     data[field.name] = field.value;
-                  }
-
-                  return data;
-               }
-
-               function isWishingPostSuccess(response, beforeCount) {
-                  var html = response.text || '';
-                  var url = response.url || '';
-
-                  if (/Thanks for your donation|Thank you for your donation/i.test(html)) {
-                     return true;
-                  }
-                  if (/[?&]thanks=/i.test(url)) {
-                     return true;
-                  }
-
-                  var afterCount = parseWishCount(html);
-                  if (afterCount !== null && beforeCount !== null && afterCount > beforeCount) {
-                     return true;
-                  }
-
-                  return false;
-               }
-
-               function parseWishingError(html) {
-                  if (/do not have enough/i.test(html)) {
-                     return 'Not enough Neopoints for that donation.';
-                  }
-                  if (/must donate at least 21|minimum of 21/i.test(html)) {
-                     return 'Donation must be at least 21 NP.';
-                  }
-                  if (/already made|seven wishes|7 wishes|no more wishes/i.test(html)) {
-                     return 'Already submitted the maximum wishes for this period.';
-                  }
-                  if (/Oops|error|invalid/i.test(html) && html.length < 5000) {
-                     var plain = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-                     if (plain.length > 0 && plain.length < 200) {
-                        return plain;
-                     }
-                  }
-                  return null;
-               }
-
-               function buildWishingPayload(formData, wishText, donation) {
-                  var payload = Object.assign({}, formData, {
-                     donation: String(donation),
-                     wish: wishText
-                  });
-                  if ('amount' in formData) {
-                     payload.amount = String(donation);
-                  }
-                  return payload;
-               }
-
-               function encodeForm(data) {
-                  return Object.keys(data).map(function (key) {
-                     return encodeURIComponent(key) + '=' + encodeURIComponent(data[key]);
-                  }).join('&');
-               }
-
-               function saveWishingPreferences() {
-                  var wishInput = document.getElementById('wishingwell-wish');
-                  var donationInput = document.getElementById('wishingwell-donation');
-                  if (wishInput && wishInput.value.trim()) {
-                     localStorage.setItem(WISHING_WISH_KEY, wishInput.value.trim());
-                  }
-                  if (donationInput && donationInput.value) {
-                     localStorage.setItem(WISHING_DONATION_KEY, donationInput.value);
-                  }
+               function wishingWell() {
+                  return window.DailiesWishingWell;
                }
 
                function loadWishingPreferences() {
+                  var ww = wishingWell();
+                  if (!ww) {
+                     return;
+                  }
+                  var state = ww.loadWishingWellState();
                   var wishInput = document.getElementById('wishingwell-wish');
                   var donationInput = document.getElementById('wishingwell-donation');
-                  var savedWish = localStorage.getItem(WISHING_WISH_KEY);
-                  var savedDonation = localStorage.getItem(WISHING_DONATION_KEY);
-                  if (wishInput && savedWish) {
-                     wishInput.value = savedWish;
+                  if (wishInput && state.wish) {
+                     wishInput.value = state.wish;
                   }
-                  if (donationInput && savedDonation) {
-                     donationInput.value = savedDonation;
+                  if (donationInput && state.donation) {
+                     donationInput.value = String(state.donation);
                   }
                }
 
-               function markWishingPeriodComplete() {
-                  localStorage.setItem(WISHING_PERIOD_KEY, getWishingPeriodKey());
-               }
-
-               function isWishingPeriodComplete() {
-                  return localStorage.getItem(WISHING_PERIOD_KEY) === getWishingPeriodKey();
+               function saveWishingPreferences() {
+                  var ww = wishingWell();
+                  if (!ww) {
+                     return;
+                  }
+                  var wishInput = document.getElementById('wishingwell-wish');
+                  var donationInput = document.getElementById('wishingwell-donation');
+                  ww.updateWishingPreferences(
+                     wishInput ? wishInput.value.trim() : '',
+                     donationInput ? parseInt(donationInput.value, 10) : null
+                  );
                }
 
                async function refreshWishingWellStatus() {
+                  var ww = wishingWell();
                   var statusEl = document.getElementById('wishingwell-status');
-                  if (!statusEl) return;
+                  if (!ww || !statusEl) {
+                     return;
+                  }
 
-                  if (isWishingPeriodComplete()) {
+                  if (ww.isWishingPeriodComplete()) {
                      setStatus(statusEl, 'Ready.');
                      return;
                   }
@@ -335,14 +214,20 @@
                         return;
                      }
 
-                     var wishCount = parseWishCount(html);
+                     var wishCount = ww.parseWishCount(html);
+                     var state = ww.loadWishingWellState();
+                     if (wishCount !== null) {
+                        state.lastWishCount = wishCount;
+                        ww.saveWishingWellState(state);
+                     }
+
                      if (wishCount === null) {
                         setStatus(statusEl, 'Ready.');
                         return;
                      }
 
-                     if (wishCount >= WISHING_MAX) {
-                        markWishingPeriodComplete();
+                     if (wishCount >= ww.WISHING_MAX) {
+                        ww.markWishingPeriodComplete(state);
                         setStatus(statusEl, 'Ready.');
                         return;
                      }
@@ -350,7 +235,7 @@
                      if (wishCount === 0) {
                         setStatus(statusEl, 'New wish period — you have not donated yet.', 'notice');
                      } else {
-                        setStatus(statusEl, 'New wish period — only ' + wishCount + '/' + WISHING_MAX + ' wishes submitted.', 'notice');
+                        setStatus(statusEl, 'New wish period — only ' + wishCount + '/' + ww.WISHING_MAX + ' wishes submitted.', 'notice');
                      }
                   } catch (err) {
                      setStatus(statusEl, 'Ready.');
@@ -358,11 +243,16 @@
                }
 
                async function runWishingWell() {
+                  var ww = wishingWell();
                   var runBtn = document.getElementById('wishingwell-run');
                   var statusEl = document.getElementById('wishingwell-status');
                   var wishInput = document.getElementById('wishingwell-wish');
                   var donationInput = document.getElementById('wishingwell-donation');
                   var progress = dailiesProgress();
+                  if (!ww || !runBtn || !statusEl || !wishInput || !donationInput) {
+                     return;
+                  }
+
                   var wishText = wishInput.value.trim();
                   var donation = parseInt(donationInput.value, 10) || 21;
 
@@ -385,6 +275,7 @@
 
                   var processed = 0;
                   var hadError = false;
+                  var state = ww.loadWishingWellState();
 
                   try {
                      var pageHtml = await neopetsFetch(WISHING_PAGE_URL);
@@ -397,7 +288,7 @@
                         return;
                      }
 
-                     var formData = parseWishingForm(pageHtml);
+                     var formData = ww.parseWishingForm(pageHtml);
                      if (!formData) {
                         setStatus(statusEl, 'Could not read the Wishing Well form.', 'error');
                         hadError = true;
@@ -407,18 +298,18 @@
                         return;
                      }
 
-                     var wishCount = parseWishCount(pageHtml);
-                     var remaining = WISHING_MAX;
+                     var wishCount = ww.parseWishCount(pageHtml);
+                     var remaining = ww.WISHING_MAX;
                      var currentWishCount = wishCount;
                      if (wishCount !== null) {
-                        remaining = Math.max(0, WISHING_MAX - wishCount);
+                        remaining = Math.max(0, ww.WISHING_MAX - wishCount);
                      }
 
                      if (remaining === 0) {
-                        markWishingPeriodComplete();
-                        setStatus(statusEl, 'Already submitted ' + WISHING_MAX + ' wishes this period.');
+                        ww.markWishingPeriodComplete(state);
+                        setStatus(statusEl, 'Already submitted ' + ww.WISHING_MAX + ' wishes this period.');
                         if (progress) {
-                           progress.finish({ label: 'Already submitted ' + WISHING_MAX + ' wishes this period.' });
+                           progress.finish({ label: 'Already submitted ' + ww.WISHING_MAX + ' wishes this period.' });
                         }
                         return;
                      }
@@ -431,8 +322,8 @@
                               label: 'Submitting wish ' + (i + 1) + '/' + remaining + '…'
                            });
                         }
-                        var payload = buildWishingPayload(formData, wishText, donation);
-                        var response = await neopetsPost(WISHING_PROCESS_URL, encodeForm(payload));
+                        var payload = ww.buildWishingPayload(formData, wishText, donation);
+                        var response = await neopetsPost(WISHING_PROCESS_URL, ww.encodeForm(payload));
                         var responseHtml = response.text || '';
 
                         if (isLoginPage(responseHtml)) {
@@ -444,16 +335,17 @@
                            break;
                         }
 
-                        if (!isWishingPostSuccess(response, currentWishCount)) {
-                           var errMsg = parseWishingError(responseHtml)
-                              || 'Unexpected response from Wishing Well.';
+                        var outcome = ww.evaluateWishingPost(response, currentWishCount);
+                        state = ww.recordWishingOutcome(state, outcome);
+
+                        if (!outcome.ok) {
                            if (!responseHtml.trim() && response.url) {
                               console.warn('Wishing Well response URL:', response.url);
                            }
-                           setStatus(statusEl, errMsg, 'error');
+                           setStatus(statusEl, outcome.error, 'error');
                            hadError = true;
                            if (progress) {
-                              progress.finish({ label: errMsg, variant: 'error' });
+                              progress.finish({ label: outcome.error, variant: 'error' });
                            }
                            break;
                         }
@@ -461,12 +353,12 @@
                         processed++;
 
                         if (/Wish Count:/i.test(responseHtml)) {
-                           formData = parseWishingForm(responseHtml) || formData;
-                           currentWishCount = parseWishCount(responseHtml);
+                           formData = ww.parseWishingForm(responseHtml) || formData;
+                           currentWishCount = outcome.wishCount;
                         } else {
                            pageHtml = await neopetsFetch(WISHING_PAGE_URL);
-                           formData = parseWishingForm(pageHtml) || formData;
-                           currentWishCount = parseWishCount(pageHtml);
+                           formData = ww.parseWishingForm(pageHtml) || formData;
+                           currentWishCount = ww.parseWishCount(pageHtml);
                         }
 
                         if (i < remaining - 1) {
@@ -477,7 +369,7 @@
                      if (!hadError) {
                         var summary = processed + ' wish' + (processed === 1 ? '' : 'es') + ' processed.';
                         if (processed >= remaining) {
-                           markWishingPeriodComplete();
+                           ww.markWishingPeriodComplete(state);
                         }
                         setStatus(statusEl, summary);
                         if (progress) {
@@ -498,7 +390,9 @@
                   var runBtn = document.getElementById('wishingwell-run');
                   var wishInput = document.getElementById('wishingwell-wish');
                   var donationInput = document.getElementById('wishingwell-donation');
-                  if (!runBtn) return;
+                  if (!runBtn || !wishingWell()) {
+                     return;
+                  }
 
                   loadWishingPreferences();
                   runBtn.addEventListener('click', runWishingWell);

@@ -90,7 +90,19 @@
          });
       }
       return settings.wishlists.map(function (wishlist, index) {
+         if (wishlist && wishlist.slug && wishlist.user && wishlist.id && wishlist.listUrl) {
+            return wishlist;
+         }
          return normalizeWishlist(wishlist, index);
+      });
+   }
+
+   function normalizeWishlistsForSave(wishlists) {
+      if (!Array.isArray(wishlists)) {
+         return [];
+      }
+      return wishlists.map(function (entry, index) {
+         return normalizeWishlist(entry, index);
       });
    }
 
@@ -99,8 +111,12 @@
    }
 
    function saveSettings(settings) {
-      if (global.HubStorage) {
-         global.HubStorage.saveDailiesSettings(settings);
+      if (global.HubStorage && settings) {
+         var payload = Object.assign({}, settings);
+         if (Array.isArray(payload.wishlists)) {
+            payload.wishlists = normalizeWishlistsForSave(payload.wishlists);
+         }
+         global.HubStorage.saveDailiesSettings(payload);
       }
    }
 
@@ -160,6 +176,7 @@
       SCHOOL_LABELS: SCHOOL_LABELS,
       parseItemDbListUrl: parseItemDbListUrl,
       normalizeWishlist: normalizeWishlist,
+      normalizeWishlistsForSave: normalizeWishlistsForSave,
       getWishlists: getWishlists,
       loadSettings: loadSettings,
       saveSettings: saveSettings,
