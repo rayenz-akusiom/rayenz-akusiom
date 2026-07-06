@@ -5,6 +5,28 @@
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
    };
 
+   var SHOP_WIZARD_ICON = 'https://images.neopets.com/shopkeepers/shopwizard.gif';
+   var ITEMDB_ICON = 'https://itemdb.com.br/favicon.ico';
+
+   function svgDataUri(svg) {
+      return 'data:image/svg+xml,' + encodeURIComponent(svg);
+   }
+
+   var WISHLIST_NEXT_ICON = svgDataUri(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<polyline points="9 6 15 12 9 18"/><line x1="4" y1="12" x2="14" y2="12"/>' +
+      '</svg>'
+   );
+
+   function renderWishlistActionIcon(tag, attrs, iconSrc) {
+      var html = '<' + tag;
+      Object.keys(attrs).forEach(function (key) {
+         html += ' ' + key + '="' + escapeHtml(attrs[key]) + '"';
+      });
+      html += '><img src="' + escapeHtml(iconSrc) + '" alt="" referrerpolicy="no-referrer"></' + tag + '>';
+      return html;
+   }
+
    function buildPetHref(template, petName) {
       if (!template) {
          return 'https://www.neopets.com/petlookup.phtml?pet=' + encodeURIComponent(petName);
@@ -58,13 +80,27 @@
       return 'https://www.neopets.com/shops/wizard.phtml?string=' + encodeURIComponent(item.name);
    }
 
-   function renderWishlistCardHeader(list) {
+   function itemdbHideUrlForWishlistItem(item, list) {
+      if (global.DailiesItemdb && global.DailiesItemdb.itemdbUrlForWishlistItem) {
+         var url = global.DailiesItemdb.itemdbUrlForWishlistItem(item);
+         if (url) {
+            return url;
+         }
+      }
+      return list && list.listUrl ? list.listUrl : '';
+   }
+
+   function renderWishlistCardHeader(list, cachedAt) {
       var html = '<div class="wishlist-card-header">';
       if (list.img) {
          html += '<img class="wishlist-card-list-icon" src="' + escapeHtml(list.img) + '" alt="" referrerpolicy="no-referrer">';
       }
+      html += '<div class="wishlist-card-header-text">';
       html += '<a class="wishlist-card-title" href="' + escapeHtml(list.listUrl) + '" target="_blank">' + escapeHtml(list.label) + '</a>';
-      html += '<a class="wishlist-card-list-link" href="' + escapeHtml(list.listUrl) + '" target="_blank">ItemDB list →</a>';
+      if (cachedAt) {
+         html += '<span class="wishlist-cache-hint">' + escapeHtml(formatWishlistCacheAge(cachedAt)) + '</span>';
+      }
+      html += '</div>';
       html += '</div>';
       return html;
    }
@@ -99,7 +135,7 @@
    function renderWishlistCard(target) {
       var list = target.list;
       var html = '<article class="wishlist-card" data-wishlist-id="' + escapeHtml(list.id) + '">';
-      html += renderWishlistCardHeader(list);
+      html += renderWishlistCardHeader(list, target.cachedAt);
       if (!target.item) {
          html += '<div class="wishlist-card-body wishlist-card-body--fallback">';
          html += '<p class="wishlist-card-message">' + escapeHtml(renderWishlistFallbackMessage(target)) + '</p>';
@@ -107,6 +143,7 @@
       } else {
          var item = target.item;
          var sswUrl = sswUrlForWishlistItem(item);
+         var hideUrl = itemdbHideUrlForWishlistItem(item, list);
          var price = item.priceNp != null ? formatNpPrice(item.priceNp) : null;
          var itemIid = item.itemIid != null ? item.itemIid : '';
          html += '<div class="wishlist-card-body">';
@@ -119,11 +156,31 @@
             html += '<div class="wishlist-card-item-desc">' + escapeHtml(item.description) + '</div>';
          }
          html += '<div class="wishlist-card-actions">';
-         html += '<button type="button" class="wishlist-next-btn" data-wishlist-next data-wishlist-id="' + escapeHtml(list.id) + '" data-item-iid="' + escapeHtml(String(itemIid)) + '">Next item</button>';
-         html += '<a class="wishlist-hide-link" href="' + escapeHtml(list.listUrl) + '" target="_blank" rel="noopener">Hide on ItemDB</a>';
-         if (target.cachedAt) {
-            html += '<span class="wishlist-cache-hint">' + escapeHtml(formatWishlistCacheAge(target.cachedAt)) + '</span>';
-         }
+         html += renderWishlistActionIcon('button', {
+            type: 'button',
+            class: 'wishlist-action-btn',
+            'data-wishlist-next': '',
+            'data-wishlist-id': list.id,
+            'data-item-iid': String(itemIid),
+            title: 'Next item',
+            'aria-label': 'Next item'
+         }, WISHLIST_NEXT_ICON);
+         html += renderWishlistActionIcon('a', {
+            class: 'wishlist-action-btn',
+            href: sswUrl,
+            target: '_blank',
+            rel: 'noopener',
+            title: 'Shop Wizard: ' + item.name,
+            'aria-label': 'Shop Wizard: ' + item.name
+         }, SHOP_WIZARD_ICON);
+         html += renderWishlistActionIcon('a', {
+            class: 'wishlist-action-btn',
+            href: hideUrl,
+            target: '_blank',
+            rel: 'noopener',
+            title: 'Hide on ItemDB',
+            'aria-label': 'Hide on ItemDB'
+         }, ITEMDB_ICON);
          html += '</div>';
          html += '</div>';
          if (price) {
