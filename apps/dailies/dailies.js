@@ -418,9 +418,45 @@
                      return;
                   }
                   window.__dailiesWishlistActionsBound = true;
+
+                  function findWishlistList(listId) {
+                     var currentSettings = DailiesSettings.loadSettings();
+                     var wishlists = DailiesSettings.getWishlists(currentSettings);
+                     return wishlists.find(function (w) { return w.id === listId; });
+                  }
+
                   document.addEventListener('click', function (event) {
+                     var menu = document.getElementById('wishlist-context-menu');
+                     if (menu && !menu.hidden && !event.target.closest('#wishlist-context-menu')) {
+                        DailiesRender.closeWishlistContextMenu();
+                     }
+
                      var btn = event.target.closest('[data-wishlist-next]');
                      if (!btn) {
+                        var blacklistBtn = event.target.closest('[data-wishlist-blacklist]');
+                        if (blacklistBtn) {
+                           event.preventDefault();
+                           DailiesRender.closeWishlistContextMenu();
+                           var listId = blacklistBtn.getAttribute('data-wishlist-id');
+                           var itemIid = parseInt(blacklistBtn.getAttribute('data-item-iid'), 10);
+                           var list = findWishlistList(listId);
+                           if (list && window.DailiesItemdb && !isNaN(itemIid)) {
+                              DailiesRender.refreshSingleWishlistCard(window.DailiesItemdb.addToBlacklist(list, itemIid));
+                           }
+                           return;
+                        }
+                        var unblacklistBtn = event.target.closest('[data-wishlist-unblacklist]');
+                        if (unblacklistBtn) {
+                           event.preventDefault();
+                           DailiesRender.closeWishlistContextMenu();
+                           var removeListId = unblacklistBtn.getAttribute('data-wishlist-id');
+                           var removeIid = parseInt(unblacklistBtn.getAttribute('data-item-iid'), 10);
+                           var removeList = findWishlistList(removeListId);
+                           if (removeList && window.DailiesItemdb && !isNaN(removeIid)) {
+                              DailiesRender.refreshSingleWishlistCard(window.DailiesItemdb.removeFromBlacklist(removeList, removeIid));
+                           }
+                           return;
+                        }
                         return;
                      }
                      var mainCol = document.getElementById('dailies-links');
@@ -432,15 +468,44 @@
                      if (!listId || isNaN(itemIid)) {
                         return;
                      }
-                     var currentSettings = DailiesSettings.loadSettings();
-                     var wishlists = DailiesSettings.getWishlists(currentSettings);
-                     var list = wishlists.find(function (w) { return w.id === listId; });
+                     var list = findWishlistList(listId);
                      if (!list || !window.DailiesItemdb) {
                         return;
                      }
                      var target = window.DailiesItemdb.skipCurrentItem(list, itemIid);
                      DailiesRender.refreshSingleWishlistCard(target);
                   });
+
+                  document.addEventListener('contextmenu', function (event) {
+                     var card = event.target.closest('.wishlist-card[data-item-iid]');
+                     var mainCol = document.getElementById('dailies-links');
+                     if (!card || !mainCol || !mainCol.contains(card)) {
+                        return;
+                     }
+                     event.preventDefault();
+                     var listId = card.getAttribute('data-wishlist-id');
+                     var itemIid = parseInt(card.getAttribute('data-item-iid'), 10);
+                     var itemName = card.getAttribute('data-item-name') || '';
+                     if (!listId || isNaN(itemIid) || !window.DailiesItemdb || !window.DailiesRender) {
+                        return;
+                     }
+                     var list = findWishlistList(listId);
+                     if (!list) {
+                        return;
+                     }
+                     var blacklisted = window.DailiesItemdb.getBlacklistedItemsForMenu(list);
+                     DailiesRender.openWishlistContextMenu(event.clientX, event.clientY, listId, itemIid, itemName, blacklisted);
+                  });
+
+                  document.addEventListener('keydown', function (event) {
+                     if (event.key === 'Escape') {
+                        DailiesRender.closeWishlistContextMenu();
+                     }
+                  });
+
+                  document.addEventListener('scroll', function () {
+                     DailiesRender.closeWishlistContextMenu();
+                  }, true);
                }
 
             function initDailiesPage() {

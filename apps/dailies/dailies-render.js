@@ -134,7 +134,12 @@
 
    function renderWishlistCard(target) {
       var list = target.list;
-      var html = '<article class="wishlist-card" data-wishlist-id="' + escapeHtml(list.id) + '">';
+      var html = '<article class="wishlist-card" data-wishlist-id="' + escapeHtml(list.id) + '"';
+      if (target.item) {
+         html += ' data-item-iid="' + escapeHtml(String(target.item.itemIid != null ? target.item.itemIid : '')) + '"';
+         html += ' data-item-name="' + escapeHtml(target.item.name || '') + '"';
+      }
+      html += '>';
       html += renderWishlistCardHeader(list, target.cachedAt);
       if (!target.item) {
          html += '<div class="wishlist-card-body wishlist-card-body--fallback">';
@@ -197,6 +202,49 @@
       if (card) {
          card.outerHTML = renderWishlistCard(target);
       }
+   }
+
+   function ensureWishlistContextMenu() {
+      var menu = document.getElementById('wishlist-context-menu');
+      if (menu) {
+         return menu;
+      }
+      menu = document.createElement('div');
+      menu.id = 'wishlist-context-menu';
+      menu.className = 'wishlist-context-menu';
+      menu.hidden = true;
+      document.body.appendChild(menu);
+      return menu;
+   }
+
+   function closeWishlistContextMenu() {
+      var menu = document.getElementById('wishlist-context-menu');
+      if (menu) {
+         menu.hidden = true;
+         menu.innerHTML = '';
+      }
+   }
+
+   function openWishlistContextMenu(clientX, clientY, listId, itemIid, itemName, blacklistedItems) {
+      var menu = ensureWishlistContextMenu();
+      var html = '';
+      if (itemIid != null && !isNaN(itemIid)) {
+         html += '<button type="button" class="wishlist-context-menu-item" data-wishlist-blacklist data-wishlist-id="' +
+            escapeHtml(listId) + '" data-item-iid="' + escapeHtml(String(itemIid)) + '">Blacklist "' +
+            escapeHtml(itemName || ('Item ' + itemIid)) + '"</button>';
+      }
+      if (blacklistedItems && blacklistedItems.length) {
+         html += '<div class="wishlist-context-menu-heading">Remove from blacklist</div>';
+         blacklistedItems.forEach(function (entry) {
+            html += '<button type="button" class="wishlist-context-menu-item wishlist-context-menu-item-remove" data-wishlist-unblacklist data-wishlist-id="' +
+               escapeHtml(listId) + '" data-item-iid="' + escapeHtml(String(entry.itemIid)) + '">Remove "' +
+               escapeHtml(entry.name) + '"</button>';
+         });
+      }
+      menu.innerHTML = html;
+      menu.hidden = false;
+      menu.style.left = clientX + 'px';
+      menu.style.top = clientY + 'px';
    }
 
    /* Wishlist targets come from DailiesItemdb.loadListTargets; this module only renders. */
@@ -630,6 +678,8 @@
       renderWishlistCard: renderWishlistCard,
       renderWishlistsSection: renderWishlistsSection,
       refreshSingleWishlistCard: refreshSingleWishlistCard,
+      openWishlistContextMenu: openWishlistContextMenu,
+      closeWishlistContextMenu: closeWishlistContextMenu,
       formatNpPrice: formatNpPrice
    };
 })(window);

@@ -276,6 +276,51 @@
    object-fit: contain;
 }
 
+.wishlist-context-menu {
+   position: fixed;
+   z-index: 10000;
+   min-width: 180px;
+   max-width: 280px;
+   padding: 4px 0;
+   border: 1px solid #ccc;
+   border-radius: 6px;
+   background: #fff;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.wishlist-context-menu[hidden] {
+   display: none;
+}
+
+.wishlist-context-menu-heading {
+   padding: 6px 12px 4px;
+   font-size: 10px;
+   font-weight: bold;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   color: #888;
+}
+
+.wishlist-context-menu-item {
+   display: block;
+   width: 100%;
+   padding: 8px 12px;
+   border: none;
+   background: transparent;
+   text-align: left;
+   font-size: 12px;
+   color: #333;
+   cursor: pointer;
+}
+
+.wishlist-context-menu-item:hover {
+   background: #f0f0f0;
+}
+
+.wishlist-context-menu-item-remove {
+   color: #666;
+}
+
 .wishlist-settings-rows {
    display: flex;
    flex-direction: column;

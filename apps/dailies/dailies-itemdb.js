@@ -10,10 +10,9 @@
     * so we fetch full lists and normalize client-side into a compact cache.
     *
     * localStorage keys:
-    *   rayenz-itemdb-cache:{user}:{slug}  — v2: { formatVersion, fetchedAt, fetches, items[], localSkipIds[] }
+    *   rayenz-itemdb-cache:{user}:{slug}  — v2: { formatVersion, fetchedAt, fetches, items[] }
+    *   rayenz-itemdb-blacklist            — { formatVersion, byList: { [listId]: itemIid[] } }
     *   rayenz-itemdb-refresh-meta         — { lastAnyRefreshAt, lastRefreshAt, rateLimitedUntil }
-    *
-    * Legacy: rayenz-itemdb-local-hidden migrated into v2 cache localSkipIds on load.
     *
     * WishlistItem (cached items[], pre-sorted cheapest-first):
     *   itemIid, itemdbId, name, priceNp, image, shopWizardUrl, description
@@ -24,11 +23,10 @@
     *   Skip network when rateLimitedUntil is active (429 backoff).
     *   On fetch failure, fall back to stale cache when available.
     *
-    * Pick: first entry in cached items[] not in local skip list.
+    * Pick: first cached item not in session skip or persistent blacklist.
     *
-    * Next item: skipCurrentItem appends item_iid to local hidden and re-picks from
-    * cache (no network). On network refresh, reconcileLocalSkips drops IDs the API
-    * now marks isHidden. Hide on ItemDB is manual via list URL in the UI.
+    * Next item: session-only skip (re-pick until reload).
+    * Blacklist: persistent via context menu; survives cache refresh.
     *
     * Legacy v1 caches (info + itemdata) are ignored — lists re-fetch one at a time.
     *
@@ -38,14 +36,17 @@
    var ITEMDB_DEBUG_KEY = 'dailies-itemdb-debug';
    var CACHE_KEY_PREFIX = 'rayenz-itemdb-cache:';
    var REFRESH_META_KEY = 'rayenz-itemdb-refresh-meta';
+   var BLACKLIST_KEY = 'rayenz-itemdb-blacklist';
+   var BLACKLIST_MIGRATED_KEY = 'rayenz-itemdb-blacklist-migrated';
    var LOCAL_HIDDEN_KEY = 'rayenz-itemdb-local-hidden';
+   var BLACKLIST_FORMAT_VERSION = 1;
    var CACHE_FORMAT_VERSION = 2;
    var CACHE_TTL_MS = 24 * 60 * 60 * 1000;
    var MIN_REFRESH_GAP_MS = 2 * 60 * 60 * 1000;
    var RATE_LIMIT_BACKOFF_MS = 30 * 60 * 1000;
+   var SEED_GOURMET_BLACKLIST = [34756, 8781, 16232, 32402];
 
-   /** ItemDB item_iids to trace on cache serve — hidden-state debugging. */
-   var WATCH_ITEM_IIDS = [34756, 8781, 16232, 32402];
+   var sessionSkipIds = {};
 
    function hasBridge() {
       return typeof global.__bridgeFetch === 'function';
@@ -93,7 +94,7 @@
          if (!cache || cache.formatVersion !== CACHE_FORMAT_VERSION || !Array.isArray(cache.items)) {
             return null;
          }
-         return list ? ensureCacheSkips(list, cache) : cache;
+         return list ? migrateCacheLocalSkips(list, cache) : cache;
       } catch (err) {
          return null;
       }
@@ -114,13 +115,12 @@
       });
    }
 
-   function buildCachePayload(items, fetchedAt, fetches, localSkipIds) {
+   function buildCachePayload(items, fetchedAt, fetches) {
       return {
          formatVersion: CACHE_FORMAT_VERSION,
          fetchedAt: fetchedAt,
          fetches: fetches || [],
-         items: items,
-         localSkipIds: Array.isArray(localSkipIds) ? localSkipIds.slice() : []
+         items: items
       };
    }
 
@@ -135,73 +135,191 @@
       persistListCache(list, cache);
    }
 
-   function loadLegacyLocalSkipIds(listId) {
-      var raw = storageGet(LOCAL_HIDDEN_KEY);
+   function emptyBlacklistDoc() {
+      return { formatVersion: BLACKLIST_FORMAT_VERSION, byList: {} };
+   }
+
+   function loadBlacklist() {
+      ensureBlacklistMigrated();
+      var raw = storageGet(BLACKLIST_KEY);
       if (!raw) {
-         return [];
+         return emptyBlacklistDoc();
       }
       try {
-         var map = JSON.parse(raw);
-         var ids = map && map[listId];
-         return Array.isArray(ids) ? ids.slice() : [];
+         var doc = JSON.parse(raw);
+         if (!doc || doc.formatVersion !== BLACKLIST_FORMAT_VERSION || !doc.byList) {
+            return emptyBlacklistDoc();
+         }
+         return doc;
       } catch (err) {
-         return [];
+         return emptyBlacklistDoc();
       }
    }
 
-   function removeLegacyLocalSkipIds(listId) {
-      var raw = storageGet(LOCAL_HIDDEN_KEY);
-      if (!raw) {
+   function saveBlacklist(doc) {
+      storageSet(BLACKLIST_KEY, JSON.stringify(doc));
+   }
+
+   function mergeBlacklistIds(doc, listId, ids) {
+      if (!listId || !Array.isArray(ids) || !ids.length) {
          return;
       }
-      try {
-         var map = JSON.parse(raw);
-         if (!map || !map[listId]) {
-            return;
+      var existing = doc.byList[listId] ? doc.byList[listId].slice() : [];
+      ids.forEach(function (id) {
+         if (id != null && existing.indexOf(id) === -1) {
+            existing.push(id);
          }
-         delete map[listId];
-         if (Object.keys(map).length === 0) {
-            try {
-               if (global.localStorage) {
-                  global.localStorage.removeItem(LOCAL_HIDDEN_KEY);
-               }
-            } catch (err) {
-               /* ignore */
-            }
-         } else {
-            storageSet(LOCAL_HIDDEN_KEY, JSON.stringify(map));
-         }
-      } catch (err) {
-         /* ignore */
+      });
+      if (existing.length) {
+         doc.byList[listId] = existing;
       }
    }
 
-   function ensureCacheSkips(list, cache) {
-      if (!cache) {
+   function ensureBlacklistMigrated() {
+      if (storageGet(BLACKLIST_MIGRATED_KEY)) {
+         return;
+      }
+      var doc = loadBlacklistRaw() || emptyBlacklistDoc();
+      var legacyRaw = storageGet(LOCAL_HIDDEN_KEY);
+      if (legacyRaw) {
+         try {
+            var map = JSON.parse(legacyRaw);
+            if (map && typeof map === 'object') {
+               Object.keys(map).forEach(function (listId) {
+                  mergeBlacklistIds(doc, listId, map[listId]);
+               });
+            }
+         } catch (err) {
+            /* ignore */
+         }
+         try {
+            if (global.localStorage) {
+               global.localStorage.removeItem(LOCAL_HIDDEN_KEY);
+            }
+         } catch (err) {
+            /* ignore */
+         }
+      }
+      mergeBlacklistIds(doc, 'gourmet-food', SEED_GOURMET_BLACKLIST);
+      saveBlacklist(doc);
+      storageSet(BLACKLIST_MIGRATED_KEY, '1');
+   }
+
+   function loadBlacklistRaw() {
+      var raw = storageGet(BLACKLIST_KEY);
+      if (!raw) {
+         return null;
+      }
+      try {
+         return JSON.parse(raw);
+      } catch (err) {
+         return null;
+      }
+   }
+
+   function migrateCacheLocalSkips(list, cache) {
+      if (!cache || !Array.isArray(cache.localSkipIds) || !cache.localSkipIds.length) {
+         if (cache && cache.localSkipIds) {
+            delete cache.localSkipIds;
+         }
          return cache;
       }
-      if (Array.isArray(cache.localSkipIds)) {
-         return cache;
-      }
-      cache.localSkipIds = loadLegacyLocalSkipIds(list.id);
-      if (cache.localSkipIds.length) {
-         removeLegacyLocalSkipIds(list.id);
-      }
+      var doc = loadBlacklist();
+      mergeBlacklistIds(doc, list.id, cache.localSkipIds);
+      saveBlacklist(doc);
+      delete cache.localSkipIds;
       writeListCache(list, cache);
       return cache;
+   }
+
+   function getBlacklistIds(list) {
+      if (!list || !list.id) {
+         return [];
+      }
+      var doc = loadBlacklist();
+      var ids = doc.byList[list.id];
+      return Array.isArray(ids) ? ids.slice() : [];
+   }
+
+   function getSessionSkipIds(listId) {
+      if (!listId || !sessionSkipIds[listId]) {
+         return [];
+      }
+      return sessionSkipIds[listId].slice();
+   }
+
+   function addSessionSkip(listId, itemIid) {
+      if (!listId || itemIid == null) {
+         return;
+      }
+      var skips = getSessionSkipIds(listId);
+      if (skips.indexOf(itemIid) === -1) {
+         skips.push(itemIid);
+      }
+      sessionSkipIds[listId] = skips;
+   }
+
+   function getPickSkipIds(list) {
+      return getSessionSkipIds(list && list.id).concat(getBlacklistIds(list));
+   }
+
+   function addToBlacklist(list, itemIid) {
+      if (!list || !list.id || itemIid == null) {
+         return pickNextForList(list);
+      }
+      var doc = loadBlacklist();
+      mergeBlacklistIds(doc, list.id, [itemIid]);
+      saveBlacklist(doc);
+      return pickNextForList(list);
+   }
+
+   function removeFromBlacklist(list, itemIid) {
+      if (!list || !list.id || itemIid == null) {
+         return pickNextForList(list);
+      }
+      var doc = loadBlacklist();
+      var ids = doc.byList[list.id];
+      if (!Array.isArray(ids)) {
+         return pickNextForList(list);
+      }
+      doc.byList[list.id] = ids.filter(function (id) {
+         return id !== itemIid;
+      });
+      if (!doc.byList[list.id].length) {
+         delete doc.byList[list.id];
+      }
+      saveBlacklist(doc);
+      return pickNextForList(list);
+   }
+
+   function getBlacklistedItemsForMenu(list) {
+      var ids = getBlacklistIds(list);
+      var cache = loadListCache(list);
+      var byId = {};
+      if (cache && Array.isArray(cache.items)) {
+         cache.items.forEach(function (item) {
+            if (item && item.itemIid != null) {
+               byId[item.itemIid] = item;
+            }
+         });
+      }
+      return ids.map(function (id) {
+         var item = byId[id];
+         return {
+            itemIid: id,
+            name: item && item.name ? item.name : ('Item ' + id)
+         };
+      });
+   }
+
+   function clearSessionSkips() {
+      sessionSkipIds = {};
    }
 
    function saveListCache(list, data, fetchedAt) {
       var normalized = normalizeWishlistFromApi(data);
       var slug = (list && list.slug) || 'wishlist';
-      var existing = loadListCache(list);
-      var localSkipIds = existing && Array.isArray(existing.localSkipIds)
-         ? existing.localSkipIds.slice()
-         : loadLegacyLocalSkipIds(list.id);
-      if (localSkipIds.length && (!existing || !Array.isArray(existing.localSkipIds))) {
-         removeLegacyLocalSkipIds(list.id);
-      }
-      var payload = buildCachePayload(normalized.items, fetchedAt, data.fetches, localSkipIds);
+      var payload = buildCachePayload(normalized.items, fetchedAt, data.fetches);
       try {
          persistListCache(list, payload);
          return true;
@@ -211,8 +329,7 @@
             persistListCache(list, buildCachePayload(
                stripDescriptionsFromItems(normalized.items),
                fetchedAt,
-               data.fetches,
-               localSkipIds
+               data.fetches
             ));
             return true;
          } catch (err2) {
@@ -241,44 +358,6 @@
 
    function saveRefreshMeta(meta) {
       storageSet(REFRESH_META_KEY, JSON.stringify(meta));
-   }
-
-   function getLocalSkipIds(list) {
-      var cache = loadListCache(list);
-      if (!cache || !Array.isArray(cache.localSkipIds)) {
-         return loadLegacyLocalSkipIds(list && list.id);
-      }
-      return cache.localSkipIds.slice();
-   }
-
-   function saveLocalSkipIds(list, ids) {
-      var cache = loadListCache(list);
-      if (!cache) {
-         return;
-      }
-      cache.localSkipIds = ids && ids.length ? ids.slice() : [];
-      writeListCache(list, cache);
-      removeLegacyLocalSkipIds(list.id);
-   }
-
-   function reconcileLocalSkips(list, info) {
-      var cache = loadListCache(list);
-      if (!cache || !cache.localSkipIds || !cache.localSkipIds.length) {
-         return;
-      }
-      var skips = cache.localSkipIds.slice();
-      var infoById = {};
-      info.forEach(function (row) {
-         infoById[row.item_iid] = row;
-      });
-      var remaining = skips.filter(function (id) {
-         var row = infoById[id];
-         if (row && isListItemHidden(row)) {
-            return false;
-         }
-         return true;
-      });
-      saveLocalSkipIds(list, remaining);
    }
 
    function pickListToRefresh(lists, caches, meta, now) {
@@ -635,38 +714,52 @@
       return Math.floor(hours / 24) + 'd';
    }
 
-   function logWatchItemsFromCache(list, cache, skipItemIds, wishlistItem, cachedAt, fromCache) {
-      if (!fromCache || !cache || !Array.isArray(cache.items) || !WATCH_ITEM_IIDS.length) {
-         return;
-      }
-      var label = (list && list.label) || (list && list.slug) || 'wishlist';
-      var slug = (list && list.slug) || '';
+   function buildTargetFromListData(list, cache, debug, meta, fromCache, cachedAt, refreshed, logSource) {
+      var skipItemIds = getPickSkipIds(list);
+      var wishlistItem = pickFirstWishlistItem(cache.items, { skipItemIds: skipItemIds });
+      var source = logSource || (fromCache ? 'cached' : 'network');
       var cacheAge = cachedAt != null ? formatCacheAgeMs(Date.now() - cachedAt) : null;
-      var watchSet = {};
-      WATCH_ITEM_IIDS.forEach(function (id) {
-         watchSet[id] = true;
-      });
-      cache.items.forEach(function (item, index) {
-         if (!item || !watchSet[item.itemIid]) {
-            return;
-         }
+      var fetches = fromCache ? [] : (cache.fetches || []);
+
+      if (wishlistItem) {
          console.info(
-            '[Dailies ItemDB] watch item (cache)',
-            label,
-            slug,
-            JSON.stringify({
-               item: item,
-               cacheIndex: index,
-               totalCached: cache.items.length,
-               inLocalSkips: isSkippedItemId(skipItemIds, item.itemIid),
-               isPicked: !!(wishlistItem && wishlistItem.itemIid === item.itemIid),
-               localSkipIds: skipItemIds.slice(),
-               fetchedAt: cache.fetchedAt != null ? cache.fetchedAt : cachedAt,
-               cacheAge: cacheAge,
-               note: 'v2 cache stores no isHidden; present here means API reported visible when last saved'
-            })
+            '[Dailies ItemDB] chosen item',
+            (list && list.label) || (list && list.slug) || 'wishlist',
+            (list && list.slug) || '',
+            JSON.stringify(wishlistItem)
          );
+      }
+
+      logItemdbSummary(list, cache, wishlistItem, fetches, null, {
+         source: source,
+         cacheAge: cacheAge,
+         blacklist: getBlacklistIds(list).length,
+         sessionSkips: getSessionSkipIds(list && list.id).length
       });
+      if (debug) {
+         logItemdbDebug(list, cache, wishlistItem, fetches);
+      }
+      return {
+         list: list,
+         item: wishlistItem,
+         error: null,
+         fromCache: fromCache,
+         cachedAt: cachedAt,
+         refreshed: refreshed
+      };
+   }
+
+   async function fetchAndCacheList(list, debug, now, meta) {
+      var data = await fetchListData(list);
+      saveListCache(list, data, now);
+      var cache = loadListCache(list);
+      if (!cache) {
+         var normalized = normalizeWishlistFromApi(data);
+         cache = buildCachePayload(normalized.items, now, data.fetches);
+      }
+      meta.lastAnyRefreshAt = now;
+      meta.lastRefreshAt[list.id] = now;
+      return buildTargetFromListData(list, cache, debug, meta, false, now, true);
    }
 
    function logItemdbSummary(list, cache, wishlistItem, fetches, error, logMeta) {
@@ -682,11 +775,12 @@
       var pickLabel = wishlistItem ? '"' + wishlistItem.name + '" ' + formatPickPriceNp(wishlistItem.priceNp) : 'none';
       var sourceNote = logMeta.source ? ' source=' + logMeta.source : '';
       var cacheNote = logMeta.cacheAge != null ? ' cacheAge=' + logMeta.cacheAge : '';
-      var skipNote = logMeta.localSkips != null ? ' localSkips=' + logMeta.localSkips : '';
+      var skipNote = logMeta.blacklist != null ? ' blacklist=' + logMeta.blacklist : '';
+      var sessionNote = logMeta.sessionSkips != null ? ' sessionSkips=' + logMeta.sessionSkips : '';
       console.info(
          '[Dailies ItemDB] ' + label + ' (' + slug + '): ' +
          'items=' + itemCount +
-         ' picked=' + pickLabel + sourceNote + cacheNote + skipNote +
+         ' picked=' + pickLabel + sourceNote + cacheNote + skipNote + sessionNote +
          ' | fetches: ' + fetchNote
       );
    }
@@ -710,56 +804,6 @@
       console.groupEnd();
    }
 
-   function buildTargetFromListData(list, cache, debug, meta, fromCache, cachedAt, refreshed, logSource) {
-      cache = ensureCacheSkips(list, cache);
-      var skipItemIds = cache.localSkipIds || [];
-      var wishlistItem = pickFirstWishlistItem(cache.items, { skipItemIds: skipItemIds });
-      logWatchItemsFromCache(list, cache, skipItemIds, wishlistItem, cachedAt, fromCache);
-      var source = logSource || (fromCache ? 'cached' : 'network');
-      var cacheAge = cachedAt != null ? formatCacheAgeMs(Date.now() - cachedAt) : null;
-      var fetches = fromCache ? [] : (cache.fetches || []);
-
-      if (wishlistItem) {
-         console.info(
-            '[Dailies ItemDB] chosen item',
-            (list && list.label) || (list && list.slug) || 'wishlist',
-            (list && list.slug) || '',
-            JSON.stringify(wishlistItem)
-         );
-      }
-
-      logItemdbSummary(list, cache, wishlistItem, fetches, null, {
-         source: source,
-         cacheAge: cacheAge,
-         localSkips: skipItemIds.length
-      });
-      if (debug) {
-         logItemdbDebug(list, cache, wishlistItem, fetches);
-      }
-      return {
-         list: list,
-         item: wishlistItem,
-         error: null,
-         fromCache: fromCache,
-         cachedAt: cachedAt,
-         refreshed: refreshed
-      };
-   }
-
-   async function fetchAndCacheList(list, debug, now, meta) {
-      var data = await fetchListData(list);
-      reconcileLocalSkips(list, data.info);
-      saveListCache(list, data, now);
-      var cache = loadListCache(list);
-      if (!cache) {
-         var normalized = normalizeWishlistFromApi(data);
-         cache = buildCachePayload(normalized.items, now, data.fetches, []);
-      }
-      meta.lastAnyRefreshAt = now;
-      meta.lastRefreshAt[list.id] = now;
-      return buildTargetFromListData(list, cache, debug, meta, false, now, true);
-   }
-
    function pickNextForList(list) {
       var cache = loadListCache(list);
       if (!cache) {
@@ -770,11 +814,7 @@
    }
 
    function skipCurrentItem(list, itemIid) {
-      var skips = getLocalSkipIds(list);
-      if (itemIid != null && skips.indexOf(itemIid) === -1) {
-         skips.push(itemIid);
-         saveLocalSkipIds(list, skips);
-      }
+      addSessionSkip(list && list.id, itemIid);
       return pickNextForList(list);
    }
 
@@ -831,6 +871,12 @@
       loadListTargets: loadListTargets,
       pickNextForList: pickNextForList,
       skipCurrentItem: skipCurrentItem,
+      addToBlacklist: addToBlacklist,
+      removeFromBlacklist: removeFromBlacklist,
+      getBlacklistIds: getBlacklistIds,
+      getBlacklistedItemsForMenu: getBlacklistedItemsForMenu,
+      loadBlacklist: loadBlacklist,
+      clearSessionSkips: clearSessionSkips,
       hasBridge: hasBridge,
       hubFetch: hubFetch,
       isListItemHidden: isListItemHidden,
@@ -848,7 +894,6 @@
       pickUncachedList: pickUncachedList,
       isRateLimited: isRateLimited,
       is429Error: is429Error,
-      getLocalSkipIds: getLocalSkipIds,
       cacheListKey: cacheListKey,
       formatCacheAgeMs: formatCacheAgeMs,
       CACHE_FORMAT_VERSION: CACHE_FORMAT_VERSION,
@@ -856,7 +901,7 @@
       MIN_REFRESH_GAP_MS: MIN_REFRESH_GAP_MS,
       RATE_LIMIT_BACKOFF_MS: RATE_LIMIT_BACKOFF_MS,
       ITEMDB_DEBUG_KEY: ITEMDB_DEBUG_KEY,
-      WATCH_ITEM_IIDS: WATCH_ITEM_IIDS
+      BLACKLIST_KEY: BLACKLIST_KEY
    };
 
 })(window);
