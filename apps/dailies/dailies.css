@@ -171,6 +171,16 @@
    white-space: nowrap;
 }
 
+.wishlist-card-menu-btn {
+   margin-left: auto;
+   flex-shrink: 0;
+}
+
+.wishlist-card-menu-btn[aria-expanded="true"] {
+   background: #eee;
+   border-color: #aaa;
+}
+
 .wishlist-card-body {
    display: flex;
    align-items: flex-start;

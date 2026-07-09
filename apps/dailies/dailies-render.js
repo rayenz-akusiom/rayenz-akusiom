@@ -18,6 +18,12 @@
       '</svg>'
    );
 
+   var WISHLIST_MENU_ICON = svgDataUri(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#444">' +
+      '<circle cx="12" cy="5" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="19" r="1.75"/>' +
+      '</svg>'
+   );
+
    function renderWishlistActionIcon(tag, attrs, iconSrc) {
       var html = '<' + tag;
       Object.keys(attrs).forEach(function (key) {
@@ -90,7 +96,8 @@
       return list && list.listUrl ? list.listUrl : '';
    }
 
-   function renderWishlistCardHeader(list, cachedAt) {
+   function renderWishlistCardHeader(list, cachedAt, menuContext) {
+      menuContext = menuContext || {};
       var html = '<div class="wishlist-card-header">';
       if (list.img) {
          html += '<img class="wishlist-card-list-icon" src="' + escapeHtml(list.img) + '" alt="" referrerpolicy="no-referrer">';
@@ -101,6 +108,23 @@
          html += '<span class="wishlist-cache-hint">' + escapeHtml(formatWishlistCacheAge(cachedAt)) + '</span>';
       }
       html += '</div>';
+      var menuAttrs = {
+         type: 'button',
+         class: 'wishlist-action-btn wishlist-card-menu-btn',
+         'data-wishlist-menu': '',
+         'data-wishlist-id': list.id,
+         title: 'Wishlist options',
+         'aria-label': 'Wishlist options',
+         'aria-expanded': 'false',
+         'aria-haspopup': 'true'
+      };
+      if (menuContext.itemIid != null && menuContext.itemIid !== '') {
+         menuAttrs['data-item-iid'] = String(menuContext.itemIid);
+      }
+      if (menuContext.itemName) {
+         menuAttrs['data-item-name'] = menuContext.itemName;
+      }
+      html += renderWishlistActionIcon('button', menuAttrs, WISHLIST_MENU_ICON);
       html += '</div>';
       return html;
    }
@@ -140,7 +164,12 @@
          html += ' data-item-name="' + escapeHtml(target.item.name || '') + '"';
       }
       html += '>';
-      html += renderWishlistCardHeader(list, target.cachedAt);
+      var menuContext = {};
+      if (target.item) {
+         menuContext.itemIid = target.item.itemIid != null ? target.item.itemIid : '';
+         menuContext.itemName = target.item.name || '';
+      }
+      html += renderWishlistCardHeader(list, target.cachedAt, menuContext);
       if (!target.item) {
          html += '<div class="wishlist-card-body wishlist-card-body--fallback">';
          html += '<p class="wishlist-card-message">' + escapeHtml(renderWishlistFallbackMessage(target)) + '</p>';
@@ -217,16 +246,44 @@
       return menu;
    }
 
+   function clearWishlistMenuButtonState() {
+      document.querySelectorAll('[data-wishlist-menu][aria-expanded="true"]').forEach(function (btn) {
+         btn.setAttribute('aria-expanded', 'false');
+      });
+   }
+
    function closeWishlistContextMenu() {
       var menu = document.getElementById('wishlist-context-menu');
       if (menu) {
          menu.hidden = true;
          menu.innerHTML = '';
       }
+      clearWishlistMenuButtonState();
    }
 
-   function openWishlistContextMenu(clientX, clientY, listId, itemIid, itemName, blacklistedItems) {
+   function clampWishlistContextMenuPosition(menu, left, top) {
+      var pad = 8;
+      menu.style.left = left + 'px';
+      menu.style.top = top + 'px';
+      var rect = menu.getBoundingClientRect();
+      var x = left;
+      var y = top;
+      if (rect.right > window.innerWidth - pad) {
+         x = Math.max(pad, window.innerWidth - rect.width - pad);
+      }
+      if (rect.bottom > window.innerHeight - pad) {
+         y = Math.max(pad, window.innerHeight - rect.height - pad);
+      }
+      if (x < pad) {
+         x = pad;
+      }
+      menu.style.left = x + 'px';
+      menu.style.top = y + 'px';
+   }
+
+   function openWishlistContextMenu(clientX, clientY, listId, itemIid, itemName, blacklistedItems, menuBtn) {
       var menu = ensureWishlistContextMenu();
+      clearWishlistMenuButtonState();
       var html = '';
       if (itemIid != null && !isNaN(itemIid)) {
          html += '<button type="button" class="wishlist-context-menu-item" data-wishlist-blacklist data-wishlist-id="' +
@@ -241,10 +298,24 @@
                escapeHtml(entry.name) + '"</button>';
          });
       }
+      if (!html) {
+         menu.hidden = true;
+         menu.innerHTML = '';
+         return;
+      }
       menu.innerHTML = html;
       menu.hidden = false;
-      menu.style.left = clientX + 'px';
-      menu.style.top = clientY + 'px';
+      var left = clientX;
+      var top = clientY;
+      if (menuBtn) {
+         var anchor = menuBtn.getBoundingClientRect();
+         left = anchor.right - menu.offsetWidth;
+         top = anchor.bottom + 4;
+      }
+      clampWishlistContextMenuPosition(menu, left, top);
+      if (menuBtn) {
+         menuBtn.setAttribute('aria-expanded', 'true');
+      }
    }
 
    /* Wishlist targets come from DailiesItemdb.loadListTargets; this module only renders. */

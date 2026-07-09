@@ -425,7 +425,53 @@
                      return wishlists.find(function (w) { return w.id === listId; });
                   }
 
+                  function readItemIidFromCard(card) {
+                     var attr = card.getAttribute('data-item-iid');
+                     if (attr == null || attr === '') {
+                        return null;
+                     }
+                     var parsed = parseInt(attr, 10);
+                     return isNaN(parsed) ? null : parsed;
+                  }
+
+                  function openWishlistMenuForCard(card, clientX, clientY, menuBtn) {
+                     var listId = card.getAttribute('data-wishlist-id');
+                     if (!listId || !window.DailiesItemdb || !window.DailiesRender) {
+                        return;
+                     }
+                     var list = findWishlistList(listId);
+                     if (!list) {
+                        return;
+                     }
+                     var itemIid = readItemIidFromCard(card);
+                     var itemName = card.getAttribute('data-item-name') || '';
+                     var blacklisted = window.DailiesItemdb.getBlacklistedItemsForMenu(list);
+                     DailiesRender.openWishlistContextMenu(clientX, clientY, listId, itemIid, itemName, blacklisted, menuBtn);
+                  }
+
                   document.addEventListener('click', function (event) {
+                     var menuBtn = event.target.closest('[data-wishlist-menu]');
+                     if (menuBtn) {
+                        event.preventDefault();
+                        var mainCol = document.getElementById('dailies-links');
+                        if (!mainCol || !mainCol.contains(menuBtn)) {
+                           return;
+                        }
+                        var card = menuBtn.closest('.wishlist-card');
+                        if (!card) {
+                           return;
+                        }
+                        var menu = document.getElementById('wishlist-context-menu');
+                        var isOpen = menu && !menu.hidden && menuBtn.getAttribute('aria-expanded') === 'true';
+                        DailiesRender.closeWishlistContextMenu();
+                        if (isOpen) {
+                           return;
+                        }
+                        var rect = menuBtn.getBoundingClientRect();
+                        openWishlistMenuForCard(card, rect.right, rect.bottom + 4, menuBtn);
+                        return;
+                     }
+
                      var menu = document.getElementById('wishlist-context-menu');
                      if (menu && !menu.hidden && !event.target.closest('#wishlist-context-menu')) {
                         DailiesRender.closeWishlistContextMenu();
@@ -477,24 +523,24 @@
                   });
 
                   document.addEventListener('contextmenu', function (event) {
-                     var card = event.target.closest('.wishlist-card[data-item-iid]');
+                     var card = event.target.closest('.wishlist-card');
                      var mainCol = document.getElementById('dailies-links');
                      if (!card || !mainCol || !mainCol.contains(card)) {
                         return;
                      }
                      event.preventDefault();
                      var listId = card.getAttribute('data-wishlist-id');
-                     var itemIid = parseInt(card.getAttribute('data-item-iid'), 10);
-                     var itemName = card.getAttribute('data-item-name') || '';
-                     if (!listId || isNaN(itemIid) || !window.DailiesItemdb || !window.DailiesRender) {
+                     if (!listId || !window.DailiesItemdb || !window.DailiesRender) {
                         return;
                      }
                      var list = findWishlistList(listId);
                      if (!list) {
                         return;
                      }
+                     var itemIid = readItemIidFromCard(card);
+                     var itemName = card.getAttribute('data-item-name') || '';
                      var blacklisted = window.DailiesItemdb.getBlacklistedItemsForMenu(list);
-                     DailiesRender.openWishlistContextMenu(event.clientX, event.clientY, listId, itemIid, itemName, blacklisted);
+                     DailiesRender.openWishlistContextMenu(event.clientX, event.clientY, listId, itemIid, itemName, blacklisted, null);
                   });
 
                   document.addEventListener('keydown', function (event) {
