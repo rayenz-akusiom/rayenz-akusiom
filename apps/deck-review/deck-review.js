@@ -13,7 +13,7 @@
       progress: null,
       activeDeckId: null,
       suggestionIndex: 0,
-      printCache: {},
+      printCache: ScryfallCache.printCache,
       deckPrefs: {},
       profileStatus: '',
       profilesConnected: false,

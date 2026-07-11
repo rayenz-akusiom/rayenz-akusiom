@@ -106,29 +106,15 @@
    }
 
    function deriveSwapQueue(snapshot) {
-      if (!snapshot || !Array.isArray(snapshot.cards)) {
+      var queue = SwapQueue.deriveSwapQueue({ deck_snapshot: snapshot });
+      if (!queue) {
          return { new_set_in: [], new_set_out: [], metadata_flags: [] };
       }
-      var newSetIn = [];
-      var newSetOut = [];
-      var metadataFlags = [];
-      snapshot.cards.forEach(function (card) {
-         var primary = card.primary_category || (card.categories && card.categories[0]);
-         var cats = card.categories || [];
-         if (primary === IN_CATEGORY) {
-            newSetIn.push(card);
-         }
-         if (primary === OUT_CATEGORY) {
-            newSetOut.push(card);
-         }
-         if (cats.indexOf(IN_CATEGORY) >= 0 && primary !== IN_CATEGORY) {
-            metadataFlags.push(card.name + ' (primary: ' + primary + ')');
-         }
-         if (cats.indexOf(OUT_CATEGORY) >= 0 && primary !== OUT_CATEGORY) {
-            metadataFlags.push(card.name + ' (primary: ' + primary + ')');
-         }
-      });
-      return { new_set_in: newSetIn, new_set_out: newSetOut, metadata_flags: metadataFlags };
+      return {
+         new_set_in: queue.new_set_in,
+         new_set_out: queue.new_set_out,
+         metadata_flags: queue.metadata_flags
+      };
    }
 
    function pairSwapSlots(newSetIn, newSetOut) {

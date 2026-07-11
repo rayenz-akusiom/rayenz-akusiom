@@ -130,19 +130,7 @@
    }
 
    async function fetchPrintings(cardName) {
-      var cacheKey = cardName.toLowerCase();
-      if (state.printCache[cacheKey]) {
-         return state.printCache[cacheKey];
-      }
-      var url = 'https://api.scryfall.com/cards/search?q=' +
-         encodeURIComponent('!"' + cardName + '"') + '&unique=prints&order=released';
-      var resp = await fetch(url);
-      if (!resp.ok) {
-         throw new Error('Scryfall lookup failed for ' + cardName);
-      }
-      var json = await resp.json();
-      state.printCache[cacheKey] = json.data || [];
-      return state.printCache[cacheKey];
+      return ScryfallCache.fetchPrintings(cardName);
    }
 
    function printOptionLines(p) {

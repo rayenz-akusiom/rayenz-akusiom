@@ -21,7 +21,7 @@
       activeDeckId: null,
       inputMode: 'list',
       isProxyOrder: false,
-      printCache: {},
+      printCache: ScryfallCache.printCache,
       colorIdentityCache: {},
       progress: null,
       statusMessage: '',
