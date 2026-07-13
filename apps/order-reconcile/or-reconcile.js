@@ -28,14 +28,14 @@
    var wireStagingPanel = OR.wireStagingPanel;
 
    function excludeCategories() {
-      return {
-         'New Set In': true,
-         'New Set Out': true,
-         Commander: true,
-         Lieutenant: true,
-         Lieutenants: true,
-         Maybeboard: true
-      };
+      var excluded = {};
+      excluded[CutCandidates.SWAP_IN] = true;
+      excluded[CutCandidates.SWAP_OUT] = true;
+      Object.keys(CutCandidates.PROTECTED_CATEGORIES).forEach(function (key) {
+         excluded[key] = true;
+      });
+      excluded.Maybeboard = true;
+      return excluded;
    }
 
    function cubeMainCardSameName(deck, name) {
@@ -116,45 +116,12 @@
    }
 
    function deckCutOptions(deck, categoryFilter, includeOutQueue) {
-      var excluded = excludeCategories();
-      var options = [];
-      var seen = {};
-
-      function addOption(card, primary) {
-         if (!card || !card.name) {
-            return;
-         }
-         var key = optionKey(card);
-         if (seen[key]) {
-            return;
-         }
-         seen[key] = true;
-         options.push({
-            name: card.name,
-            set_code: card.set_code,
-            collector_number: card.collector_number,
-            primary_category: primary || card.primary_category
-         });
-      }
-
-      if (includeOutQueue && deck && deck.deck_snapshot) {
-         var queue = OrderReconcileExport.deriveSwapQueue(deck.deck_snapshot);
-         (queue.new_set_out || []).forEach(function (card) {
-            addOption(card, OrderReconcileExport.OUT_CATEGORY);
-         });
-      }
-
-      (deck.deck_snapshot.cards || []).forEach(function (card) {
-         var primary = card.primary_category || (card.categories && card.categories[0]);
-         if (primary && excluded[primary]) {
-            return;
-         }
-         if (categoryFilter && primary !== categoryFilter) {
-            return;
-         }
-         addOption(card, primary);
+      return CutCandidates.buildCutCandidates(deck.deck_snapshot, {
+         excludeMaybeboard: true,
+         categoryFilter: categoryFilter || null,
+         includeOutQueue: !!includeOutQueue,
+         outQueueCategory: OrderReconcileExport.OUT_CATEGORY
       });
-      return options;
    }
 
    function assignDefaultOuts(deck, items) {

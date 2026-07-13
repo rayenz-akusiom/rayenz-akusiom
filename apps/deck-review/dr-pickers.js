@@ -8,7 +8,6 @@
    var scryfallImageFromId = HubUtils.scryfallImageFromId;
    var scryfallImageFromPrinting = HubUtils.scryfallImageFromPrinting;
 
-   var deriveSwapQueue = DR.deriveSwapQueue;
    var findSnapshotCard = DR.findSnapshotCard;
    var fetchPrintings = DR.fetchPrintings;
    var printOptionLines = DR.printOptionLines;
@@ -17,60 +16,14 @@
    var cutOptionLines = DR.cutOptionLines;
    var isMissingSuggestedCut = DR.isMissingSuggestedCut;
 
-   function excludeCategories() {
-      return { Commander: true, Lieutenant: true, Lieutenants: true };
-   }
-
    function deckCutOptions(deck) {
-      var excluded = excludeCategories();
-      var options = [];
+      var options = CutCandidates.buildCutCandidates(deck.deck_snapshot, {
+         outQueueFallback: true
+      });
       var seen = {};
-
-      if (deck.deck_snapshot && Array.isArray(deck.deck_snapshot.cards)) {
-         deck.deck_snapshot.cards.forEach(function (card) {
-            var primary = card.primary_category || (card.categories && card.categories[0]);
-            if (primary && excluded[primary]) {
-               return;
-            }
-            if (primary === 'New Set In' || primary === 'New Set Out') {
-               return;
-            }
-            if (!card.name) {
-               return;
-            }
-            var key = optionKey(card);
-            if (seen[key]) {
-               return;
-            }
-            seen[key] = true;
-            options.push({
-               name: card.name,
-               quantity: 1,
-               set_code: card.set_code,
-               collector_number: card.collector_number,
-               primary_category: primary
-            });
-         });
-      }
-
-      if (!options.length) {
-         var queue = deriveSwapQueue(deck);
-         if (queue) {
-            (queue.new_set_out || []).forEach(function (card) {
-               var key = optionKey({ name: card.name, set_code: card.set_code, collector_number: card.collector_number });
-               if (!seen[key]) {
-                  seen[key] = true;
-                  options.push({
-                     name: card.name,
-                     quantity: 1,
-                     set_code: card.set_code,
-                     collector_number: card.collector_number,
-                     primary_category: 'New Set Out'
-                  });
-               }
-            });
-         }
-      }
+      options.forEach(function (opt) {
+         seen[optionKey(opt)] = true;
+      });
 
       (deck.suggestions || []).forEach(function (s) {
          (s.replaces || []).forEach(function (r) {
