@@ -11,9 +11,15 @@
 
    function findOfficialInScope(proxyCard, setScope) {
       var name = proxyCard.name;
-      var matches = (setScope.cards || []).filter(function (c) {
-         return c.name === name;
-      });
+      var nameLower = String(name || '').toLowerCase();
+      var matches;
+      if (setScope && setScope.cardsByName) {
+         matches = (setScope.cardsByName[nameLower] || []).slice();
+      } else {
+         matches = (setScope.cards || []).filter(function (c) {
+            return c.name === name;
+         });
+      }
       if (!matches.length) {
          return null;
       }

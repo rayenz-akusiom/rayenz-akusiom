@@ -49,6 +49,9 @@
    }
 
    function deckNamesInSnapshot(deck) {
+      if (deck.ruleContext && deck.ruleContext.deckNames) {
+         return deck.ruleContext.deckNames;
+      }
       var names = {};
       (deck.deck_snapshot && deck.deck_snapshot.cards || []).forEach(function (c) {
          if (c.name) {
@@ -59,6 +62,9 @@
    }
 
    function cutCandidates(deck) {
+      if (deck.ruleContext && deck.ruleContext.cutCandidates) {
+         return deck.ruleContext.cutCandidates;
+      }
       var options = [];
       var seen = {};
       (deck.deck_snapshot && deck.deck_snapshot.cards || []).forEach(function (card) {
@@ -75,6 +81,9 @@
          seen[card.name] = true;
          options.push(card);
       });
+      if (deck.ruleContext) {
+         deck.ruleContext.cutCandidates = options;
+      }
       return options;
    }
 
@@ -224,9 +233,14 @@
 
    function findInSetPool(cardName, setScope) {
       var nameLower = String(cardName || '').toLowerCase();
-      var matches = (setScope && setScope.cards || []).filter(function (c) {
-         return String(c.name).toLowerCase() === nameLower;
-      });
+      var matches;
+      if (setScope && setScope.cardsByName) {
+         matches = setScope.cardsByName[nameLower] || [];
+      } else {
+         matches = (setScope && setScope.cards || []).filter(function (c) {
+            return String(c.name).toLowerCase() === nameLower;
+         });
+      }
       if (!matches.length) {
          return null;
       }

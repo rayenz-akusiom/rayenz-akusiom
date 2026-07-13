@@ -99,7 +99,7 @@
    function buildScopeFromCodes(codes, cards, source) {
       var upper = codes.map(function (c) { return String(c).toUpperCase(); });
       var codesKey = HubStorage.normalizeSetCodesKey(upper);
-      return {
+      return indexSetPool({
          primaryCode: upper[0],
          codes: upper,
          codesKey: codesKey,
@@ -108,7 +108,57 @@
          fetchedAt: new Date().toISOString().slice(0, 10),
          source: source || 'scryfall',
          complete: true
+      });
+   }
+
+   function indexSetPool(scope) {
+      if (!scope) {
+         return scope;
+      }
+      if (scope.indexVersion === 1 && scope.cardsByName) {
+         return scope;
+      }
+      var cardsByName = {};
+      (scope.cards || []).forEach(function (card) {
+         var key = String(card.name || '').toLowerCase();
+         if (!key) {
+            return;
+         }
+         if (!cardsByName[key]) {
+            cardsByName[key] = [];
+         }
+         cardsByName[key].push(card);
+      });
+      scope.cardsByName = cardsByName;
+      scope.indexVersion = 1;
+      return scope;
+   }
+
+   function ensureSetPoolIndexed(scope) {
+      return indexSetPool(scope);
+   }
+
+   function buildDeckRuleContext(deck) {
+      if (deck.ruleContext && deck.ruleContext.version === 1) {
+         return deck.ruleContext;
+      }
+      var deckNames = {};
+      (deck.deck_snapshot && deck.deck_snapshot.cards || []).forEach(function (card) {
+         if (card.name) {
+            deckNames[card.name.toLowerCase()] = true;
+         }
+      });
+      deck.ruleContext = {
+         version: 1,
+         swapQueue: deriveSwapQueue(deck),
+         deckNames: deckNames,
+         cutCandidates: null
       };
+      return deck.ruleContext;
+   }
+
+   function getDeckSwapQueue(deck) {
+      return buildDeckRuleContext(deck).swapQueue;
    }
 
    function tryRestoreSetPool(codesKey) {
@@ -116,12 +166,12 @@
          return null;
       }
       if (setPoolCache[codesKey]) {
-         return setPoolCache[codesKey];
+         return ensureSetPoolIndexed(setPoolCache[codesKey]);
       }
       var stored = HubStorage.loadSetPoolCache(codesKey);
       if (stored) {
-         setPoolCache[codesKey] = stored;
-         return stored;
+         setPoolCache[codesKey] = ensureSetPoolIndexed(stored);
+         return setPoolCache[codesKey];
       }
       return null;
    }
@@ -201,7 +251,7 @@
       if (!codes.length && json.primaryCode) {
          codes = [String(json.primaryCode).toUpperCase()];
       }
-      var scope = {
+      var scope = indexSetPool({
          primaryCode: (json.primaryCode || codes[0] || '').toUpperCase(),
          codes: codes,
          codesKey: HubStorage.normalizeSetCodesKey(codes),
@@ -210,7 +260,7 @@
          fetchedAt: json.fetchedAt || new Date().toISOString().slice(0, 10),
          source: 'upload',
          complete: true
-      };
+      });
       if (scope.codesKey) {
          setPoolCache[scope.codesKey] = scope;
          HubStorage.saveSetPoolCache(scope.codesKey, scope);
@@ -263,6 +313,9 @@
       }
       var eligibility = resolveDeckEligibility(deck);
       deck.eligibility = eligibility;
+      if (eligibility.eligible && deck.deck_snapshot) {
+         buildDeckRuleContext(deck);
+      }
       return deck;
    }
 
@@ -350,6 +403,10 @@
    DS.Data = {
       parseYamlProfile: parseYamlProfile,
       resolveDeckEligibility: resolveDeckEligibility,
+      indexSetPool: indexSetPool,
+      ensureSetPoolIndexed: ensureSetPoolIndexed,
+      buildDeckRuleContext: buildDeckRuleContext,
+      getDeckSwapQueue: getDeckSwapQueue,
       fetchSetPool: fetchSetPool,
       tryRestoreSetPool: tryRestoreSetPool,
       loadSetScopeFromUpload: loadSetScopeFromUpload,

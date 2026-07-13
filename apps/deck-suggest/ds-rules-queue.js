@@ -3,7 +3,13 @@
 
    var DS = global.DeckSuggest;
    var G = DS.RuleGuards;
-   var deriveSwapQueue = global.SwapQueue.deriveSwapQueue;
+
+   function getSwapQueue(deck) {
+      if (DS.Data && DS.Data.getDeckSwapQueue) {
+         return DS.Data.getDeckSwapQueue(deck);
+      }
+      return global.SwapQueue.deriveSwapQueue(deck);
+   }
 
    function inCardIsLand(inCard) {
       var typeLine = inCard.type_line || '';
@@ -31,7 +37,7 @@
    function runQueueInPair(deck, setScope, profile, existing, taggerCtx, debug) {
       var added = [];
       var skipped = [];
-      var queue = deriveSwapQueue(deck);
+      var queue = getSwapQueue(deck);
       if (!queue) {
          if (debug && debug.collector) {
             debug.collector.push({
@@ -118,8 +124,8 @@
       return { added: added, skipped: skipped };
    }
 
-   function findSetReplacement(outCard, setScope, profile, taggerCtx) {
-      var deckNames = G.deckNamesInSnapshot({ deck_snapshot: { cards: [outCard] } });
+   function findSetReplacement(deck, outCard, setScope, profile, taggerCtx) {
+      var deckNames = G.deckNamesInSnapshot(deck);
       var best = null;
       (setScope.cards || []).forEach(function (setCard) {
          if (deckNames[setCard.name.toLowerCase()]) {
@@ -138,7 +144,7 @@
 
    function runQueueOutFill(deck, setScope, profile, existing, taggerCtx, debug) {
       var added = [];
-      var queue = deriveSwapQueue(deck);
+      var queue = getSwapQueue(deck);
       if (!queue) {
          return added;
       }
@@ -159,7 +165,7 @@
 
       for (var i = inCards.length; i < outCards.length; i += 1) {
          var outCard = outCards[i];
-         var replacement = findSetReplacement(outCard, setScope, profile, taggerCtx);
+         var replacement = findSetReplacement(deck, outCard, setScope, profile, taggerCtx);
          if (!replacement) {
             if (debug && debug.collector) {
                debug.collector.push({

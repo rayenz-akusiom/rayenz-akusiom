@@ -3,7 +3,13 @@
 
    var DS = global.DeckSuggest;
    var G = DS.RuleGuards;
-   var deriveSwapQueue = global.SwapQueue.deriveSwapQueue;
+
+   function getSwapQueue(deck) {
+      if (DS.Data && DS.Data.getDeckSwapQueue) {
+         return DS.Data.getDeckSwapQueue(deck);
+      }
+      return global.SwapQueue.deriveSwapQueue(deck);
+   }
 
    var CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 };
 
@@ -24,7 +30,7 @@
    }
 
    function buildSwapQueueAnalysis(deck) {
-      var queue = deriveSwapQueue(deck);
+      var queue = getSwapQueue(deck);
       if (!queue) {
          return null;
       }
@@ -59,6 +65,11 @@
 
    function runRulesForDeck(deck, setScope, options) {
       options = options || {};
+      if (DS.Data) {
+         DS.Data.ensureSetPoolIndexed(setScope);
+         DS.Data.buildDeckRuleContext(deck);
+      }
+      G.cutCandidates(deck);
       var profile = deck.profile || {};
       var existing = (options.existingSuggestions || []).slice();
       var suggestions = existing.slice();
