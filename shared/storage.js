@@ -305,6 +305,9 @@
 
    function saveDailiesSettings(settings) {
       setItem(DAILIES_SETTINGS_KEY, JSON.stringify(settings || {}));
+      if (global.HubApiClient && global.HubApiClient.getConfig().enabled) {
+         global.HubApiClient.pushSettings('dailies', settings || {}).catch(function () {});
+      }
    }
 
    global.HubStorage = {

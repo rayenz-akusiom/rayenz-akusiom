@@ -768,9 +768,16 @@
             }
 
             function initDailiesApp() {
-               initCoconutShyAutomation();
-               initWishingWellAutomation();
-               initDailiesPage();
+               function start() {
+                  initCoconutShyAutomation();
+                  initWishingWellAutomation();
+                  initDailiesPage();
+               }
+               if (window.HubApiClient && window.HubApiClient.syncDailiesSettingsFromApi) {
+                  window.HubApiClient.syncDailiesSettingsFromApi(DailiesSettings.loadSettings).then(start).catch(start);
+               } else {
+                  start();
+               }
             }
 
             window.__initDailiesApp = initDailiesApp;

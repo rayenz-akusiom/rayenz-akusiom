@@ -220,13 +220,27 @@
       });
    }
 
-   function readProfileYaml(deckId) {
+   function readProfileYamlFromDir(deckId) {
       return getProfilesDir().then(function (handle) {
          if (!handle) {
             return null;
          }
          return readProfileFile(handle, deckId);
       });
+   }
+
+   function readProfileYaml(deckId) {
+      if (global.HubApiClient && global.HubApiClient.getConfig().enabled) {
+         return global.HubApiClient.pullProfileYaml(deckId).then(function (yaml) {
+            if (yaml) {
+               return yaml;
+            }
+            return readProfileYamlFromDir(deckId);
+         }).catch(function () {
+            return readProfileYamlFromDir(deckId);
+         });
+      }
+      return readProfileYamlFromDir(deckId);
    }
 
    function isConnected() {
