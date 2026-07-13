@@ -4,7 +4,7 @@
    var DR = global.DeckReview;
    var state = DR.state;
 
-   var deriveSwapQueue = SwapQueue.deriveSwapQueue;
+   var getSwapQueue = SuggestionsBundle.getSwapQueue;
 
    var escapeHtml = HubUtils.escapeHtml;
    var optionKey = HubUtils.optionKey;
@@ -30,7 +30,7 @@
    }
 
    function getSuggestionStaleness(deck, suggestion) {
-      var queue = deriveSwapQueue(deck);
+      var queue = getSwapQueue(deck);
       if (!queue) {
          return { stale: false, level: '', reasons: [] };
       }
@@ -86,7 +86,7 @@
    }
 
    function getSwapQueueReconciliation(deck) {
-      var queue = deriveSwapQueue(deck);
+      var queue = getSwapQueue(deck);
       if (!queue) {
          return { uncoveredIn: [], uncoveredOut: [], unpairedIn: [], unpairedOut: [] };
       }
@@ -249,7 +249,7 @@
    }
 
    DR.archidektApplyOpenUrl = archidektApplyOpenUrl;
-   DR.deriveSwapQueue = deriveSwapQueue;
+   DR.deriveSwapQueue = getSwapQueue;
    DR.formatSwapQueueItem = formatSwapQueueItem;
    DR.getSuggestionStaleness = getSuggestionStaleness;
    DR.getSwapQueueReconciliation = getSwapQueueReconciliation;

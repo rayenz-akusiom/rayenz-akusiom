@@ -1,7 +1,7 @@
 (function (global) {
    'use strict';
 
-   var SUPPORTED_SCHEMAS = { '1.0': true, '1.1': true };
+   var SUPPORTED_SCHEMAS = SuggestionsBundle.SUPPORTED_SCHEMAS;
    var CONFIDENCE_ORDER = { high: 0, medium: 1, low: 2 };
    var LATEST_URL = 'data/suggestions/latest.json';
 
@@ -32,52 +32,16 @@
       HubUtils.ensureCss('apps/deck-review/deck-review.css', 'data-deck-review-css');
    }
 
-   function normalizeArrayValue(value) {
-      if (!value) {
-         return [];
-      }
-      return Array.isArray(value) ? value : [value];
-   }
-
    function normalizeSuggestion(suggestion) {
-      if (!suggestion) {
-         return suggestion;
-      }
-      suggestion.replaces = normalizeArrayValue(suggestion.replaces);
-      suggestion.roles_matched = normalizeArrayValue(suggestion.roles_matched);
-      return suggestion;
+      return SuggestionsBundle.normalizeSuggestion(suggestion);
    }
 
    function validateSuggestions(data) {
-      if (!data || typeof data !== 'object') {
-         throw new Error('Invalid JSON: expected an object');
-      }
-      if (!data.meta || !SUPPORTED_SCHEMAS[data.meta.schema_version]) {
-         throw new Error('Unsupported or missing schema_version (need 1.0 or 1.1)');
-      }
-      if (!Array.isArray(data.decks)) {
-         throw new Error('Missing decks array');
-      }
-      data.decks.forEach(function (deck) {
-         deck.suggestions = normalizeArrayValue(deck.suggestions).map(normalizeSuggestion);
-      });
-      return data;
+      return SuggestionsBundle.validatePayload(data);
    }
 
    function sortSuggestions(suggestions) {
-      return suggestions.slice().sort(function (a, b) {
-         var tierA = a.priority_tier === 'swap' ? 0 : 1;
-         var tierB = b.priority_tier === 'swap' ? 0 : 1;
-         if (tierA !== tierB) {
-            return tierA - tierB;
-         }
-         var confA = CONFIDENCE_ORDER[a.confidence] != null ? CONFIDENCE_ORDER[a.confidence] : 9;
-         var confB = CONFIDENCE_ORDER[b.confidence] != null ? CONFIDENCE_ORDER[b.confidence] : 9;
-         if (confA !== confB) {
-            return confA - confB;
-         }
-         return String(a.suggestion_id).localeCompare(String(b.suggestion_id));
-      });
+      return SuggestionsBundle.sortSuggestions(suggestions);
    }
 
    function getDeckById(deckId) {
