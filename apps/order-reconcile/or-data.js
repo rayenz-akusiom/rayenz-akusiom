@@ -71,6 +71,7 @@
                await sleep(150);
             }
          }
+         state.assignmentIndex = OR.buildAssignmentIndex(state.decks);
          setStatus('Fetched ' + state.decks.length + ' decks + staging list.');
          finishProgress('Fetched ' + state.decks.length + ' decks + staging list.');
       } catch (err) {

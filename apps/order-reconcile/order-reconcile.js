@@ -19,6 +19,7 @@
       reconcileItems: [],
       completedDecks: {},
       activeDeckId: null,
+      assignmentIndex: null,
       inputMode: 'list',
       isProxyOrder: false,
       printCache: ScryfallCache.printCache,

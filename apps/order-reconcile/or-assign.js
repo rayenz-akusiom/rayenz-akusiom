@@ -34,18 +34,51 @@
       return copies;
    }
 
-   function findCandidatesForName(cardName) {
-      var candidates = [];
-      state.decks.forEach(function (deck) {
+   function indexKeysForName(name) {
+      var keys = {};
+      keys[String(name || '').trim().toLowerCase()] = true;
+      OrderReconcileExport.cardFaces(name).forEach(function (face) {
+         keys[face] = true;
+      });
+      return Object.keys(keys);
+   }
+
+   function addCandidateToIndex(index, name, candidate) {
+      indexKeysForName(name).forEach(function (key) {
+         if (!index[key]) {
+            index[key] = [];
+         }
+         index[key].push(candidate);
+      });
+   }
+
+   function lookupAssignmentIndex(index, cardName) {
+      var seen = {};
+      var result = [];
+      function collect(key) {
+         (index[key] || []).forEach(function (candidate) {
+            if (seen[candidate.slot_key]) {
+               return;
+            }
+            seen[candidate.slot_key] = true;
+            result.push(candidate);
+         });
+      }
+      collect(String(cardName || '').trim().toLowerCase());
+      OrderReconcileExport.cardFaces(cardName).forEach(collect);
+      return result;
+   }
+
+   function buildAssignmentIndex(decks) {
+      var swapByName = {};
+      var maybeboardByName = {};
+
+      (decks || []).forEach(function (deck) {
          if (OrderReconcileExport.isCubeDeck(deck)) {
-            var maybeboard = OrderReconcileExport.deriveMaybeboard(deck.deck_snapshot);
-            maybeboard.forEach(function (entry, idx) {
-               if (!OrderReconcileExport.namesMatch(cardName, entry.name)) {
-                  return;
-               }
+            OrderReconcileExport.deriveMaybeboard(deck.deck_snapshot).forEach(function (entry, idx) {
                var destCat = OrderReconcileExport.resolveCubeDestinationCategory(
                   deck.deck_snapshot, entry.color_identity);
-               candidates.push({
+               addCandidateToIndex(swapByName, entry.name, {
                   deck_id: deck.deck_id,
                   deck_name: deck.deck_name,
                   slot_key: OrderReconcileExport.maybeboardSlotKey(deck.deck_id, idx, entry.name),
@@ -63,12 +96,10 @@
             });
             return;
          }
+
          var queue = OrderReconcileExport.deriveSwapQueue(deck.deck_snapshot);
          OrderReconcileExport.pairSwapSlots(queue.new_set_in, queue.new_set_out).forEach(function (pair) {
-            if (!OrderReconcileExport.namesMatch(cardName, pair.in.name)) {
-               return;
-            }
-            candidates.push({
+            addCandidateToIndex(swapByName, pair.in.name, {
                deck_id: deck.deck_id,
                deck_name: deck.deck_name,
                slot_key: OrderReconcileExport.fulfilledSlotKey(deck.deck_id, pair.index, pair.in.name),
@@ -78,21 +109,9 @@
                maybeboard_entry: null
             });
          });
-      });
-      return candidates;
-   }
 
-   function findMaybeboardCandidatesForName(cardName) {
-      var candidates = [];
-      state.decks.forEach(function (deck) {
-         if (OrderReconcileExport.isCubeDeck(deck)) {
-            return;
-         }
          OrderReconcileExport.deriveMaybeboard(deck.deck_snapshot).forEach(function (entry, idx) {
-            if (!OrderReconcileExport.namesMatch(cardName, entry.name)) {
-               return;
-            }
-            candidates.push({
+            addCandidateToIndex(maybeboardByName, entry.name, {
                deck_id: deck.deck_id,
                deck_name: deck.deck_name,
                slot_key: OrderReconcileExport.maybeboardSlotKey(deck.deck_id, idx, entry.name),
@@ -110,7 +129,25 @@
             });
          });
       });
-      return candidates;
+
+      return { swapByName: swapByName, maybeboardByName: maybeboardByName };
+   }
+
+   function ensureAssignmentIndex() {
+      if (!state.assignmentIndex) {
+         state.assignmentIndex = buildAssignmentIndex(state.decks);
+      }
+      return state.assignmentIndex;
+   }
+
+   function findCandidatesForName(cardName) {
+      var index = ensureAssignmentIndex();
+      return lookupAssignmentIndex(index.swapByName, cardName);
+   }
+
+   function findMaybeboardCandidatesForName(cardName) {
+      var index = ensureAssignmentIndex();
+      return lookupAssignmentIndex(index.maybeboardByName, cardName);
    }
 
    async function resolveCubeCandidateCategories(candidates) {
@@ -148,6 +185,7 @@
    }
 
    async function buildAssignmentPlan() {
+      state.assignmentIndex = buildAssignmentIndex(state.decks);
       state.copies = expandToCopies(state.acquiredCards);
       state.assignments = [];
       state.needsReview = [];
@@ -665,6 +703,7 @@
    }
 
    OR.expandToCopies = expandToCopies;
+   OR.buildAssignmentIndex = buildAssignmentIndex;
    OR.findCandidatesForName = findCandidatesForName;
    OR.findMaybeboardCandidatesForName = findMaybeboardCandidatesForName;
    OR.resolveCubeCandidateCategories = resolveCubeCandidateCategories;
