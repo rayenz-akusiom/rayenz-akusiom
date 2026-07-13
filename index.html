@@ -49,6 +49,17 @@
                      <span class="hub-nav-label">More</span>
                   </a>
                </li>
+               <li>
+                  <a class="hub-nav-link" href="#/settings/dailies">
+                     <span class="hub-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <circle cx="12" cy="12" r="3"></circle>
+                           <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                        </svg>
+                     </span>
+                     <span class="hub-nav-label">Dailies Settings</span>
+                  </a>
+               </li>
             </ul>
          </div>
          <div class="hub-nav-group">
@@ -105,6 +116,7 @@
    <script src="shared/scryfall-cache.js"></script>
    <script src="shared/hub-progress.js"></script>
    <script src="apps/dailies/load.js"></script>
+   <script src="apps/settings-dailies/load.js"></script>
    <script src="apps/neopets-more/load.js"></script>
    <script src="shared/swap-queue.js"></script>
    <script src="shared/suggestions-bundle.js"></script>
@@ -136,6 +148,7 @@
    <script src="apps/deck-suggest/ds-render.js"></script>
    <script>
       HubRouter.registerRoute('/dailies', loadDailiesApp);
+      HubRouter.registerRoute('/settings/dailies', loadDailiesSettingsApp);
       HubRouter.registerRoute('/neopets-more', loadNeopetsMoreApp);
       HubRouter.registerRoute('/deck-review', loadDeckReviewApp);
       HubRouter.registerRoute('/deck-suggest', loadDeckSuggestApp);
