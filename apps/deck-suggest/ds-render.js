@@ -47,6 +47,7 @@
       var selected = state.deckSelection.selectedIds || [];
 
       var html = '<h3>Setup</h3>' +
+         '<p class="ds-meta"><a href="#/settings/deck-suggest">Open Deck Suggest settings</a> for folder URL, set codes, and debug prefs.</p>' +
          '<label class="ds-field">Set codes (comma-separated)' +
          '<input type="text" id="ds-set-codes" value="' + escapeHtml(codes) + '" placeholder="MSH,MSC,MAR"></label>' +
          '<div class="ds-actions">' +

@@ -69,6 +69,17 @@
       });
    }
 
+   function applyMainPetFromPayload(payload) {
+      if (!payload || !global.DailiesSettings || !global.DailiesSettings.saveMainPet) {
+         return;
+      }
+      var name = payload.mainPetName != null ? String(payload.mainPetName).trim() : '';
+      var slug = payload.mainPetSlug != null ? String(payload.mainPetSlug).trim() : '';
+      if (name) {
+         global.DailiesSettings.saveMainPet(name, slug || null);
+      }
+   }
+
    function syncDailiesSettingsFromApi(fallbackLoader) {
       var cfg = getConfig();
       if (!cfg.enabled) {
@@ -79,6 +90,7 @@
             return fallbackLoader ? fallbackLoader() : null;
          }
          global.HubStorage.saveDailiesSettings(payload);
+         applyMainPetFromPayload(payload);
          return payload;
       }).catch(function () {
          return fallbackLoader ? fallbackLoader() : null;

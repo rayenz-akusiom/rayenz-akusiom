@@ -482,6 +482,13 @@
    padding: 4px 0;
 }
 
+.pet-edit-host {
+   position: relative;
+   flex-shrink: 0;
+   display: inline-block;
+   line-height: 0;
+}
+
 .pet-headshot-link {
    flex-shrink: 0;
    line-height: 0;
@@ -498,8 +505,136 @@
    display: block;
 }
 
+.pet-headshot-link[hidden],
+.pet-headshot[hidden] {
+   display: none !important;
+}
+
+.pet-headshot--empty {
+   background: #d4d4d8;
+   border-color: #a1a1aa;
+}
+
 .pet-headshot-link:hover .pet-headshot {
    border-color: #333;
+}
+
+.pet-edit-btn {
+   position: absolute;
+   right: -2px;
+   bottom: -2px;
+   width: 22px;
+   height: 22px;
+   padding: 0;
+   border: 1px solid #ccc;
+   border-radius: 50%;
+   background: #fff;
+   color: #333;
+   font-size: 12px;
+   line-height: 1;
+   cursor: pointer;
+   opacity: 0;
+   pointer-events: none;
+   z-index: 2;
+   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.pet-edit-host:hover .pet-edit-btn,
+.pet-edit-host:focus-within .pet-edit-btn {
+   opacity: 1;
+   pointer-events: auto;
+}
+
+.pet-edit-btn:hover,
+.pet-edit-btn:focus-visible {
+   background: #f4f4f5;
+   outline: none;
+   border-color: #888;
+}
+
+.daily-tile.pet-edit-host .pet-edit-btn {
+   right: 4px;
+   bottom: 4px;
+}
+
+.pet-tile--empty .pet-tile-placeholder {
+   display: block;
+   width: 64px;
+   height: 64px;
+   margin: 0 auto 6px;
+   border-radius: 50%;
+   background: #d4d4d8;
+   border: 2px solid #a1a1aa;
+}
+
+.pet-tile--empty .pet-tile-nameplate {
+   display: block;
+   text-align: center;
+   color: #71717a;
+   font-weight: 600;
+   font-size: 0.85rem;
+   line-height: 1.3;
+}
+
+.pet-edit-popover {
+   position: fixed;
+   z-index: 1200;
+   min-width: 220px;
+   padding: 12px;
+   border-radius: 8px;
+   background: #fff;
+   border: 1px solid #d4d4d8;
+   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+   color: #18181b;
+}
+
+.pet-edit-popover[hidden] {
+   display: none;
+}
+
+.pet-edit-popover-label {
+   display: block;
+   font-size: 0.85rem;
+   font-weight: 600;
+   margin-bottom: 6px;
+}
+
+.pet-edit-popover-input {
+   display: block;
+   width: 100%;
+   box-sizing: border-box;
+   padding: 8px 10px;
+   border: 1px solid #d4d4d8;
+   border-radius: 6px;
+   font: inherit;
+}
+
+.pet-edit-popover-actions {
+   display: flex;
+   gap: 8px;
+   margin-top: 10px;
+}
+
+.pet-edit-popover-save,
+.pet-edit-popover-cancel {
+   flex: 1;
+   padding: 6px 10px;
+   border-radius: 6px;
+   border: 1px solid #d4d4d8;
+   font: inherit;
+   font-weight: 600;
+   cursor: pointer;
+}
+
+.pet-edit-popover-save {
+   background: #2563eb;
+   border-color: #2563eb;
+   color: #fff;
+}
+
+.pet-edit-popover-cancel {
+   background: #f4f4f5;
+   color: #18181b;
 }
 
 .settings-gear {
@@ -517,6 +652,7 @@
    cursor: pointer;
    font-size: 22px;
    line-height: 1;
+   text-decoration: none;
 }
 
 .settings-gear:hover,

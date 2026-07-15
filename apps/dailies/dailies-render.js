@@ -72,6 +72,29 @@
       return html;
    }
 
+   function renderMainPetSidebarTile(link, petName) {
+      var hasPet = !!(petName && String(petName).trim());
+      var label = hasPet ? String(petName).trim() : 'Main Pet';
+      var tileClass = 'daily-tile sidebar-tile pet-edit-host' + (hasPet ? '' : ' pet-tile--empty');
+      var html = '<div class="' + tileClass + '" data-link-id="main-pet">';
+      if (hasPet) {
+         var url = buildPetHref(link.petHref, petName);
+         var img = 'https://pets.neopets.com/cpn/' + encodeURIComponent(petName) + '/1/4.png';
+         html += '<a href="' + escapeHtml(url) + '" target="_blank" class="main-pet-link" data-pet-href="' +
+            escapeHtml(link.petHref || '') + '">';
+         html += '<img src="' + escapeHtml(img) + '" alt="" referrerpolicy="no-referrer">';
+         html += '</a>';
+         html += '<a href="' + escapeHtml(url) + '" target="_blank" class="main-pet-label main-pet-link" data-pet-href="' +
+            escapeHtml(link.petHref || '') + '">' + escapeHtml(label) + '</a>';
+      } else {
+         html += '<span class="pet-tile-placeholder" aria-hidden="true"></span>';
+         html += '<span class="main-pet-label pet-tile-nameplate">' + escapeHtml(label) + '</span>';
+      }
+      html += '<button type="button" class="pet-edit-btn" aria-label="Edit main pet" title="Edit main pet">&#9998;</button>';
+      html += '</div>';
+      return html;
+   }
+
    function formatNpPrice(value) {
       if (value == null || value === Infinity || isNaN(value)) {
          return null;
@@ -438,9 +461,8 @@
       var html = '';
 
       if (mainPet) {
-         var petTile = Object.assign({}, mainPet, { label: petName });
          html += '<div class="dailies-sidebar-pet">';
-         html += renderLinkTile(petTile, petName, 'sidebar-tile');
+         html += renderMainPetSidebarTile(mainPet, petName);
          html += '</div>';
       }
 
@@ -746,6 +768,7 @@
       readSettingsFromTray: readSettingsFromTray,
       renderDailiesPage: renderDailiesPage,
       renderLinkTile: renderLinkTile,
+      renderMainPetSidebarTile: renderMainPetSidebarTile,
       renderWishlistCard: renderWishlistCard,
       renderWishlistsSection: renderWishlistsSection,
       refreshSingleWishlistCard: refreshSingleWishlistCard,

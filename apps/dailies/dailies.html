@@ -1,12 +1,16 @@
 <div class="hub-sticky-chrome dailies-sticky-chrome">
    <header class="page_title site-header">
       <div class="site-header-start">
-         <a id="pet-headshot-link" class="pet-headshot-link" href="https://www.neopets.com/petlookup.phtml?pet=Blue_Eyes_WhDragon" target="_blank" title="View pet profile">
-            <img id="pet-headshot" class="pet-headshot" src="https://pets.neopets.com/cp/l88flmjv/4/1.png" alt="Main pet">
-         </a>
+         <div class="pet-edit-host" id="pet-headshot-host">
+            <a id="pet-headshot-link" class="pet-headshot-link" href="#" target="_blank" title="View pet profile" hidden>
+               <img id="pet-headshot" class="pet-headshot" src="" alt="Main pet">
+            </a>
+            <span id="pet-headshot-placeholder" class="pet-headshot pet-headshot--empty" aria-hidden="true"></span>
+            <button type="button" class="pet-edit-btn" aria-label="Edit main pet" title="Edit main pet">&#9998;</button>
+         </div>
          <h1>Rayenz's Dailies</h1>
       </div>
-      <button type="button" id="settings-open" class="settings-gear" aria-label="Open settings" title="Settings">&#9881;</button>
+      <a id="settings-open" class="settings-gear" href="#/settings/dailies" aria-label="Open settings" title="Settings">&#9881;</a>
    </header>
    <div class="hub-progress-host" id="dailies-progress-host"></div>
    <div id="seasonal-alerts" class="seasonal-alerts" hidden>
@@ -15,14 +19,14 @@
    </div>
 </div>
 
-<div id="settings-backdrop" class="settings-backdrop" hidden></div>
-<aside id="settings-tray" class="settings-tray" aria-label="Settings" aria-hidden="true">
-   <div class="settings-tray-header">
-      <h2>Settings</h2>
-      <button type="button" id="settings-close" class="settings-tray-close" aria-label="Close settings">&times;</button>
+<div id="pet-edit-popover" class="pet-edit-popover" hidden role="dialog" aria-label="Edit main pet">
+   <label class="pet-edit-popover-label" for="pet-edit-input">Pet name</label>
+   <input type="text" id="pet-edit-input" class="pet-edit-popover-input" autocomplete="off" spellcheck="false" placeholder="Your_Pet_Name">
+   <div class="pet-edit-popover-actions">
+      <button type="button" id="pet-edit-save" class="pet-edit-popover-save">Save</button>
+      <button type="button" id="pet-edit-cancel" class="pet-edit-popover-cancel">Cancel</button>
    </div>
-   <div class="settings-tray-body"></div>
-</aside>
+</div>
 
 <div class="dailies-layout">
    <section class="dailies-main" id="dailies-links"></section>

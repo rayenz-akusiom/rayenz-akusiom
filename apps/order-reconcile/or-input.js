@@ -69,21 +69,14 @@
    }
 
    function renderInputPhase() {
+      var settingsSummary = state.settings.folderUrl
+         ? escapeHtml(state.settings.folderUrl)
+         : '(no folder URL — configure in Settings)';
       state.ui.mainContent.innerHTML =
          '<div class="or-settings-panel">' +
          '<h3>Settings</h3>' +
-         '<label for="or-folder-url">Archidekt folder URL</label>' +
-         '<input type="url" id="or-folder-url" value="' + escapeHtml(state.settings.folderUrl || '') + '">' +
-         '<label for="or-staging-url">Buy/trade staging deck URL</label>' +
-         '<input type="url" id="or-staging-url" value="' + escapeHtml(state.settings.stagingDeckUrl) + '">' +
-         '<label for="or-registry-source">Deck registry source</label>' +
-         '<select id="or-registry-source">' +
-         '<option value="folder"' + (state.settings.registrySource !== 'urls' ? ' selected' : '') + '>Archidekt folder</option>' +
-         '<option value="urls"' + (state.settings.registrySource === 'urls' ? ' selected' : '') + '>Custom Archidekt URLs</option>' +
-         '</select>' +
-         '<label for="or-custom-urls">Custom deck URLs (one per line)</label>' +
-         '<textarea id="or-custom-urls" rows="3">' + escapeHtml(state.settings.customDeckUrls || '') + '</textarea>' +
-         '<button type="button" class="or-btn or-btn-ghost" id="or-save-settings" style="margin-top:12px">Save settings</button>' +
+         '<p class="or-meta">Folder: ' + settingsSummary + '</p>' +
+         '<p><a class="or-btn or-btn-ghost" href="#/settings/order-reconcile">Open Order Reconcile settings</a></p>' +
          '</div>' +
          '<div class="or-input-tabs">' +
          '<button type="button" class="or-input-tab' + (state.inputMode === 'list' ? ' active' : '') + '" data-input-mode="list">Card list</button>' +
@@ -118,14 +111,6 @@
          parseInputToAcquired();
          document.getElementById('or-parsed-area').innerHTML = renderParsedTable();
          wireParsedTable();
-      });
-      document.getElementById('or-save-settings').addEventListener('click', function () {
-         state.settings.folderUrl = document.getElementById('or-folder-url').value.trim();
-         state.settings.stagingDeckUrl = document.getElementById('or-staging-url').value.trim();
-         state.settings.registrySource = document.getElementById('or-registry-source').value;
-         state.settings.customDeckUrls = document.getElementById('or-custom-urls').value;
-         HubStorage.saveOrderReconcileSettings(state.settings);
-         setStatus('Settings saved.');
       });
       var proxyCheckbox = document.getElementById('or-proxy-order');
       if (proxyCheckbox) {

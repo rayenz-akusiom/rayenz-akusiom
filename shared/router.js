@@ -30,7 +30,12 @@
       navLinks.forEach(function (link) {
          var href = link.getAttribute('href') || '';
          var linkPath = href.replace(/^#/, '');
-         link.classList.toggle('active', linkPath === path);
+         var prefix = link.getAttribute('data-nav-prefix');
+         var active = linkPath === path;
+         if (!active && prefix) {
+            active = path === prefix || path.indexOf(prefix + '/') === 0;
+         }
+         link.classList.toggle('active', active);
       });
    }
 

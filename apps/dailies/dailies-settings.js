@@ -3,8 +3,6 @@
 
    var MAIN_PET_KEY = 'rayenz-main-pet';
    var MAIN_PET_SLUG_KEY = 'rayenz-main-pet-slug';
-   var DEFAULT_PET = 'Blue_Eyes_WhDragon';
-   var DEFAULT_SLUG = 'l88flmjv';
    var IMG = 'https://images.neopets.com/items/';
 
    var DEFAULT_WISHLISTS = [
@@ -122,29 +120,81 @@
 
    function getMainPet() {
       try {
-         return localStorage.getItem(MAIN_PET_KEY) || DEFAULT_PET;
+         return String(localStorage.getItem(MAIN_PET_KEY) || '').trim();
       } catch (e) {
-         return DEFAULT_PET;
+         return '';
       }
    }
 
    function getMainPetSlug() {
       try {
-         return localStorage.getItem(MAIN_PET_SLUG_KEY) || DEFAULT_SLUG;
+         return String(localStorage.getItem(MAIN_PET_SLUG_KEY) || '').trim();
       } catch (e) {
-         return DEFAULT_SLUG;
+         return '';
       }
+   }
+
+   function hasMainPet() {
+      return !!getMainPet();
    }
 
    function saveMainPet(petName, slug) {
       try {
-         localStorage.setItem(MAIN_PET_KEY, petName);
+         var name = String(petName || '').trim();
+         if (!name) {
+            localStorage.removeItem(MAIN_PET_KEY);
+            localStorage.removeItem(MAIN_PET_SLUG_KEY);
+            return;
+         }
+         localStorage.setItem(MAIN_PET_KEY, name);
          if (slug) {
-            localStorage.setItem(MAIN_PET_SLUG_KEY, slug);
+            localStorage.setItem(MAIN_PET_SLUG_KEY, String(slug).trim());
+         } else {
+            localStorage.removeItem(MAIN_PET_SLUG_KEY);
          }
       } catch (e) {
          /* ignore */
       }
+   }
+
+   /**
+    * Extract a pet image slug from petlookup HTML.
+    * Prefers the main /1/1.png portrait over the first /cp/ hit (often the active-pet chrome).
+    * When the pet name changed, rejects a result that only matches the previous slug.
+    */
+   function parsePetImageSlug(html, options) {
+      options = options || {};
+      var previousSlug = options.previousSlug ? String(options.previousSlug).trim() : '';
+      var nameChanged = !!options.nameChanged;
+      var text = String(html || '');
+      var mainMatch = text.match(/pets\.neopets\.com\/cp\/([a-z0-9]+)\/1\/1\.png/i);
+      if (mainMatch) {
+         var mainSlug = mainMatch[1];
+         if (nameChanged && previousSlug && mainSlug === previousSlug) {
+            return null;
+         }
+         return mainSlug;
+      }
+      var found = [];
+      var re = /pets\.neopets\.com\/cp\/([a-z0-9]+)\//gi;
+      var match;
+      while ((match = re.exec(text)) !== null) {
+         if (found.indexOf(match[1]) === -1) {
+            found.push(match[1]);
+         }
+      }
+      if (found.length === 0) {
+         return null;
+      }
+      if (nameChanged && previousSlug) {
+         for (var i = 0; i < found.length; i++) {
+            if (found[i] !== previousSlug) {
+               return found[i];
+            }
+         }
+         return null;
+      }
+      return found[0];
    }
 
    function isSchoolEnabled(settings, schoolId) {
@@ -170,8 +220,6 @@
    global.DailiesSettings = {
       MAIN_PET_KEY: MAIN_PET_KEY,
       MAIN_PET_SLUG_KEY: MAIN_PET_SLUG_KEY,
-      DEFAULT_PET: DEFAULT_PET,
-      DEFAULT_SLUG: DEFAULT_SLUG,
       DEFAULT_WISHLISTS: DEFAULT_WISHLISTS,
       SCHOOL_LABELS: SCHOOL_LABELS,
       parseItemDbListUrl: parseItemDbListUrl,
@@ -182,7 +230,9 @@
       saveSettings: saveSettings,
       getMainPet: getMainPet,
       getMainPetSlug: getMainPetSlug,
+      hasMainPet: hasMainPet,
       saveMainPet: saveMainPet,
+      parsePetImageSlug: parsePetImageSlug,
       shouldShowLink: shouldShowLink
    };
 })(window);

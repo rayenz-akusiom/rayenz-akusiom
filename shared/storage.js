@@ -55,9 +55,9 @@
    }
 
    var DEFAULT_ORDER_RECONCILE_SETTINGS = {
-      stagingDeckUrl: 'https://archidekt.com/decks/8667017',
+      stagingDeckUrl: '',
       registrySource: 'folder',
-      folderUrl: 'https://archidekt.com/folders/81998',
+      folderUrl: '',
       customDeckUrls: ''
    };
 
@@ -75,6 +75,9 @@
 
    function saveOrderReconcileSettings(settings) {
       setItem(ORDER_RECONCILE_SETTINGS_KEY, JSON.stringify(settings || {}));
+      if (global.HubApiClient && global.HubApiClient.getConfig().enabled) {
+         global.HubApiClient.pushSettings('order-reconcile', settings || {}).catch(function () {});
+      }
    }
 
    function orderReconcileSessionKey(sessionId) {
@@ -99,8 +102,8 @@
 
    var DECK_SUGGEST_SETTINGS_KEY = 'rayenz-deck-suggest-settings';
    var DEFAULT_DECK_SUGGEST_SETTINGS = {
-      folderUrl: 'https://archidekt.com/folders/81998',
-      setCodes: 'MSH,MSC,MAR',
+      folderUrl: '',
+      setCodes: '',
       deckLoadTab: null,
       customDeckUrls: '',
       pasteDeckImport: '',
@@ -123,6 +126,9 @@
 
    function saveDeckSuggestSettings(settings) {
       setItem(DECK_SUGGEST_SETTINGS_KEY, JSON.stringify(settings || {}));
+      if (global.HubApiClient && global.HubApiClient.getConfig().enabled) {
+         global.HubApiClient.pushSettings('deck-suggest', settings || {}).catch(function () {});
+      }
    }
 
    var SET_POOL_CACHE_PREFIX = 'rayenz-deck-suggest-set-pool-';

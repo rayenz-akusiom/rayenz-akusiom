@@ -54,6 +54,13 @@ body {
    margin-bottom: 8px;
 }
 
+.hub-nav-footer {
+   margin-top: auto;
+   margin-bottom: 0;
+   border-top: 1px solid #333;
+   padding: 8px 0 12px;
+}
+
 .hub-nav-group-title {
    margin: 0;
    padding: 8px 16px 4px;
