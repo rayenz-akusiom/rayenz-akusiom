@@ -9,26 +9,18 @@
    var ITEMDB_ICON = 'https://itemdb.com.br/favicon.ico';
    var SDB_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAECklEQVRYhe1WS08jRxD+qj2PHQ8gbLB5SgaBQKDkyokDXPIbOOcX5RJFSi45RcovyCESIocoOawQSHhxQDwMEg/j4CEz4/FO90zlwIzXsMbrELTaw35SH2ZUVd/XVdVdDXzGZ3yKIKKPxwUAlmVNFAqFNcMwviwUChfZbPZ8b2/vLTP/PTg4eCuE8E9OTlgpxQDeAmgBYAB6EkcCiADESUzu4NASO5H8l8nitoCZmZmv19fXf3AcR0xNTcUDAwOy1WqBmZtE9I+U0t/Z2ckwc2wYhgOgngTIJiR+IirqEMAJ6SsANgADgALgE5F/c3PzZ7lc/lYTQmB6enpI3AOGYYhsNmtalgUAJoAcEWF2dhZhGMJ1Xei6DsMwwNy50f4QBAFM04RlWROVSuVHjYig67qdGjBze6WI4xhSSjSbTRQKBTSbTRSLRdi23ZWkG+I4xvX1NUzThFIKvu8PEVFWS0j1pxyFEDg6OsLW1haICBsbG1heXka5XEYURdD1J10fwPM85PN5LCwsYHt7G47jCACkJTsNezm7rotarYZMJgOlFEZHR5HP53F4eAjbtj9YCqUUTNPEysoKhBCpvQYgozEzWq2WSo9eFEXvBZBSPiBhZmQyGQwPD2NwcPCDAlJ/ImqXN5vNGpOTk5rGzFBKRUTUNngKhmHAMIwHQh73Szc8tmFmWJYlJicnNQ0AiOjJQjIz5ufnsbq6CiJCsVh8Vvd3gWDmjJZ85HsJyOVyKJVKcF0XQoiXIG8LSKMN9bLsTHUcx/+bOSl1JggCU+D+5tL6cSKirk36TBhRFL1KM9Azr8lJQRAEL0UOABkARkr85PgTQqBarWJzcxPlcrndgGlG/svqIkBPU99z/jqOg0ajAeDdPSGlhOd5iOO4r4tICIEoiqBp7WoLAFpfAjoDKaXQaDQwMTGBpaWlvt8OjUYDR0dHKJVKqQ8BoFRAz9bWNA1DQ0PI5XJoNBoYGRnB3Nxc33MAAEqlEqrVKvb39+G6bjsTGgAKw9BMd/L4mDEzSqUS1tbWwMw4PT2FlBKVSqVv8hREhHq9DsdxMD4+HgNQqQArbZRuAgYGBmBZFoiIdV2PPc9rF11KSVEUpd9xstLXkcL9oAuT7wwR2SMjI7bnebdhGNbTEnTtIiJCEAS4u7ur6rr+i+/7f4Rh6CYEDAC7u7u4uLgAEXHyX3WsEO9eSwr3T7McgGFmdqWU+10vICKCUgp3d3e1s7Ozn46Pj78/PT39y/O893qln2HUC10FuK7bvLy8/LVSqXxzfHz8++3trXw2Qz8CmJnDMIRSimu12ptarfbd69evfz4/P6+/xN3fCwSAbNv+amxs7IvFxcXg4ODgt6urqze+77/IzO0byYv4o3J+EvgX4yIhYBP/dWUAAAAASUVORK5CYII=';
 
-   function svgDataUri(svg) {
-      return 'data:image/svg+xml,' + encodeURIComponent(svg);
-   }
-
-   var WISHLIST_NEXT_ICON = svgDataUri(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-      '<polyline points="9 6 15 12 9 18"/><line x1="4" y1="12" x2="14" y2="12"/>' +
-      '</svg>'
-   );
-
-   var WISHLIST_MENU_ICON = svgDataUri(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#444">' +
-      '<circle cx="12" cy="5" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="19" r="1.75"/>' +
-      '</svg>'
-   );
-
    function renderWishlistActionIcon(tag, attrs, iconSrc) {
+      var defaults = { class: 'wishlist-action-btn' };
+      if (tag === 'button') {
+         defaults.type = 'button';
+      } else if (tag === 'a') {
+         defaults.target = '_blank';
+         defaults.rel = 'noopener';
+      }
+      var merged = Object.assign({}, defaults, attrs || {});
       var html = '<' + tag;
-      Object.keys(attrs).forEach(function (key) {
-         html += ' ' + key + '="' + escapeHtml(attrs[key]) + '"';
+      Object.keys(merged).forEach(function (key) {
+         html += ' ' + key + '="' + escapeHtml(merged[key]) + '"';
       });
       html += '><img src="' + escapeHtml(iconSrc) + '" alt="" referrerpolicy="no-referrer"></' + tag + '>';
       return html;
@@ -131,7 +123,6 @@
       }
       html += '</div>';
       var menuAttrs = {
-         type: 'button',
          class: 'wishlist-action-btn wishlist-card-menu-btn',
          'data-wishlist-menu': '',
          'data-wishlist-id': list.id,
@@ -146,7 +137,7 @@
       if (menuContext.itemName) {
          menuAttrs['data-item-name'] = menuContext.itemName;
       }
-      html += renderWishlistActionIcon('button', menuAttrs, WISHLIST_MENU_ICON);
+      html += renderWishlistActionIcon('button', menuAttrs, global.NeopetsIcons.WISHLIST_MENU_ICON);
       html += '</div>';
       return html;
    }
@@ -214,35 +205,24 @@
          }
          html += '<div class="wishlist-card-actions">';
          html += renderWishlistActionIcon('button', {
-            type: 'button',
-            class: 'wishlist-action-btn',
             'data-wishlist-next': '',
             'data-wishlist-id': list.id,
             'data-item-iid': String(itemIid),
             title: 'Next item',
             'aria-label': 'Next item'
-         }, WISHLIST_NEXT_ICON);
+         }, global.NeopetsIcons.WISHLIST_NEXT_ICON);
          html += renderWishlistActionIcon('a', {
-            class: 'wishlist-action-btn',
             href: sswUrl,
-            target: '_blank',
-            rel: 'noopener',
             title: 'Shop Wizard: ' + item.name,
             'aria-label': 'Shop Wizard: ' + item.name
          }, SHOP_WIZARD_ICON);
          html += renderWishlistActionIcon('a', {
-            class: 'wishlist-action-btn',
             href: hideUrl,
-            target: '_blank',
-            rel: 'noopener',
             title: 'Hide on ItemDB',
             'aria-label': 'Hide on ItemDB'
          }, ITEMDB_ICON);
          html += renderWishlistActionIcon('a', {
-            class: 'wishlist-action-btn',
             href: hideUrl,
-            target: '_blank',
-            rel: 'noopener',
             title: 'Find in SDB',
             'aria-label': 'Find in SDB'
          }, SDB_ICON);

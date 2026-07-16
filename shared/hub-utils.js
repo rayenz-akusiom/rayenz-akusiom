@@ -1,14 +1,6 @@
 (function (global) {
    'use strict';
 
-   function escapeHtml(str) {
-      return String(str || '')
-         .replace(/&/g, '&amp;')
-         .replace(/</g, '&lt;')
-         .replace(/>/g, '&gt;')
-         .replace(/"/g, '&quot;');
-   }
-
    function bridgeAvailable() {
       return typeof global.RayenzArchidektBridge !== 'undefined' && global.RayenzArchidektBridge.isAvailable;
    }
@@ -112,7 +104,7 @@
    }
 
    global.HubUtils = {
-      escapeHtml: escapeHtml,
+      escapeHtml: global.StringUtils.escapeHtml,
       bridgeAvailable: bridgeAvailable,
       bridgeApplyAvailable: bridgeApplyAvailable,
       optionKey: optionKey,
