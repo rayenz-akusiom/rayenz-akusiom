@@ -55,6 +55,19 @@
             <p class="hub-nav-group-title">MTG</p>
             <ul class="hub-nav-list">
                <li>
+                  <a class="hub-nav-link" href="#/deck-builder">
+                     <span class="hub-nav-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+                           <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+                           <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+                           <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+                        </svg>
+                     </span>
+                     <span class="hub-nav-label">Deck Builder</span>
+                  </a>
+               </li>
+               <li>
                   <a class="hub-nav-link" href="#/deck-suggest">
                      <span class="hub-nav-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -122,6 +135,7 @@
    <script src="shared/scryfall-cache.js"></script>
    <script src="shared/hub-progress.js"></script>
    <script src="apps/dailies/load.js"></script>
+   <script src="apps/deck-builder/load.js"></script>
    <script src="apps/settings/load.js"></script>
    <script src="apps/neopets-more/load.js"></script>
    <script src="shared/swap-queue.js"></script>
@@ -154,6 +168,7 @@
    <script src="apps/deck-suggest/ds-render.js"></script>
    <script>
       HubRouter.registerRoute('/dailies', loadDailiesApp);
+      HubRouter.registerRoute('/deck-builder', loadDeckBuilderApp);
       HubRouter.registerRoute('/settings', loadSettingsApp);
       HubRouter.registerRoute('/settings/dailies', loadSettingsApp);
       HubRouter.registerRoute('/settings/deck-suggest', loadSettingsApp);
