@@ -15,7 +15,7 @@
     *   rayenz-itemdb-refresh-meta         — { lastAnyRefreshAt, lastRefreshAt, rateLimitedUntil }
     *
     * WishlistItem (cached items[], pre-sorted cheapest-first):
-    *   itemIid, itemdbId, name, priceNp, image, shopWizardUrl, description
+    *   itemIid, name, priceNp, image, shopWizardUrl, description
     *
     * Refresh policy (CACHE_TTL_MS = 24h, MIN_REFRESH_GAP_MS = 2h):
     *   Per list — serve from cache when present (zero network).
@@ -606,7 +606,6 @@
       var shopWizardUrl = item.findAt && item.findAt.shopWizard ? item.findAt.shopWizard : null;
       return {
          itemIid: row.item_iid,
-         itemdbId: item.internal_id != null ? item.internal_id : null,
          name: item.name,
          priceNp: priceNpFromItemdata(item),
          image: item.image || null,
@@ -616,16 +615,10 @@
    }
 
    function itemdbUrlForWishlistItem(item) {
-      if (!item) {
+      if (!item || !item.name) {
          return null;
       }
-      if (item.itemdbId != null) {
-         return 'https://itemdb.com.br/items/' + item.itemdbId;
-      }
-      if (item.name) {
-         return 'https://itemdb.com.br/items/' + encodeURIComponent(item.name);
-      }
-      return null;
+      return 'https://itemdb.com.br/item/' + global.StringUtils.toUriEncodedKebabCase(item.name);
    }
 
    function wishlistItemSortTier(priceNp) {

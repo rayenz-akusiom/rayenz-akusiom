@@ -102,10 +102,6 @@
       return 'https://www.neopets.com/shops/wizard.phtml?string=' + encodeURIComponent(item.name);
    }
 
-   function itemdbHideUrlForWishlistItem(item, list) {
-      return `https://itemdb.com.br/item/${global.StringUtils.toUriEncodedKebabCase(item.name)}`;
-   }
-
    function sdbUrlForWishlistItem(item){
       return 'https://www.neopets.com/safetydeposit.phtml?obj_name=' + encodeURIComponent(item.name) + '&category=0';
    }
@@ -190,7 +186,7 @@
       } else {
          var item = target.item;
          var sswUrl = sswUrlForWishlistItem(item);
-         var hideUrl = itemdbHideUrlForWishlistItem(item, list);
+         var hideUrl = global.DailiesItemdb.itemdbUrlForWishlistItem(item);
          var sdbUrl = sdbUrlForWishlistItem(item);
          var price = item.priceNp != null ? formatNpPrice(item.priceNp) : null;
          var itemIid = item.itemIid != null ? item.itemIid : '';
