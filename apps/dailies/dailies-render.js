@@ -7,6 +7,7 @@
 
    var SHOP_WIZARD_ICON = 'https://images.neopets.com/shopkeepers/shopwizard.gif';
    var ITEMDB_ICON = 'https://itemdb.com.br/favicon.ico';
+   var SDB_ICON = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAECklEQVRYhe1WS08jRxD+qj2PHQ8gbLB5SgaBQKDkyokDXPIbOOcX5RJFSi45RcovyCESIocoOawQSHhxQDwMEg/j4CEz4/FO90zlwIzXsMbrELTaw35SH2ZUVd/XVdVdDXzGZ3yKIKKPxwUAlmVNFAqFNcMwviwUChfZbPZ8b2/vLTP/PTg4eCuE8E9OTlgpxQDeAmgBYAB6EkcCiADESUzu4NASO5H8l8nitoCZmZmv19fXf3AcR0xNTcUDAwOy1WqBmZtE9I+U0t/Z2ckwc2wYhgOgngTIJiR+IirqEMAJ6SsANgADgALgE5F/c3PzZ7lc/lYTQmB6enpI3AOGYYhsNmtalgUAJoAcEWF2dhZhGMJ1Xei6DsMwwNy50f4QBAFM04RlWROVSuVHjYig67qdGjBze6WI4xhSSjSbTRQKBTSbTRSLRdi23ZWkG+I4xvX1NUzThFIKvu8PEVFWS0j1pxyFEDg6OsLW1haICBsbG1heXka5XEYURdD1J10fwPM85PN5LCwsYHt7G47jCACkJTsNezm7rotarYZMJgOlFEZHR5HP53F4eAjbtj9YCqUUTNPEysoKhBCpvQYgozEzWq2WSo9eFEXvBZBSPiBhZmQyGQwPD2NwcPCDAlJ/ImqXN5vNGpOTk5rGzFBKRUTUNngKhmHAMIwHQh73Szc8tmFmWJYlJicnNQ0AiOjJQjIz5ufnsbq6CiJCsVh8Vvd3gWDmjJZ85HsJyOVyKJVKcF0XQoiXIG8LSKMN9bLsTHUcx/+bOSl1JggCU+D+5tL6cSKirk36TBhRFL1KM9Azr8lJQRAEL0UOABkARkr85PgTQqBarWJzcxPlcrndgGlG/svqIkBPU99z/jqOg0ajAeDdPSGlhOd5iOO4r4tICIEoiqBp7WoLAFpfAjoDKaXQaDQwMTGBpaWlvt8OjUYDR0dHKJVKqQ8BoFRAz9bWNA1DQ0PI5XJoNBoYGRnB3Nxc33MAAEqlEqrVKvb39+G6bjsTGgAKw9BMd/L4mDEzSqUS1tbWwMw4PT2FlBKVSqVv8hREhHq9DsdxMD4+HgNQqQArbZRuAgYGBmBZFoiIdV2PPc9rF11KSVEUpd9xstLXkcL9oAuT7wwR2SMjI7bnebdhGNbTEnTtIiJCEAS4u7ur6rr+i+/7f4Rh6CYEDAC7u7u4uLgAEXHyX3WsEO9eSwr3T7McgGFmdqWU+10vICKCUgp3d3e1s7Ozn46Pj78/PT39y/O893qln2HUC10FuK7bvLy8/LVSqXxzfHz8++3trXw2Qz8CmJnDMIRSimu12ptarfbd69evfz4/P6+/xN3fCwSAbNv+amxs7IvFxcXg4ODgt6urqze+77/IzO0byYv4o3J+EvgX4yIhYBP/dWUAAAAASUVORK5CYII=';
 
    function svgDataUri(svg) {
       return 'data:image/svg+xml,' + encodeURIComponent(svg);
@@ -110,13 +111,11 @@
    }
 
    function itemdbHideUrlForWishlistItem(item, list) {
-      if (global.DailiesItemdb && global.DailiesItemdb.itemdbUrlForWishlistItem) {
-         var url = global.DailiesItemdb.itemdbUrlForWishlistItem(item);
-         if (url) {
-            return url;
-         }
-      }
-      return list && list.listUrl ? list.listUrl : '';
+      return `https://itemdb.com.br/item/${global.StringUtils.toUriEncodedKebabCase(item.name)}`;
+   }
+
+   function sdbUrlForWishlistItem(item){
+      return 'https://www.neopets.com/safetydeposit.phtml?obj_name=' + encodeURIComponent(item.name) + '&category=0';
    }
 
    function renderWishlistCardHeader(list, cachedAt, menuContext) {
@@ -201,6 +200,7 @@
          var item = target.item;
          var sswUrl = sswUrlForWishlistItem(item);
          var hideUrl = itemdbHideUrlForWishlistItem(item, list);
+         var sdbUrl = sdbUrlForWishlistItem(item);
          var price = item.priceNp != null ? formatNpPrice(item.priceNp) : null;
          var itemIid = item.itemIid != null ? item.itemIid : '';
          html += '<div class="wishlist-card-body">';
@@ -238,6 +238,14 @@
             title: 'Hide on ItemDB',
             'aria-label': 'Hide on ItemDB'
          }, ITEMDB_ICON);
+         html += renderWishlistActionIcon('a', {
+            class: 'wishlist-action-btn',
+            href: hideUrl,
+            target: '_blank',
+            rel: 'noopener',
+            title: 'Find in SDB',
+            'aria-label': 'Find in SDB'
+         }, SDB_ICON);
          html += '</div>';
          html += '</div>';
          if (price) {
