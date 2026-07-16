@@ -3,8 +3,23 @@
 
 global.StringUtils = {
     toUriEncodedKebabCase: toUriEncodedKebabCase,
-    toKebabCase: toKebabCase
+    toKebabCase: toKebabCase,
+    escapeHtml: escapeHtml,
+    svgDataUri: svgDataUri
 }
+
+function svgDataUri(svg) {
+    return 'data:image/svg+xml,' + encodeURIComponent(svg);
+ }
+
+function escapeHtml(str) {
+    return String(str || '')
+       .replace(/&/g, '&amp;')
+       .replace(/</g, '&lt;')
+       .replace(/>/g, '&gt;')
+       .replace(/"/g, '&quot;');
+ }
+
 
 function toUriEncodedKebabCase(str) {
     return encodeURIComponent(toKebabCase(str));
