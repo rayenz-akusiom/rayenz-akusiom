@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecting…</title>
+    <script>
+      (function () {
+        var map = {"dailies":"#/dailies","neopets-more":"#/neopets-more","deck-builder":"#/deck-builder","deck-suggest":"#/deck-suggest","deck-review":"#/deck-review","order-reconcile":"#/order-reconcile","settings":"#/settings/dailies"};
+        var path = location.pathname;
+        var m = path.match(/\/apps\/([^/]+)\/?$/);
+        var segs = path.split('/').filter(Boolean);
+        var root = segs.length ? '/' + segs[0] + '/' : '/';
+        var hash = location.hash || '';
+        if (m) {
+          hash = map[m[1]] || '#/dailies';
+        }
+        location.replace(root + location.search + hash);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to Hub…</p>
+  </body>
+</html>

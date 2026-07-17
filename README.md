@@ -11,11 +11,13 @@ Personal multi-app hub hosted on GitHub Pages at [rayenz-akusiom.github.io/rayen
 
 ## Publishing
 
-This folder is the **dev/staging** hub source. Production GitHub Pages live in the separate [rayenz-akusiom](https://github.com/rayenz-akusiom/rayenz-akusiom) repo.
+This folder is the **built publish tree** (Vite `outDir` from `packages/web`). Production GitHub Pages live in the separate [rayenz-akusiom](https://github.com/rayenz-akusiom/rayenz-akusiom) repo.
 
-From the monorepo root, deploy hub changes with:
+From the monorepo root:
 
 ```bash
+npm run build:web    # or: npm run publish:hub
+# commit rayenz-hub/index.html, 404.html, .nojekyll, assets/
 npm run deploy:hub
 ```
 
