@@ -496,6 +496,9 @@
                         return {
                            value: p.id,
                            imgSrc: scryfallImageFromId(p.id),
+                           scryfallId: p.id,
+                           layout: p.layout || null,
+                           faceKey: p.id,
                            lines: printOptionLines(p),
                            finishes: p.finishes,
                            name: p.name,

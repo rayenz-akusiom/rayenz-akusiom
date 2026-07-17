@@ -142,7 +142,8 @@ body {
    min-height: 0;
    overflow-y: auto;
    overflow-x: auto;
-   background: #000;
+   /* Light content surface (nav stays dark). Dailies paints its own black canvas. */
+   background: #f4f4f5;
 }
 
 #app-root {

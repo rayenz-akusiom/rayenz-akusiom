@@ -184,6 +184,9 @@
          return {
             value: p.id,
             imgSrc: scryfallImageFromId(p.id),
+            scryfallId: p.id,
+            layout: p.layout || null,
+            faceKey: p.id,
             lines: printOptionLines(p),
             finishes: p.finishes,
             name: p.name,
@@ -195,6 +198,9 @@
          items.push({
             value: suggestion.card.scryfall_id,
             imgSrc: scryfallImageFromId(suggestion.card.scryfall_id),
+            scryfallId: suggestion.card.scryfall_id,
+            layout: suggestion.card.layout || null,
+            faceKey: suggestion.card.scryfall_id,
             lines: [suggestion.card.set_code + ' #' + suggestion.card.collector_number],
             finishes: [],
             name: suggestion.card.name,

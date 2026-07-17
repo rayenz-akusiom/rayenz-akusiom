@@ -41,13 +41,39 @@
          encodeURIComponent(name) + '&format=image&version=normal';
    }
 
+   function hubDocumentRoot() {
+      var entry = document.querySelector(
+         'script[type="module"][src*="/assets/"], script[type="module"][src*="/src/hub/"]'
+      );
+      if (entry && entry.src) {
+         var src = entry.src;
+         var assetsIdx = src.lastIndexOf('/assets/');
+         if (assetsIdx !== -1) {
+            return src.slice(0, assetsIdx + 1);
+         }
+         var hubIdx = src.lastIndexOf('/src/hub/');
+         if (hubIdx !== -1) {
+            return src.slice(0, hubIdx + 1);
+         }
+      }
+      return (global.location && global.location.origin ? global.location.origin : '') + '/';
+   }
+
+   function resolveHubUrl(path) {
+      try {
+         return new URL(path, hubDocumentRoot()).href;
+      } catch (e) {
+         return path;
+      }
+   }
+
    function ensureCss(href, attrName) {
       if (document.querySelector('link[' + attrName + ']')) {
          return;
       }
       var link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = href;
+      link.href = resolveHubUrl(href);
       link.setAttribute(attrName, '1');
       document.head.appendChild(link);
    }
@@ -113,6 +139,7 @@
       scryfallImageFromPrinting: scryfallImageFromPrinting,
       scryfallImageFromName: scryfallImageFromName,
       ensureCss: ensureCss,
+      resolveHubUrl: resolveHubUrl,
       isLocalHub: isLocalHub,
       mountAppProgress: mountAppProgress,
       suggestionsExportFilename: suggestionsExportFilename,

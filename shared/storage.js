@@ -131,6 +131,31 @@
       }
    }
 
+   var DECK_BUILDER_SETTINGS_KEY = 'rayenz-deck-builder-settings';
+   var DEFAULT_DECK_BUILDER_SETTINGS = {
+      allyThreeColourNames: 'shards',
+      enemyThreeColourNames: 'wedges'
+   };
+
+   function loadDeckBuilderSettings() {
+      var raw = getItem(DECK_BUILDER_SETTINGS_KEY);
+      if (!raw) {
+         return Object.assign({}, DEFAULT_DECK_BUILDER_SETTINGS);
+      }
+      try {
+         return Object.assign({}, DEFAULT_DECK_BUILDER_SETTINGS, JSON.parse(raw));
+      } catch (e) {
+         return Object.assign({}, DEFAULT_DECK_BUILDER_SETTINGS);
+      }
+   }
+
+   function saveDeckBuilderSettings(settings) {
+      setItem(DECK_BUILDER_SETTINGS_KEY, JSON.stringify(settings || {}));
+      if (global.HubApiClient && global.HubApiClient.getConfig().enabled) {
+         global.HubApiClient.pushSettings('deck-builder', settings || {}).catch(function () {});
+      }
+   }
+
    var SET_POOL_CACHE_PREFIX = 'rayenz-deck-suggest-set-pool-';
    var REVIEW_HANDOFF_KEY = 'rayenz-deck-suggest-review-handoff';
 
@@ -328,6 +353,8 @@
       saveOrderReconcileProgress: saveOrderReconcileProgress,
       loadDeckSuggestSettings: loadDeckSuggestSettings,
       saveDeckSuggestSettings: saveDeckSuggestSettings,
+      loadDeckBuilderSettings: loadDeckBuilderSettings,
+      saveDeckBuilderSettings: saveDeckBuilderSettings,
       normalizeSetCodesKey: normalizeSetCodesKey,
       saveSetPoolCache: saveSetPoolCache,
       loadSetPoolCache: loadSetPoolCache,
