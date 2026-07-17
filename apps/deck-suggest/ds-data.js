@@ -190,6 +190,13 @@
          if (cached) {
             return cached;
          }
+         if (HubStorage.hydrateSetPoolFromApi) {
+            var fromApi = await HubStorage.hydrateSetPoolFromApi(codesKey);
+            if (fromApi) {
+               setPoolCache[codesKey] = ensureSetPoolIndexed(fromApi);
+               return setPoolCache[codesKey];
+            }
+         }
       } else {
          HubStorage.clearSetPoolCache(codesKey);
          delete setPoolCache[codesKey];

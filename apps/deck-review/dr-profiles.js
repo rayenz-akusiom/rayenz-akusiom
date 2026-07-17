@@ -74,11 +74,14 @@
          return;
       }
       var canWrite = global.ProfileSync && ProfileSync.canWriteProfiles();
+      var canConnectFolder = global.ProfileSync && ProfileSync.canWriteProfilesViaDirectory
+         ? ProfileSync.canWriteProfilesViaDirectory()
+         : canWrite;
       state.ui.profilesSection.hidden = !state.data;
 
       if (state.ui.connectProfilesBtn) {
-         state.ui.connectProfilesBtn.hidden = !canWrite;
-         state.ui.connectProfilesBtn.disabled = !canWrite || state.profilesConnected;
+         state.ui.connectProfilesBtn.hidden = !canConnectFolder;
+         state.ui.connectProfilesBtn.disabled = !canConnectFolder || state.profilesConnected;
          state.ui.connectProfilesBtn.textContent = state.profilesConnected
             ? 'Profiles folder connected'
             : 'Connect profiles folder';
@@ -120,7 +123,7 @@
 
    function neverSuggestAgain(deck, suggestion, side, cardEl, advance) {
       if (!global.ProfileSync || !ProfileSync.canWriteProfiles()) {
-         setProfileStatus('Profile updates require desktop Chrome on PC.');
+         setProfileStatus('Profile updates require a configured Hub API or desktop Chrome on PC.');
          return;
       }
 

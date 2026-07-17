@@ -34,20 +34,46 @@
       return REVIEW_PREFIX + fileId;
    }
 
-   function loadReviewProgress(fileId) {
+   function emptyReviewProgress() {
+      return { decisions: {}, currentDeckId: null, currentSuggestionIndex: {} };
+   }
+
+   function loadReviewProgressLocal(fileId) {
       var raw = getItem(reviewFileKey(fileId));
       if (!raw) {
-         return { decisions: {}, currentDeckId: null, currentSuggestionIndex: {} };
+         return emptyReviewProgress();
       }
       try {
          return JSON.parse(raw);
       } catch (e) {
-         return { decisions: {}, currentDeckId: null, currentSuggestionIndex: {} };
+         return emptyReviewProgress();
       }
+   }
+
+   function loadReviewProgress(fileId) {
+      return loadReviewProgressLocal(fileId);
    }
 
    function saveReviewProgress(fileId, progress) {
       setItem(reviewFileKey(fileId), JSON.stringify(progress));
+      if (global.HubApiClient && global.HubApiClient.getConfig().enabled) {
+         global.HubApiClient.pushReviewProgress(fileId, progress || {}).catch(function () {});
+      }
+   }
+
+   function hydrateReviewProgressFromApi(fileId) {
+      if (!fileId || !global.HubApiClient || !global.HubApiClient.getConfig().enabled) {
+         return Promise.resolve(loadReviewProgressLocal(fileId));
+      }
+      return global.HubApiClient.pullReviewProgress(fileId).then(function (remote) {
+         if (!remote) {
+            return loadReviewProgressLocal(fileId);
+         }
+         setItem(reviewFileKey(fileId), JSON.stringify(remote));
+         return remote;
+      }).catch(function () {
+         return loadReviewProgressLocal(fileId);
+      });
    }
 
    function fileIdFromMeta(meta) {
@@ -175,6 +201,9 @@
       }
       try {
          setItem(setPoolCacheKey(codesKey), JSON.stringify(scope));
+         if (global.HubApiClient && global.HubApiClient.getConfig().enabled) {
+            global.HubApiClient.pushSetPool(codesKey, scope).catch(function () {});
+         }
          return true;
       } catch (e) {
          return false;
@@ -198,6 +227,25 @@
       } catch (e) {
          return null;
       }
+   }
+
+   function hydrateSetPoolFromApi(codesKey) {
+      if (!codesKey || !global.HubApiClient || !global.HubApiClient.getConfig().enabled) {
+         return Promise.resolve(loadSetPoolCache(codesKey));
+      }
+      return global.HubApiClient.pullSetPool(codesKey).then(function (remote) {
+         if (!remote || remote.complete !== true) {
+            return loadSetPoolCache(codesKey);
+         }
+         try {
+            setItem(setPoolCacheKey(codesKey), JSON.stringify(remote));
+         } catch (e) {
+            /* ignore quota — still return remote for this session */
+         }
+         return remote;
+      }).catch(function () {
+         return loadSetPoolCache(codesKey);
+      });
    }
 
    function clearSetPoolCache(codesKey) {
@@ -346,6 +394,7 @@
       setLastRoute: setLastRoute,
       loadReviewProgress: loadReviewProgress,
       saveReviewProgress: saveReviewProgress,
+      hydrateReviewProgressFromApi: hydrateReviewProgressFromApi,
       fileIdFromMeta: fileIdFromMeta,
       loadOrderReconcileSettings: loadOrderReconcileSettings,
       saveOrderReconcileSettings: saveOrderReconcileSettings,
@@ -358,6 +407,7 @@
       normalizeSetCodesKey: normalizeSetCodesKey,
       saveSetPoolCache: saveSetPoolCache,
       loadSetPoolCache: loadSetPoolCache,
+      hydrateSetPoolFromApi: hydrateSetPoolFromApi,
       clearSetPoolCache: clearSetPoolCache,
       saveReviewHandoff: saveReviewHandoff,
       consumeReviewHandoff: consumeReviewHandoff,

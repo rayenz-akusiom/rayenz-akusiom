@@ -64,15 +64,22 @@
    function loadSuggestionsData(data) {
       state.data = validateSuggestions(data);
       state.fileId = HubStorage.fileIdFromMeta(state.data.meta);
-      state.progress = HubStorage.loadReviewProgress(state.fileId);
-      if (!state.progress.currentSuggestionIndex) {
-         state.progress.currentSuggestionIndex = {};
+      var applyProgress = function (progress) {
+         state.progress = progress || HubStorage.loadReviewProgress(state.fileId);
+         if (!state.progress.currentSuggestionIndex) {
+            state.progress.currentSuggestionIndex = {};
+         }
+         state.activeDeckId = state.progress.currentDeckId || (state.data.decks[0] && state.data.decks[0].deck_id);
+         state.suggestionIndex = state.progress.currentSuggestionIndex[state.activeDeckId] || 0;
+         applyHandoffStatus(state.data);
+         showLoadedUi();
+         render();
+      };
+      if (HubStorage.hydrateReviewProgressFromApi) {
+         return HubStorage.hydrateReviewProgressFromApi(state.fileId).then(applyProgress);
       }
-      state.activeDeckId = state.progress.currentDeckId || (state.data.decks[0] && state.data.decks[0].deck_id);
-      state.suggestionIndex = state.progress.currentSuggestionIndex[state.activeDeckId] || 0;
-      applyHandoffStatus(state.data);
-      showLoadedUi();
-      render();
+      applyProgress(HubStorage.loadReviewProgress(state.fileId));
+      return Promise.resolve();
    }
 
    function applyHandoffStatus(data) {
@@ -97,7 +104,7 @@
       }
       var data = await resp.json();
       state.transferSource = 'latest';
-      loadSuggestionsData(data);
+      await loadSuggestionsData(data);
    }
 
    function handleFileUpload(file) {
@@ -106,7 +113,9 @@
          try {
             var data = JSON.parse(reader.result);
             state.transferSource = 'upload';
-            loadSuggestionsData(data);
+            Promise.resolve(loadSuggestionsData(data)).catch(function (err) {
+               showError(err.message || String(err));
+            });
          } catch (err) {
             showError(err.message || String(err));
          }
@@ -364,7 +373,7 @@
       var handoff = HubStorage.consumeReviewHandoff();
       if (handoff && handoff.data) {
          state.transferSource = handoff.source || 'handoff';
-         loadSuggestionsData(handoff.data);
+         await loadSuggestionsData(handoff.data);
       }
    }
 

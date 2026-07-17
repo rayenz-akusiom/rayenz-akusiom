@@ -13,7 +13,18 @@
       return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
    }
 
+   function isApiProfilesEnabled() {
+      return !!(global.HubApiClient && global.HubApiClient.getConfig().enabled);
+   }
+
    function canWriteProfiles() {
+      if (isApiProfilesEnabled()) {
+         return true;
+      }
+      return typeof window.showDirectoryPicker === 'function' && !isMobileDevice();
+   }
+
+   function canWriteProfilesViaDirectory() {
       return typeof window.showDirectoryPicker === 'function' && !isMobileDevice();
    }
 
@@ -79,8 +90,8 @@
    }
 
    function connectProfilesDir() {
-      if (!canWriteProfiles()) {
-         return Promise.reject(new Error('Profile updates require desktop Chrome on PC.'));
+      if (!canWriteProfilesViaDirectory()) {
+         return Promise.reject(new Error('Profile updates require desktop Chrome on PC or a configured Hub API.'));
       }
       return window.showDirectoryPicker({ id: 'rayenz-mtg-profiles', mode: 'readwrite' })
          .then(function (handle) {
@@ -196,12 +207,26 @@
       });
    }
 
-   function appendToProfileList(deckId, field, cardName) {
-      var yamlField = LIST_FIELDS[field] || field;
-      if (!yamlField || !cardName) {
-         return Promise.reject(new Error('Missing deck, field, or card name.'));
-      }
+   function appendToProfileListViaApi(deckId, yamlField, cardName) {
+      return global.HubApiClient.pullProfileYaml(deckId).then(function (yaml) {
+         var text = yaml || '';
+         var result = appendToYamlList(text, yamlField, cardName);
+         if (!result.changed) {
+            return { field: yamlField, cardName: cardName, changed: false };
+         }
+         var protectedCards = parseYamlList(result.text, 'protected_cards');
+         var blockedCards = parseYamlList(result.text, 'blocked_cards');
+         return global.HubApiClient.pushProfile(deckId, {
+            yaml: result.text,
+            protectedCards: protectedCards,
+            blockedCards: blockedCards
+         }).then(function () {
+            return { field: yamlField, cardName: cardName, changed: true };
+         });
+      });
+   }
 
+   function appendToProfileListViaDirectory(deckId, yamlField, cardName) {
       return getProfilesDir().then(function (handle) {
          if (!handle) {
             return connectProfilesDir();
@@ -218,6 +243,18 @@
             });
          });
       });
+   }
+
+   function appendToProfileList(deckId, field, cardName) {
+      var yamlField = LIST_FIELDS[field] || field;
+      if (!yamlField || !cardName) {
+         return Promise.reject(new Error('Missing deck, field, or card name.'));
+      }
+
+      if (isApiProfilesEnabled()) {
+         return appendToProfileListViaApi(deckId, yamlField, cardName);
+      }
+      return appendToProfileListViaDirectory(deckId, yamlField, cardName);
    }
 
    function readProfileYamlFromDir(deckId) {
@@ -244,11 +281,15 @@
    }
 
    function isConnected() {
+      if (isApiProfilesEnabled()) {
+         return Promise.resolve(true);
+      }
       return getProfilesDir().then(function (h) { return !!h; });
    }
 
    global.ProfileSync = {
       canWriteProfiles: canWriteProfiles,
+      canWriteProfilesViaDirectory: canWriteProfilesViaDirectory,
       connectProfilesDir: connectProfilesDir,
       getProfilesDir: getProfilesDir,
       isConnected: isConnected,

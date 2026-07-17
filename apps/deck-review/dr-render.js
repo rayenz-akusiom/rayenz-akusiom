@@ -306,7 +306,7 @@
       var canWriteProfiles = global.ProfileSync && ProfileSync.canWriteProfiles();
       var neverBtnAttrs = canWriteProfiles
          ? ''
-         : ' disabled title="Profile updates require desktop Chrome on PC."';
+         : ' disabled title="Profile updates require a configured Hub API or desktop Chrome on PC."';
       var missingCutBadge = missingCut
          ? '<span class="dr-badge dr-badge-missing-cut">No cut suggested</span>'
          : '';

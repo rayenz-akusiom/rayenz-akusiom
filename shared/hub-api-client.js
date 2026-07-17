@@ -69,6 +69,71 @@
       });
    }
 
+   function pushProfile(deckId, body) {
+      return apiFetch('/v1/profiles/' + encodeURIComponent(deckId), {
+         method: 'PUT',
+         body: body || {}
+      });
+   }
+
+   function pullReviewProgress(fileId) {
+      return apiFetch('/v1/review-progress/' + encodeURIComponent(fileId)).then(function (data) {
+         if (!data) {
+            return null;
+         }
+         return {
+            decisions: data.decisions || {},
+            currentDeckId: data.currentDeckId != null ? data.currentDeckId : null,
+            currentSuggestionIndex: data.currentSuggestionIndex || {}
+         };
+      });
+   }
+
+   function pushReviewProgress(fileId, progress) {
+      progress = progress || {};
+      return apiFetch('/v1/review-progress/' + encodeURIComponent(fileId), {
+         method: 'PUT',
+         body: {
+            formatVersion: 1,
+            decisions: progress.decisions || {},
+            currentDeckId: progress.currentDeckId != null ? progress.currentDeckId : null,
+            currentSuggestionIndex: progress.currentSuggestionIndex || {}
+         }
+      });
+   }
+
+   function pullSetPool(codesKey) {
+      return apiFetch('/v1/set-pools/' + encodeURIComponent(codesKey)).then(function (data) {
+         if (!data || data.complete !== true) {
+            return null;
+         }
+         return {
+            complete: true,
+            codes: data.codes || [],
+            codesKey: data.codesKey || codesKey,
+            primaryCode: data.primaryCode,
+            setName: data.setName,
+            cards: data.cards || [],
+            formatVersion: data.formatVersion
+         };
+      });
+   }
+
+   function pushSetPool(codesKey, scope) {
+      scope = scope || {};
+      return apiFetch('/v1/set-pools/' + encodeURIComponent(codesKey), {
+         method: 'PUT',
+         body: {
+            codes: scope.codes || String(codesKey).split(',').filter(Boolean),
+            complete: scope.complete === true,
+            primaryCode: scope.primaryCode,
+            setName: scope.setName,
+            cards: scope.cards || [],
+            formatVersion: scope.formatVersion || 1
+         }
+      });
+   }
+
    function applyMainPetFromPayload(payload) {
       if (!payload || !global.DailiesSettings || !global.DailiesSettings.saveMainPet) {
          return;
@@ -104,6 +169,11 @@
       pushSettings: pushSettings,
       pullProfile: pullProfile,
       pullProfileYaml: pullProfileYaml,
+      pushProfile: pushProfile,
+      pullReviewProgress: pullReviewProgress,
+      pushReviewProgress: pushReviewProgress,
+      pullSetPool: pullSetPool,
+      pushSetPool: pushSetPool,
       syncDailiesSettingsFromApi: syncDailiesSettingsFromApi
    };
 })(window);
