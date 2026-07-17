@@ -45,7 +45,7 @@ git clone https://github.com/rayenz-akusiom/rayenz-hub.git
 7. On **desktop Chrome**, connect your profiles folder in the right nav and use **Never suggest again** to update `~/mtg/decks/profiles/{deck_id}.yaml` directly.
 8. After changing profiles on PC, re-run `enrich_suggestions` so tablet-loaded `latest.json` reflects new blocklists.
 
-**Update is blocked** until every visible suggestion for the deck has a decision. The exported import is a **full deck replace**: main-deck cards keep their categories; `New Set In` / `New Set Out` are rebuilt from **accepted** swaps only (rejected/skipped queue slots are cleared).
+**Update is blocked** until every visible suggestion for the deck has a decision. The exported import is a **full deck replace**: main-deck cards keep their categories; `Queued In` / `Queued Out` are rebuilt from **accepted** swaps only (rejected/skipped queue slots are cleared).
 
 ## Order Reconcile workflow
 
@@ -59,7 +59,7 @@ Use after cards from a buy order physically arrive.
 6. **Reconcile deck-by-deck** — pick In printing/treatment (Scryfall), Out cut (deck snapshot; cube cuts are limited to the card's color section), destination category; review running summary; **Confirm & apply** per deck.
 7. **Buy/trade list** — remove acquired cards from the staging deck.
 
-Swap queues are always read live from Archidekt (`New Set In` / `New Set Out` for Commander decks; **Maybeboard** for cube decks named with "cube"). Cube destination categories are inferred from color identity (mono colors, Ravnica guilds for two colors; three or more colors require manual category pick). Partial orders are safe: unfilled queue slots stay.
+Swap queues are always read live from Archidekt (`Queued In` / `Queued Out` for Commander decks — legacy `New Set In` / `New Set Out` still recognized on read; **Maybeboard** for cube decks named with "cube"). Cube destination categories are inferred from color identity (mono colors, Ravnica guilds for two colors; three or more colors require manual category pick). Partial orders are safe: unfilled queue slots stay.
 
 ## Deck Suggest workflow
 
