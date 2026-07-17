@@ -99,9 +99,32 @@ body {
    justify-content: center;
 }
 
-.hub-nav-icon svg {
+.hub-nav-icon svg,
+.hub-nav-icon img {
    width: 100%;
    height: 100%;
+}
+
+/* FormatBadge charms (Commander CM1 set / Cube) in the dark nav */
+.hub-nav-icon .db-format-badge {
+   display: flex;
+   width: 100%;
+   height: 100%;
+   align-items: center;
+   justify-content: center;
+   /* Override .db-format-badge --db-ink so Cube currentColor reads on dark nav */
+   color: inherit;
+}
+
+.hub-nav-icon .db-format-icon-img,
+.hub-nav-icon .db-format-icon-svg {
+   width: 100%;
+   height: 100%;
+}
+
+.hub-nav-icon .db-format-icon-img {
+   /* Scryfall set SVGs are dark; invert to match #ccc nav text */
+   filter: invert(1);
 }
 
 .hub-nav-label {
