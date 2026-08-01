@@ -4,16 +4,18 @@ After `npm run deploy:api`, note the **HubApiUrl** stack output (API Gateway HTT
 
 ## Browser configuration (GitHub Pages Hub)
 
-Open DevTools on the deployed Hub and run:
+Prefer **Settings → Hub API** (`#/settings/hub-api`) in the Hub SPA, or open DevTools and run:
 
 ```javascript
 localStorage.setItem('rayenz-hub-api-url', 'https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com');
 localStorage.setItem('rayenz-hub-api-key', 'YOUR_API_KEY');
 ```
 
-Reload the page. The vanilla Hub (`hub-api-client.js`) and React settings shell (`#/settings/dailies`) use these keys when present.
+Reload the page. The Hub API client and settings shell use these keys when present.
 
 ### Disable API mode
+
+Use **Clear** on the Hub API settings tab, or:
 
 ```javascript
 localStorage.removeItem('rayenz-hub-api-url');
