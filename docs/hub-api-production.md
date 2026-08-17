@@ -26,10 +26,10 @@ The Hub continues to work with `localStorage` only (no API URL required).
 
 ## API key source
 
-Production API keys are stored in **SSM Parameter Store** at `/rayenz-hub/prod/api-key` (SecureString). Retrieve for client setup:
+The operator API key is in **Secrets Manager** (`rayenz-hub/prod/api-key`). Retrieve for MCP / deployed contract tests — not for Pages localStorage:
 
 ```powershell
-aws ssm get-parameter --name /rayenz-hub/prod/api-key --with-decryption --query Parameter.Value --output text
+aws secretsmanager get-secret-value --secret-id rayenz-hub/prod/api-key --region us-east-1 --query SecretString --output text
 ```
 
 Do not commit API keys to git or embed them in static Hub assets.
