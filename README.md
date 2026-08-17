@@ -5,8 +5,7 @@ Personal multi-app hub hosted on GitHub Pages at [rayenz-akusiom.github.io/rayen
 ## Apps
 
 - **Dailies** — Neopets dailies launcher (requires [rayenz-dailies.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/rayenz-dailies.user.js) for automation)
-- **Deck Review** — Review MTG set-update suggestions; export full-deck Archidekt import or apply via bridge
-- **Deck Suggest** — Rule-based replacement suggestions (swap queue, proxy upgrades, role matching) without LLM; export schema 1.1 JSON for Deck Review
+- **Deck Suggest** — Generate rule-based suggestions or upload LLM suggestion JSON; review Accept (Swap or Seeking) / Reject / Skip; export full-deck Archidekt import or apply via bridge
 - **Order Reconcile** — Match acquired cards to swap queues; update decks and buy/trade list after an order arrives
 
 ## Publishing
@@ -29,7 +28,21 @@ Userscripts live in **`monkey-scripts/` at the monorepo root** (same clone as th
 git clone https://github.com/rayenz-akusiom/rayenz-hub.git
 ```
 
-## Deck Review workflow
+## Deck Suggest workflow
+
+One app (`#/deck-suggest`; legacy `#/deck-review` redirects here) with two suggestion sources, then a shared review/apply loop.
+
+### Source A — Generate (rules engine)
+
+Rule-based alternative to the `mtg-deck-set-updates` Cursor skill for Commander decks only.
+
+1. Open **Deck Suggest** (`#/deck-suggest`).
+2. Pick a set release or set codes, select Hub library decks, **Generate** (API required).
+3. Suggestions load into the review UI immediately (snapshots / profile prefs attached inline — no `enrich_suggestions.ps1`).
+
+Cube decks and Maybeboard-only swap queues are skipped with a per-deck message.
+
+### Source B — Upload / latest (LLM file)
 
 1. Generate suggestions with the `mtg-deck-set-updates` Cursor skill.
 2. Enrich with deck snapshots and profile preferences (`protected_cards`, `blocked_cards`):
@@ -38,14 +51,17 @@ git clone https://github.com/rayenz-akusiom/rayenz-hub.git
    .\scripts\enrich_suggestions.ps1 -InputPath ~\mtg\decks\suggestions\MSH-2026-06-21.json -Output data\suggestions\latest.json
    ```
 
-3. Commit enriched output to **production** via `npm run deploy:hub` as `data/suggestions/latest.json` (or upload JSON on the Deck Review page). The hub repo no longer ships a default `latest.json`; regression coverage lives in `tests/fixtures/suggestions/` at the monorepo root.
-4. Review every suggestion for each deck (Accept / Reject / Skip). The **Deck status** card at the top shows a **Decisions** recap, live **Archidekt queue**, and **Update** actions.
-5. On **desktop** with [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js): when all suggestions are reviewed, open the **Update** tab → **Apply via bridge** (opens Archidekt and shows an apply banner).
-6. On **tablet** (no userscript): when all suggestions are reviewed, **Update** tab → **Copy full deck import** → Archidekt deck → **Import** → **Replace deck** → paste → Save Changes.
-7. On **desktop Chrome**, connect your profiles folder in the right nav and use **Never suggest again** to update `~/mtg/decks/profiles/{deck_id}.yaml` directly.
-8. After changing profiles on PC, re-run `enrich_suggestions` so tablet-loaded `latest.json` reflects new blocklists.
+3. Commit enriched output to **production** via `npm run deploy:hub` as `data/suggestions/latest.json`, or **Upload JSON** / **Refresh latest** in the Deck Suggest sidebar. Regression fixtures live in `tests/fixtures/suggestions/` at the monorepo root.
 
-**Update is blocked** until every visible suggestion for the deck has a decision. The exported import is a **full deck replace**: main-deck cards keep their categories; `Queued In` / `Queued Out` are rebuilt from **accepted** swaps only (rejected/skipped queue slots are cleared).
+### Review and apply
+
+4. Review every suggestion for each deck (**Accept** as **Swap** or **Seeking**, **Reject**, or **Skip**). Swap requires an Out cut; Seeking adds In only. The **Deck status** card shows **Decisions**, live **Archidekt queue**, and **Update**.
+5. On **desktop** with [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js): when all suggestions are reviewed, **Update** → **Apply via bridge**.
+6. On **tablet** (no userscript): **Update** → **Copy full deck import** → Archidekt → **Import** → **Replace deck** → paste → Save Changes.
+7. On **desktop Chrome**, connect profiles in the right nav and use **Never suggest again** to update profile YAML.
+8. After changing profiles on PC for an uploaded `latest.json`, re-run `enrich_suggestions` so tablet loads reflect new blocklists.
+
+**Update is blocked** until every visible suggestion for the deck has a decision. The export is a **full deck replace**: main-deck cards keep their categories; `Queued In` / `Queued Out` are rebuilt from **accepted swaps**; **Seeking** lines are added from **accepted Seeking** decisions.
 
 ## Order Reconcile workflow
 
@@ -60,20 +76,6 @@ Use after cards from a buy order physically arrive.
 7. **Buy/trade list** — remove acquired cards from the staging deck.
 
 Swap queues are always read live from Archidekt (`Queued In` / `Queued Out` for Commander decks — legacy `New Set In` / `New Set Out` still recognized on read; **Maybeboard** for cube decks named with "cube"). Cube destination categories are inferred from color identity (mono colors, Ravnica guilds for two colors; three or more colors require manual category pick). Partial orders are safe: unfilled queue slots stay.
-
-## Deck Suggest workflow
-
-Rule-based alternative to the `mtg-deck-set-updates` Cursor skill for Commander decks only.
-
-1. Open **Deck Suggest** (`#/deck-suggest`).
-2. Enter set codes (e.g. `MSH,MSC,MAR`) and **Load set pool** (Scryfall), or upload cached set JSON.
-3. Load decks from your Archidekt folder (bridge required) or upload a deck JSON snapshot.
-4. Connect profiles in Deck Review (optional) for role rules and blocklists.
-5. Select one or more Commander decks and **Generate suggestions** (requirements checklist in the header shows what is still needed).
-6. Review the results summary and rule audit; filter by tier or rule id.
-7. Click **Review in Deck Review** to open Deck Review with your suggestions loaded (no download step), or **Download JSON** (`{SET}-{date}-rules.json`) to save a file. After transfer, Deck Review shows **Download JSON** in the Data panel if you want a copy.
-
-Cube decks and Maybeboard-only swap queues are skipped with a per-deck message. No `enrich_suggestions.ps1` step is required — export attaches `deck_snapshot` and `profile_preferences` inline.
 
 ### Apply via bridge troubleshooting
 
