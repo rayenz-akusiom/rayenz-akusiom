@@ -5,7 +5,7 @@ Personal multi-app hub hosted on GitHub Pages at [rayenz-akusiom.github.io/rayen
 ## Apps
 
 - **Dailies** — Neopets dailies launcher (requires [rayenz-dailies.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/rayenz-dailies.user.js) for automation)
-- **Deck Suggest** — Generate rule-based suggestions or upload LLM suggestion JSON; review Accept (Swap or Seeking) / Reject / Skip; export full-deck Archidekt import or apply via bridge
+- **Deck Suggest** — Generate rule-based suggestions or upload LLM suggestion JSON; review Accept (Swap or Seeking) / Reject / Skip; Accept saves formal swaps / Seeking to Hub; optional Archidekt full-deck import export (mirror only)
 - **Order Reconcile** — Match acquired cards to swap queues; update decks and buy/trade list after an order arrives
 
 ## Publishing
@@ -42,26 +42,19 @@ Rule-based alternative to the `mtg-deck-set-updates` Cursor skill for Commander 
 
 Cube decks and Maybeboard-only swap queues are skipped with a per-deck message.
 
-### Source B — Upload / latest (LLM file)
+### Source B — Upload JSON (LLM file)
 
-1. Generate suggestions with the `mtg-deck-set-updates` Cursor skill.
-2. Enrich with deck snapshots and profile preferences (`protected_cards`, `blocked_cards`):
-
-   ```powershell
-   .\scripts\enrich_suggestions.ps1 -InputPath ~\mtg\decks\suggestions\MSH-2026-06-21.json -Output data\suggestions\latest.json
-   ```
-
-3. Commit enriched output to **production** via `npm run deploy:hub` as `data/suggestions/latest.json`, or **Upload JSON** / **Refresh latest** in the Deck Suggest sidebar. Regression fixtures live in `tests/fixtures/suggestions/` at the monorepo root.
+1. Generate suggestions with the `mtg-deck-set-updates` Cursor skill (or other offline tooling).
+2. Optionally enrich with deck snapshots and profile preferences (`protected_cards`, `blocked_cards`) via `enrich_suggestions.ps1`.
+3. **Upload JSON** in the Deck Suggest sidebar. Regression fixtures live in `tests/fixtures/suggestions/` at the monorepo root.
 
 ### Review and apply
 
-4. Review every suggestion for each deck (**Accept** as **Swap** or **Seeking**, **Reject**, or **Skip**). Swap requires an Out cut; Seeking adds In only. The **Deck status** card shows **Decisions**, live **Archidekt queue**, and **Update**.
-5. On **desktop** with [archidekt-deck-review.user.js](https://github.com/rayenz-akusiom/rayenz-hub/blob/main/monkey-scripts/archidekt-deck-review.user.js): when all suggestions are reviewed, **Update** → **Apply via bridge**.
-6. On **tablet** (no userscript): **Update** → **Copy full deck import** → Archidekt → **Import** → **Replace deck** → paste → Save Changes.
-7. On **desktop Chrome**, connect profiles in the right nav and use **Never suggest again** to update profile YAML.
-8. After changing profiles on PC for an uploaded `latest.json`, re-run `enrich_suggestions` so tablet loads reflect new blocklists.
+4. Review every suggestion for each deck (**Accept** as **Swap** or **Seeking**, **Reject**, or **Skip**). Swap requires an Out cut; Seeking adds In only. **Accept** writes to the Hub deck (formal swaps / Seeking). The **Deck status** card shows **Decisions**, **Swap queue**, and **Export**.
+5. Optional mirror: when all suggestions are reviewed, **Export** → **Copy Archidekt import** → Archidekt → **Import** → **Replace deck** → paste → Save Changes. Hub remains the system of record.
+6. On **desktop Chrome**, connect profiles in the right nav and use **Never suggest again** to update profile YAML.
 
-**Update is blocked** until every visible suggestion for the deck has a decision. The export is a **full deck replace**: main-deck cards keep their categories; `Queued In` / `Queued Out` are rebuilt from **accepted swaps**; **Seeking** lines are added from **accepted Seeking** decisions.
+**Export is blocked** until every visible suggestion for the deck has a decision. The export is a **full deck replace** for the Archidekt mirror: main-deck cards keep their categories; `Queued In` / `Queued Out` are rebuilt from **accepted swaps**; **Seeking** lines are added from **accepted Seeking** decisions.
 
 ## Order Reconcile workflow
 
