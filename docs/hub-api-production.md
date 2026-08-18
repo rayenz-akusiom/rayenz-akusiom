@@ -1,28 +1,16 @@
 # Hub API — production client configuration
 
-After `npm run deploy:api`, note the **HubApiUrl** stack output (API Gateway HTTP API endpoint).
+After `npm run deploy:api`, note the **HubApiUrl** stack output (API Gateway HTTP API endpoint). `npm run publish:hub` bakes that URL into the SPA (`VITE_HUB_API_URL`, or `HUB_API_URL`, or the stack output).
 
 ## Browser configuration (GitHub Pages Hub)
 
-**Settings → Hub API** (`#/settings/hub-api`): set the API base URL, then **Sign in** as Rayenz (or an invitee). Tokens stay in sessionStorage.
+**Settings → Hub API** (`#/settings/hub-api`): **Sign in** as Rayenz (or an invitee). Tokens stay in sessionStorage. The API URL is part of the Pages bundle — do not set it in localStorage.
 
-DevTools equivalent (URL only — sign-in still required):
-
-```javascript
-localStorage.setItem('rayenz-hub-api-url', 'https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com');
-```
-
-Reload the page. API mode is on only when that URL is set **and** a login session exists.
+API mode is on only when the baked URL is present **and** a login session exists.
 
 ### Disable API mode
 
-Use **Clear** on the Hub API settings tab, or:
-
-```javascript
-localStorage.removeItem('rayenz-hub-api-url');
-```
-
-The Hub continues to work with `localStorage` only (no API URL required).
+Use **Sign out** on the Hub API settings tab. The Hub continues to work with `localStorage` only.
 
 ## Verify deployed API
 
@@ -38,9 +26,4 @@ npm run test:api:deployed
 
 ```powershell
 npx tsx scripts/migrate-user-partition.ts --dry-run
-npx tsx scripts/migrate-user-partition.ts --execute --target-sub <cognito-sub>
-# After verification:
-npx tsx scripts/migrate-user-partition.ts --execute --target-sub <cognito-sub> --delete-bootstrap
 ```
-
-See `docs/hub-api-production.md` in the source repo for the full cutover order.
