@@ -33,21 +33,118 @@ body {
 }
 
 .hub-nav-header {
+   display: grid;
+   grid-template-columns: minmax(0, 1fr) auto;
+   align-items: center;
+   column-gap: 8px;
    padding: 20px 16px 12px;
    border-bottom: 1px solid #333;
 }
 
 .hub-nav-header h1 {
    margin: 0;
+   min-width: 0;
    font-size: 1.15rem;
    font-weight: 700;
    letter-spacing: 0.02em;
 }
 
-.hub-nav-header p {
+.hub-nav-subtitle {
+   grid-column: 1 / -1;
    margin: 4px 0 0;
    font-size: 0.75rem;
    color: #888;
+}
+
+.hub-nav-auth-slot {
+   max-width: 7.5rem;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+   padding: 0;
+   border: 0;
+   background: none;
+   color: #63b3ed;
+   font: inherit;
+   font-size: 0.75rem;
+   font-weight: 600;
+   cursor: pointer;
+   text-align: right;
+}
+
+.hub-nav-auth-slot:hover,
+.hub-nav-auth-slot:focus-visible {
+   color: #90cdf4;
+}
+
+.hub-nav-auth-error,
+.hub-nav-auth-form,
+.hub-nav-auth-sign-out {
+   grid-column: 1 / -1;
+}
+
+.hub-nav-auth-error {
+   margin: 8px 0 0;
+   font-size: 0.75rem;
+   color: #feb2b2;
+}
+
+.hub-nav-auth-form {
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+   margin-top: 10px;
+}
+
+.hub-nav-auth-field {
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+   font-size: 0.7rem;
+   font-weight: 600;
+   color: #aaa;
+}
+
+.hub-nav-auth-field input {
+   width: 100%;
+   padding: 6px 8px;
+   border: 1px solid #444;
+   border-radius: 4px;
+   background: #111;
+   color: #e8e8e8;
+   font: inherit;
+   font-size: 0.8rem;
+   font-weight: 400;
+}
+
+.hub-nav-auth-submit,
+.hub-nav-auth-sign-out {
+   margin-top: 2px;
+   padding: 6px 8px;
+   border: 0;
+   border-radius: 4px;
+   background: #2d3748;
+   color: #e8e8e8;
+   font: inherit;
+   font-size: 0.75rem;
+   font-weight: 600;
+   cursor: pointer;
+}
+
+.hub-nav-auth-sign-out {
+   margin-top: 8px;
+}
+
+.hub-nav-auth-submit:hover,
+.hub-nav-auth-sign-out:hover,
+.hub-nav-auth-submit:focus-visible,
+.hub-nav-auth-sign-out:focus-visible {
+   background: #3d4f66;
+}
+
+.hub-nav-auth-submit:disabled {
+   opacity: 0.5;
+   cursor: not-allowed;
 }
 
 .hub-nav-group {
