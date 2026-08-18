@@ -52,7 +52,7 @@ Cube decks and Maybeboard-only swap queues are skipped with a per-deck message.
 
 4. Review every suggestion for each deck (**Accept** as **Swap** or **Seeking**, **Reject**, or **Skip**). Swap requires an Out cut; Seeking adds In only. **Accept** writes to the Hub deck (formal swaps / Seeking). The **Deck status** card shows **Decisions**, **Swap queue**, and **Export**.
 5. Optional mirror: when all suggestions are reviewed, **Export** → **Copy Archidekt import** → Archidekt → **Import** → **Replace deck** → paste → Save Changes. Hub remains the system of record.
-6. On **desktop Chrome**, connect profiles in the right nav and use **Never suggest again** to update profile YAML.
+6. **Never suggest again** updates profile YAML via Hub API when signed in (desktop Chrome can still write a local profiles folder).
 
 **Export is blocked** until every visible suggestion for the deck has a decision. The export is a **full deck replace** for the Archidekt mirror: main-deck cards keep their categories; `Queued In` / `Queued Out` are rebuilt from **accepted swaps**; **Seeking** lines are added from **accepted Seeking** decisions.
 
