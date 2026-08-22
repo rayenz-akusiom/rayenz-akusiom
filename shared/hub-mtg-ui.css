@@ -395,6 +395,10 @@
   justify-content: center;
 }
 
+.dr-actions .db-menu {
+  display: inline-flex;
+}
+
 .or-actions {
   justify-content: flex-end;
 }
