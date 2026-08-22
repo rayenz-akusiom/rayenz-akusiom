@@ -11,7 +11,9 @@
 .hub-sticky-chrome .ds-header,
 .hub-sticky-chrome .dr-header,
 .hub-sticky-chrome .or-header,
-.hub-sticky-chrome .site-header {
+.hub-sticky-chrome .site-header,
+.hub-sticky-chrome .db-header,
+.hub-sticky-chrome .sq-header {
    box-shadow: none;
    border-bottom: 1px solid #e2e8f0;
 }
