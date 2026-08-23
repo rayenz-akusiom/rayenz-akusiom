@@ -26,3 +26,9 @@
 .hub-sticky-chrome .hub-progress-host .hub-progress-bar[hidden] {
    display: none;
 }
+
+.hub-shortcut-hint {
+   margin: 0;
+   padding: 0 12px 8px;
+   font-size: 12px;
+}
