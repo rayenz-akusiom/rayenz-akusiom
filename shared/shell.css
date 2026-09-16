@@ -79,7 +79,7 @@ body {
 
 .hub-nav-auth-error,
 .hub-nav-auth-form,
-.hub-nav-auth-sign-out {
+.hub-nav-auth-actions {
    grid-column: 1 / -1;
 }
 
@@ -94,6 +94,13 @@ body {
    flex-direction: column;
    gap: 8px;
    margin-top: 10px;
+}
+
+.hub-nav-auth-actions {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+   margin-top: 8px;
 }
 
 .hub-nav-auth-field {
@@ -118,7 +125,7 @@ body {
 }
 
 .hub-nav-auth-submit,
-.hub-nav-auth-sign-out {
+.hub-nav-auth-action {
    margin-top: 2px;
    padding: 6px 8px;
    border: 0;
@@ -129,16 +136,18 @@ body {
    font-size: 0.75rem;
    font-weight: 600;
    cursor: pointer;
+   text-align: center;
+   text-decoration: none;
 }
 
-.hub-nav-auth-sign-out {
-   margin-top: 8px;
+.hub-nav-auth-actions .hub-nav-auth-action {
+   margin-top: 0;
 }
 
 .hub-nav-auth-submit:hover,
-.hub-nav-auth-sign-out:hover,
+.hub-nav-auth-action:hover,
 .hub-nav-auth-submit:focus-visible,
-.hub-nav-auth-sign-out:focus-visible {
+.hub-nav-auth-action:focus-visible {
    background: #3d4f66;
 }
 
