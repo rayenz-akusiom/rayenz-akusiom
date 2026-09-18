@@ -4,7 +4,7 @@
    top: 0;
    z-index: 40;
    flex-shrink: 0;
-   background: #fff;
+   background: var(--hub-panel, #fff);
    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
@@ -15,7 +15,7 @@
 .hub-sticky-chrome .db-header,
 .hub-sticky-chrome .sq-header {
    box-shadow: none;
-   border-bottom: 1px solid #e2e8f0;
+   border-bottom: 1px solid var(--hub-border, #e2e8f0);
 }
 
 .hub-sticky-chrome .hub-progress-host .hub-progress-bar {

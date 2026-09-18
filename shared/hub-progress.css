@@ -3,14 +3,14 @@
 }
 
 .hub-progress-bar {
-   background: #edf2f7;
-   border-bottom: 1px solid #e2e8f0;
+   background: var(--hub-ghost-bg, #edf2f7);
+   border-bottom: 1px solid var(--hub-border, #e2e8f0);
    padding: 10px 20px;
 }
 
 .hub-progress-bar-track {
    height: 6px;
-   background: #cbd5e0;
+   background: var(--hub-border, #cbd5e0);
    border-radius: 3px;
    overflow: hidden;
    margin-bottom: 6px;
@@ -18,17 +18,17 @@
 
 .hub-progress-bar-fill {
    height: 100%;
-   background: #2b6cb0;
+   background: var(--hub-accent, #2b6cb0);
    width: 0;
    transition: width 0.2s ease;
 }
 
 .hub-progress-bar.hub-progress-success .hub-progress-bar-fill {
-   background: #276749;
+   background: var(--hub-success, #276749);
 }
 
 .hub-progress-bar.hub-progress-error .hub-progress-bar-fill {
-   background: #c53030;
+   background: var(--hub-danger-fill, #c53030);
 }
 
 .hub-progress-bar.hub-progress-indeterminate .hub-progress-bar-fill {
@@ -51,7 +51,7 @@
 
 .hub-progress-bar-label {
    font-size: 0.85rem;
-   color: #2d3748;
+   color: var(--hub-ink, #2d3748);
    flex: 1;
    min-width: 0;
 }
@@ -60,7 +60,7 @@
    flex-shrink: 0;
    border: none;
    background: transparent;
-   color: #4a5568;
+   color: var(--hub-muted, #4a5568);
    font-size: 1.25rem;
    line-height: 1;
    cursor: pointer;
@@ -68,5 +68,5 @@
 }
 
 .hub-progress-dismiss:hover {
-   color: #1a202c;
+   color: var(--hub-ink, #1a202c);
 }

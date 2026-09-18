@@ -6,6 +6,8 @@
    width: 100%;
    max-height: calc(100vh - 24px);
    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+   background: var(--hub-panel, #fff);
+   color: var(--hub-ink, #2d3748);
 }
 
 .hub-picker-dialog::backdrop {
@@ -24,8 +26,8 @@
    justify-content: space-between;
    gap: 12px;
    padding: 14px 16px;
-   border-bottom: 1px solid #e2e8f0;
-   background: #fff;
+   border-bottom: 1px solid var(--hub-border, #e2e8f0);
+   background: var(--hub-panel, #fff);
    border-radius: 12px 12px 0 0;
 }
 
@@ -33,7 +35,7 @@
    margin: 0;
    font-size: 1rem;
    font-weight: 700;
-   color: #2d3748;
+   color: var(--hub-ink, #2d3748);
    flex: 1;
    min-width: 0;
 }
@@ -57,22 +59,22 @@
    width: 36px;
    height: 32px;
    padding: 0;
-   border: 1px solid #cbd5e0;
+   border: 1px solid var(--hub-border, #cbd5e0);
    border-radius: 6px;
-   background: #fff;
+   background: var(--hub-panel, #fff);
    cursor: pointer;
-   color: #4a5568;
+   color: var(--hub-muted, #4a5568);
 }
 
 .hub-picker-size-btn:hover {
-   border-color: #90cdf4;
-   background: #ebf8ff;
+   border-color: var(--hub-accent, #90cdf4);
+   background: var(--hub-accent-soft, #ebf8ff);
 }
 
 .hub-picker-size-btn.active {
-   border-color: #2b6cb0;
-   background: #bee3f8;
-   color: #2c5282;
+   border-color: var(--hub-accent, #2b6cb0);
+   background: var(--hub-accent-soft-strong, #bee3f8);
+   color: var(--hub-accent-ink, #2c5282);
 }
 
 .hub-picker-size-btn svg {
@@ -81,16 +83,16 @@
 
 .hub-picker-close-btn {
    padding: 6px 12px;
-   border: 1px solid #cbd5e0;
+   border: 1px solid var(--hub-border, #cbd5e0);
    border-radius: 6px;
-   background: #fff;
+   background: var(--hub-panel, #fff);
    font-size: 0.85rem;
-   color: #4a5568;
+   color: var(--hub-muted, #4a5568);
    cursor: pointer;
 }
 
 .hub-picker-close-btn:hover {
-   background: #f7fafc;
+   background: var(--hub-bg, #f7fafc);
 }
 
 .hub-picker-foil-toggle {
@@ -98,7 +100,7 @@
    align-items: center;
    gap: 6px;
    font-size: 0.85rem;
-   color: #4a5568;
+   color: var(--hub-muted, #4a5568);
    cursor: pointer;
    user-select: none;
    white-space: nowrap;
@@ -112,30 +114,32 @@
 .hub-picker-filter-row {
    flex-shrink: 0;
    padding: 0 16px 12px;
-   border-bottom: 1px solid #e2e8f0;
-   background: #fff;
+   border-bottom: 1px solid var(--hub-border, #e2e8f0);
+   background: var(--hub-panel, #fff);
 }
 
 .hub-picker-filter {
    width: 100%;
    box-sizing: border-box;
    padding: 8px 10px;
-   border: 1px solid #cbd5e0;
+   border: 1px solid var(--hub-border, #cbd5e0);
    border-radius: 6px;
    font-size: 0.9rem;
+   background: var(--hub-panel, #fff);
+   color: var(--hub-ink, #2d3748);
 }
 
 .hub-picker-filter:focus {
    outline: none;
-   border-color: #2b6cb0;
-   box-shadow: 0 0 0 2px rgba(43, 108, 176, 0.2);
+   border-color: var(--hub-accent, #2b6cb0);
+   box-shadow: 0 0 0 2px color-mix(in srgb, var(--hub-accent, #2b6cb0) 20%, transparent);
 }
 
 .hub-picker-empty {
    grid-column: 1 / -1;
    margin: 24px 8px;
    text-align: center;
-   color: #718096;
+   color: var(--hub-muted, #718096);
    font-size: 0.9rem;
 }
 
@@ -148,9 +152,9 @@
    font-weight: 700;
    text-transform: uppercase;
    letter-spacing: 0.04em;
-   color: #4a5568;
+   color: var(--hub-muted, #4a5568);
    padding: 4px 2px;
-   border-bottom: 1px solid #e2e8f0;
+   border-bottom: 1px solid var(--hub-border, #e2e8f0);
 }
 
 .hub-picker-group-count {
@@ -158,8 +162,8 @@
    min-width: 18px;
    padding: 0 6px;
    border-radius: 999px;
-   background: #e2e8f0;
-   color: #4a5568;
+   background: var(--hub-ghost-bg, #e2e8f0);
+   color: var(--hub-muted, #4a5568);
    font-size: 0.7rem;
    font-weight: 700;
    line-height: 1.5;
@@ -172,7 +176,7 @@
    gap: 12px;
    padding: 16px;
    overflow-y: auto;
-   background: #f7fafc;
+   background: var(--hub-bg, #f7fafc);
    border-radius: 0 0 12px 12px;
 }
 
@@ -180,10 +184,10 @@
    display: flex;
    flex-direction: column;
    gap: 8px;
-   border: 2px solid #e2e8f0;
+   border: 2px solid var(--hub-border, #e2e8f0);
    border-radius: 8px;
    padding: 8px;
-   background: #fff;
+   background: var(--hub-panel, #fff);
    cursor: pointer;
    text-align: center;
    font: inherit;
@@ -191,14 +195,14 @@
 }
 
 .hub-picker-option:hover {
-   border-color: #90cdf4;
-   box-shadow: 0 2px 8px rgba(43, 108, 176, 0.15);
+   border-color: var(--hub-accent, #90cdf4);
+   box-shadow: 0 2px 8px color-mix(in srgb, var(--hub-accent, #2b6cb0) 15%, transparent);
 }
 
 .hub-picker-option.selected {
-   border-color: #2b6cb0;
-   box-shadow: 0 0 0 1px #2b6cb0;
-   background: #ebf8ff;
+   border-color: var(--hub-accent, #2b6cb0);
+   box-shadow: 0 0 0 1px var(--hub-accent, #2b6cb0);
+   background: var(--hub-accent-soft, #ebf8ff);
 }
 
 .hub-picker-option-image {
@@ -219,11 +223,11 @@
    display: flex;
    align-items: center;
    justify-content: center;
-   color: #a0aec0;
+   color: var(--hub-muted, #a0aec0);
    font-size: 0.75rem;
    font-weight: 600;
    padding: 8px;
-   background: #edf2f7;
+   background: var(--hub-ghost-bg, #edf2f7);
 }
 
 .hub-picker-option-meta {
@@ -236,7 +240,7 @@
 .hub-picker-option-name {
    font-size: 0.72rem;
    line-height: 1.3;
-   color: #2d3748;
+   color: var(--hub-ink, #2d3748);
    white-space: nowrap;
    overflow: hidden;
    text-overflow: ellipsis;
@@ -254,11 +258,11 @@
    display: inline-block;
    padding: 2px 8px;
    border-radius: 999px;
-   background: #edf2f7;
-   border: 1px solid #cbd5e0;
+   background: var(--hub-ghost-bg, #edf2f7);
+   border: 1px solid var(--hub-border, #cbd5e0);
    font-size: 0.65rem;
    font-weight: 700;
-   color: #2d3748;
+   color: var(--hub-ink, #2d3748);
    white-space: nowrap;
    line-height: 1.4;
 }
