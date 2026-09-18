@@ -5,8 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Rayenz Hub</title>
     <link rel="shortcut icon" href="./favicon.svg" />
-    <script type="module" crossorigin src="./assets/index-CvbtWy3e.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DDa-o0Nv.css">
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('rayenzHubTheme');
+          if (t !== 'light' && t !== 'dark') t = 'light';
+          document.documentElement.dataset.theme = t;
+          document.documentElement.style.colorScheme = t;
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+          document.documentElement.style.colorScheme = 'light';
+        }
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-CI9f_WGw.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DPeSVmTR.css">
   </head>
   <body>
     <div id="root"></div>
